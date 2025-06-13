@@ -1,8 +1,8 @@
-# tf-flask
+# tf-fast
 
 ## Description
 
-A python service handling some simple HTTP REST requests for Text-Fabric datasets.
+A python (FastAPI)[https://fastapi.tiangolo.com/] service handling some HTTP REST requests for Text-Fabric datasets. (This was ported from an earlier version, (tf-flask)[https://github.com/cbop-dev/tf-flask], which used (Flask)[https://flask.palletsprojects.com].)
 
 It currently handles a limited set of queries for versions of BHS, LXX, and the Greek NT (Nestle's 1904 edition).
 See text-fabric for information on the underlying data platform, and [ETCBC/bhsa](https://etcbc.github.io/bhsa/) (also on [github](https://github.com/ETCBC/bhsa)), [CBLC/LXX](https://github.com/CenterBLC/LXX), and [CBLC/N1904](https://github.com/CenterBLC/N1904) for info on the datasets here employed.
@@ -32,17 +32,33 @@ See app.py for various url-paths and types of responses.
 * pip 25.1+
 * Disk space: 600GB-1TB (for TF installation and datasets)
 
+### Package installed automatically
+
+When installing (see below), the following packages will automatically be installed in the local tf-fast project directory:
+
+* pytest
+* fastapi[standard]
+* httpx
+* wordcloud
+* text-fabric
+
 ## Installation
 
-	7zz x tf-flask.7z #(or git clone ...)
-	cd tf-flask
+	git clone https://github.com/cbop-dev/tf-fast.git
+	cd tf-fast
 	python3 -m venv .venv
 	. .venv/bin/activate
 	pip install -r requirements.txt
-	#test:
-	flask run
-	#production run:
-	gunicorn -b localhost:5000 app:app
+
+	# run development server (defaults to http://localhost:8000):
+	fastapi dev tffast/main.py
+
+	## change port:
+	fastapi dev --port 5000 tffast/main.py
+
+	#production run (change port with `... run --port XXXX ... `):
+	fastapi run tffast/main.py
+
 	# try calling from outside of venv:
 	deactivate
 	.venv/bin/gunicorn -b localhost:5000 app:app
