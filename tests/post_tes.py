@@ -3,7 +3,7 @@ import requests
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #from _old_app import app, load
-from tfflask import create_app, getLexemes, getChaptersDict, getBooksDict
+from tffast.main import create_app, getLexemes, getChaptersDict, getBooksDict
 @pytest.fixture()
 def base_url():
     return "http://localhost:5000/"

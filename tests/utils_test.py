@@ -1,5 +1,5 @@
 import pytest, os,sys
-from tfflask.utils.greekUtils import GreekUtils
+from tffast.utils.greekUtils import GreekUtils
 # Test the GreekUtils class
 
 def test_greekBeta():

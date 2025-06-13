@@ -1,5 +1,5 @@
 import pytest, os,sys
-from tfflask.tfData.tfLXX import TfLXX
+from tffast.tfData.tfLXX import TfLXX
 lxx=None
 @pytest.fixture()
 def LXX():

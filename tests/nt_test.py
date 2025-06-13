@@ -1,5 +1,5 @@
 import pytest, os,sys
-from tfflask.tfData.tfNT import TfN1904
+from tffast.tfData.tfNT import TfN1904
 NT=None
 
 @pytest.fixture()

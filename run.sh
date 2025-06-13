@@ -1,3 +1,4 @@
 #!/bin/bash
 . .venv/bin/activate && \
-flask --app tfflask run --debug
+#flask --app tffast run --debug
+fastapi dev tffast/main.py

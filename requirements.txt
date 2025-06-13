@@ -1,6 +1,5 @@
 wordcloud
-flask
-flask-cors
-gunicorn 
-text-fabric==12.6.2
+fastapi[standard]
+text-fabric
 pytest
+httpx
