@@ -8,7 +8,7 @@
 !tests/*.py
 !requirements.txt
 !install.sh
-!tfflask/
+!tffast/
 !run.sh
 !test.sh
 tfData/__pycache__/
