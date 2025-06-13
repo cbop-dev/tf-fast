@@ -7,6 +7,8 @@ from tf.advanced import sections
 
 from fastapi import Depends, FastAPI
 from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from wordcloud import WordCloud, STOPWORDS
 
@@ -79,15 +81,26 @@ lxx2=TfDataset(datapath,version=version)
 '''
 #lxx3=TfLXX()
 app = FastAPI()
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/{db}/lex/common/")
 @app.get("/lex/common/")
 def getCommonRoute(db='lxx'):
 	return ''
 
-@app.get("/{db}/lex/<int:lexid>")
-@app.get("/lex/<int:lexid>")
-def getLexInfo(lexid,db='lxx'):
+@app.get("/{db}/lex/{lexid}")
+@app.get("/lex/{lexid}")
+def getLexInfo(lexid: int,db='lxx'):
 	tf=getAPI(db)
 	api=tf.api
 	lexid=int(lexid)
@@ -124,7 +137,7 @@ def bhsTest():
 
 @app.get("/{db}/lex/freq/{lexid}")
 @app.get("/lex/freq/{lexid}")
-def getLexCount(lexid, db='lxx'):
+def getLexCount(lex: int, db='lxx'):
 	
 	if (db == 'lxx'):
 		return LXX.api.F.freq_lemma.v(lexid)
@@ -136,11 +149,11 @@ def getLexCount(lexid, db='lxx'):
 
 @app.get("/{db}/wordcloud")
 @app.get("/wordcloud")
-def wordCloudRoute(db='lxx',invert='',title='',sections='',maxWords='0'):
+def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='',pos='',maxWords='0'):
 	
-	theLexemesResp=lexemesRoute(db)
+	theLexemesResp=lexemesRoute(db,restrict=restrict,exclude=exclude,pos='',sections=sections)
 	theLexemes=theLexemesResp['lexemes']
-	response = ''
+	response = ''	
 
 	if (theLexemes.values()):
 		filteredLexemes= {}
@@ -241,9 +254,9 @@ def allChaptersRoute(db='lxx'):
 	
 	return booksChaps
 
-@app.get("/{db}/chapters/<int:book>")
-@app.get("/chapters/<int:book>")
-def chaptersRoute(book, db='lxx'):
+@app.get("/{db}/chapters/{book}")
+@app.get("/chapters/{book}")
+def chaptersRoute(book: int, db='lxx'):
 	return getChaptersDict(book, db)
 
 @app.get("/{db}/books")
@@ -251,13 +264,13 @@ def chaptersRoute(book, db='lxx'):
 def booksRoute(db='lxx'):
 	return getBooksDict(db)
 
-@app.get("/{db}/getrefs/<int:id>")
-@app.get("/getrefs/<int:id>")
-def getrefsRoute(id, db='lxx'):
+@app.get("/{db}/getrefs/{id}")
+@app.get("/getrefs/{id}")
+def getrefsRoute(id: int, db='lxx'):
 	return getLexRefs(id, db)
 
-@app.get("/{db}/words/<int:id>")
-@app.get("/words/<int:id>")
+@app.get("/{db}/words/{id}")
+@app.get("/words/{id}")
 def getWords(id,db='lxx',features=''):
 	tf=getAPI(db)
 	api=tf.api
@@ -283,17 +296,39 @@ def textRoute(id,db='lxx'):
 	api=tf.api
 	return {'section': getRef(id,db), 'text': getText(id,db), 'id':int(id), 'type': api.F.otype.v(int(id))} if api else ''
 
-@app.get("/texts/")
-@app.get("/{db}>/texts/")
+
+class TextsRequest(BaseModel):
+	refs: list[tuple[str,int,list[int]]]|None =None# book name, chapter, verses
+	sections: list[int] |None = None
+	options: dict[str,bool]|None=None
+
 @app.post("/texts/")
 @app.post("/{db}/texts/")
+def postTextsRoute(request: TextsRequest, db='lxx'):
+	texts = list()
+	tfAPI = getAPI(db)
+	
+	if request.refs:
+		for r in request.refs:
+			text=''
+			for v in r[2]:
+				node=tfAPI.TfData.getNodeFromBcV(r[0],r[1],v)## book, chap, verse
+				text+=tfAPI.TfData.getText(node)
+			texts.append(text)
+	elif request.sections:
+		for node in request.sections:
+			texts.append(tfAPI.TfData.getText(node))
+	return texts
+
+@app.get("/texts/")
+@app.get("/{db}/texts/")
 def textsRoute(db='lxx',sections='',refs=''):
 	tf=getAPI(db)
 	api=tf.api
 	texts = []
 	if(api):
 		
-		refs=[]
+		#refs=[]
 		ids=sections.split(",")
 		if not len(ids):
 			refs=refs.split(";")
@@ -519,7 +554,6 @@ def getRef(nodeId, db='lxx'):
 		except:
 			return ''
 	return ''
-
 def getNodeFromBcV(book,chapter,verse,db='lxx'):
 	node = 0
 	tf=getAPI(db)
@@ -532,26 +566,30 @@ def getNodeFromBcV(book,chapter,verse,db='lxx'):
 			node = 0
 		print("...got node" + str(node))
 	return node
-TfAPI=namedtuple('tfAPI', ['api','getLemma'])
+TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
 def getAPI(db='lxx'):
 	
 	api=None
 	getLemma=lambda x: ''
+	dataSet=None
 	if (db=='lxx'):
 		api=LXX.api
 		getLemma =LXX.getLemma
 		theBooksDict=LXX.bookDict
+		dataSet=LXX
 	elif (enableNT and db=='nt'):
 		api=NTa
 		getLemma = NT.getLemma
 		theBooksDict=NT.bookDict
+		dataSet=NT
 	elif (enableBHS and db=='bhs'):
 		api=BHS.api
 		#api.lex= lambda i : api.F.voc_lex_utf8.v(i) if api.F.voc_lex_utf8.v(i) else tf.getLemma(i)
 		getLemma=BHS.getLemma
 		theBooksDict=tfBhsBooksDict
+		dataSet=BHS
 		#api.lex =lambda i : api.F.lex_utf8.v(i)
-	return TfAPI(api,getLemma)
+	return TfAPI(api,getLemma,dataSet)
 
 def getDicts(db='lxx'):
 	if (db=='lxx'):
