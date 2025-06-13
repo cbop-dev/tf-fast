@@ -2,7 +2,7 @@
 
 ## Description
 
-A python (FastAPI)[https://fastapi.tiangolo.com/] service handling some HTTP REST requests for Text-Fabric datasets. (This was ported from an earlier version, (tf-flask)[https://github.com/cbop-dev/tf-flask], which used (Flask)[https://flask.palletsprojects.com].)
+A python [FastAPI](https://fastapi.tiangolo.com/) service handling some HTTP REST requests for Text-Fabric datasets. (This was ported from an earlier version, [tf-flask](https://github.com/cbop-dev/tf-flask), which used [Flask](https://flask.palletsprojects.com).)
 
 It currently handles a limited set of queries for versions of BHS, LXX, and the Greek NT (Nestle's 1904 edition).
 See text-fabric for information on the underlying data platform, and [ETCBC/bhsa](https://etcbc.github.io/bhsa/) (also on [github](https://github.com/ETCBC/bhsa)), [CBLC/LXX](https://github.com/CenterBLC/LXX), and [CBLC/N1904](https://github.com/CenterBLC/N1904) for info on the datasets here employed.
@@ -13,7 +13,7 @@ This is a work in progress.
 
 ### Text of a node
 
-The server will return the text of a given TF node, at `http://localhost:5000/<db>/text/<node-id>`, where `<db>` is either `bhsa`, `lxx`, or `nt` and `<node-id>` is the numeral id of a given node in that dataset. E.g., a fetch request at `http://localhost:5000/nt/text/382716` will return the following json object (for Matt 1:3):
+The server will return the text of a given TF node, at `http://localhost:8000/<db>/text/<node-id>`, where `<db>` is either `bhsa`, `lxx`, or `nt` and `<node-id>` is the numeral id of a given node in that dataset. E.g., a fetch request at `http://localhost:8000/nt/text/382716` will return the following json object (for Matt 1:3):
 
 ```
 {
@@ -32,13 +32,13 @@ See app.py for various url-paths and types of responses.
 * pip 25.1+
 * Disk space: 600GB-1TB (for TF installation and datasets)
 
-### Package installed automatically
+### Packages installed automatically
 
 When installing (see below), the following packages will automatically be installed in the local tf-fast project directory:
 
 * pytest
 * fastapi[standard]
-* httpx
+* httpx
 * wordcloud
 * text-fabric
 
@@ -59,13 +59,12 @@ When installing (see below), the following packages will automatically be instal
 	#production run (change port with `... run --port XXXX ... `):
 	fastapi run tffast/main.py
 
-	# try calling from outside of venv:
-	deactivate
-	.venv/bin/gunicorn -b localhost:5000 app:app
 
-
-If all goes well, create, enable, and start systemd service. (google it)
+If all goes well, create, enable, and start a systemd service! 
 
 ## TO DO:
 
-- [ ] Documentation
+- [ ] `/texts/` route 
+- [ ] more (and major) refactoring...
+- [ ] Documentation of routes and usage
+- [ ] more awesome stuff
