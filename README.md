@@ -5,7 +5,7 @@
 A python [FastAPI](https://fastapi.tiangolo.com/) service handling some HTTP REST requests for Text-Fabric datasets. (This was ported from an earlier version, [tf-flask](https://github.com/cbop-dev/tf-flask), which used [Flask](https://flask.palletsprojects.com).)
 
 It currently handles a limited set of queries for versions of BHS, LXX, and the Greek NT (Nestle's 1904 edition).
-See text-fabric for information on the underlying data platform, and [ETCBC/bhsa](https://etcbc.github.io/bhsa/) (also on [github](https://github.com/ETCBC/bhsa)), [CBLC/LXX](https://github.com/CenterBLC/LXX), and [CBLC/N1904](https://github.com/CenterBLC/N1904) for info on the datasets here employed.
+See [text-fabric](https://github.com/annotation/text-fabric) for information on the underlying data platform, and [ETCBC/bhsa](https://etcbc.github.io/bhsa/) (also on [github](https://github.com/ETCBC/bhsa)), [CBLC/LXX](https://github.com/CenterBLC/LXX), and [CBLC/N1904](https://github.com/CenterBLC/N1904) for info on the datasets here employed.
 
 This is a work in progress. 
 
