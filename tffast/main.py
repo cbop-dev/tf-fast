@@ -300,24 +300,38 @@ def textRoute(id,db='lxx'):
 class TextsRequest(BaseModel):
 	refs: list[tuple[str,int,list[int]]]|None =None# book name, chapter, verses
 	sections: list[int] |None = None
-	options: dict[str,bool]|None=None
+	options: dict[str,bool|str|int]|None=None
 
 @app.post("/texts/")
 @app.post("/{db}/texts/")
 def postTextsRoute(request: TextsRequest, db='lxx'):
 	texts = list()
 	tfAPI = getAPI(db)
-	
+	showVerses= request.options['showVerses'] if request.options and 'showVerses' in request.options.keys() else False
+	mylog("postTextsRoute. showVerses = " + str(showVerses))
 	if request.refs:
 		for r in request.refs:
 			text=''
 			for v in r[2]:
+				mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
 				node=tfAPI.TfData.getNodeFromBcV(r[0],r[1],v)## book, chap, verse
-				text+=tfAPI.TfData.getText(node)
+				textToAdd = tfAPI.TfData.getText(node)
+				mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
+				if (len(textToAdd) > 0 and showVerses):
+					print("ADDING VERSE:"+ str(v))
+					text+=str(v)+' '
+				text+= textToAdd
 			texts.append(text)
 	elif request.sections:
 		for node in request.sections:
-			texts.append(tfAPI.TfData.getText(node))
+			textToAdd = tfAPI.TfData.getText(node)
+			text=''
+			if(showVerses and textToAdd and (tfAPI.api.F.otype.v(node) == 'verse')):
+				sect = tfAPI.api.T.sectionFromNode(node)
+				if (len(sect)==3):
+					text+= str(sect[2])+' '
+			text+=textToAdd
+			texts.append(text)
 	return texts
 
 @app.get("/texts/")
@@ -357,7 +371,8 @@ def getNodeFromRefRoute(db='lxx',book='',chapter='',verse=''):
 				theDB=BHS
 			elif(db=='nt'):
 				theDB=NT
-			secs = sections.nodeFromSectionStr(theDB,ref)
+			print("getNodeFromRefRoute calling nodeFromSectionStr with ref=" + ref)
+			secs = sections.nodeFromSectionStr(tf.TfData.dataset,ref)
 
 			if ((type(secs) is int) and secs > 0):
 				node = secs

@@ -49,7 +49,7 @@ class TfDataset:
 		else:
 			mylog("TfDataset() got no data!")
 			self.api = None
-		#self.datasets=["yes", "no"]
+		
 		self.posDict=None
 		self.posGroups=None
 		self.bookDict=None
@@ -318,10 +318,12 @@ class TfDataset:
 			return ''
 
 	def getText(self,nodeId):
-		
-		try:
-			return self.api.T.text(int(nodeId)).strip()
-		except:
+		if (nodeId > 0):
+			try:
+				return self.api.T.text(int(nodeId)).strip()
+			except:
+				return ''
+		else:
 			return ''
 
 	def getRef(self,nodeId):
@@ -402,4 +404,4 @@ class TfDataset:
 		
 		return outString
 
-
+	
