@@ -43,17 +43,23 @@ def test_get_text(client):
     assert response.json()['text'] == "καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"
 
 def test_post_text(base_url, client):
-    sections={'sections': [385239]}
-    texts=["καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"
+    requests=[{'sections': [385239]},
+              {'refs': [('Matthew',1,[1])]}
     ]
-  #  payload = {"sections": [385239]}
-    #req=TextsRequest(sections=[385239])
-    response  =client.post(f"/nt/texts/",json=sections)
-   # assert response.status_code == 200
-   # print(response)
-   # print("json: ")
-    #print(response.json())
-    assert len(sections['sections'])== len(texts)
-    assert len(response.json()) == len(sections)
-    for i in range(0,len(sections)):
-        assert response.json()[i] == texts[i]
+    results=[
+        {'texts':["καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"]},
+        {'texts':["Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."]}
+    ]
+    assert len(requests) == len(results)
+    for i in range(0,len(requests)):
+        testReq = requests[i]
+        testRes = results[i]
+        response  =client.post(f"/nt/texts/",json=testReq)
+        if ('sections' in testReq.keys()):
+            assert len(testReq['sections'])== len(testRes['texts'])
+            assert len(response.json()) == len(testReq['sections'])
+        elif('refs' in testReq.keys()):
+            assert len(testReq['refs'])== len(testRes['texts'])
+            assert len(response.json()) == len(testReq['refs'])
+        for x in range(0,len(testRes['texts'])):
+            assert response.json()[x] == testRes['texts'][x]
