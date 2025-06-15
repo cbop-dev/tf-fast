@@ -24,6 +24,49 @@ The server will return the text of a given TF node, at `http://localhost:8000/<d
 }
 ```
 
+### Texts Post Request
+
+Request several texts at once, and get lexical data using `options.lexemes` with either `refs` or `sections` with a `POST` request body to `http://localhost:8000/nt/texts` like the following:
+
+```
+ {'refs': [
+	('Matthew',1,[1])
+  ],
+  'options':{
+	'lexemes': True
+	}
+	},
+```
+Server JSON reponse:
+
+```
+{
+	'texts': [
+		'Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ.'
+	], 
+	'lexemes': {
+		'βίβλος': 962, 
+		'γένεσις': 1063, 
+		'Ἰησοῦς': 2382, 
+		'Χριστός': 5320, 
+		'υἱός': 4989, 
+		'Δαυίδ': 1144, 
+		'Ἀβραάμ': 9
+	}, 
+	'words': [
+		[	{'word': 'Βίβλος', 'id': 962}, 
+			{'word': 'γενέσεως', 'id': 1063}, 
+			{'word': 'Ἰησοῦ', 'id': 2382}, 
+			{'word': 'Χριστοῦ', 'id': 5320}, 
+			{'word': 'υἱοῦ', 'id': 4989}, 
+			{'word': 'Δαυεὶδ', 'id': 1144}, 
+			{'word': 'υἱοῦ', 'id': 4989}, 
+			{'word': 'Ἀβραάμ.', 'id': 9}
+		]
+	]
+}
+```
+
 See app.py for various url-paths and types of responses. 
 
 ## Requirements
