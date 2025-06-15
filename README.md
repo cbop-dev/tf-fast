@@ -68,7 +68,7 @@ Server JSON reponse:
 }
 ```
 
-See app.py for various url-paths and types of responses. 
+See main.py for various url-paths and types of responses. 
 
 ## Requirements
 
@@ -108,7 +108,7 @@ If all goes well, create, enable, and start a systemd service!
 
 ## TO DO:
 
-- [ ] `/texts/` route 
+- [ ] extending/testing `/texts/` route 
 - [ ] more (and major) refactoring...
 - [ ] Documentation of routes and usage
-- [ ] more awesome stuff
+- [ ] More awesome stuff!
