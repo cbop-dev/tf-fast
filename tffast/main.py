@@ -313,7 +313,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	print("postTextsRoute request.options: ")
 	print(request.options)
 	print("postTextsRoute: getLexemes=" + str(getLexemes))
-	lexemes = dict() # dict[lemma:str,id:int]
+	lexemes = dict() # dict[lemma:str,dict{id:int,count:int}]
 	words= list() # list[{'id':int,'word':str,'pos':str,...}]
 	mylog("postTextsRoute. showVerses = " + str(showVerses))
 	if request.refs:
@@ -345,9 +345,10 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					lemma = l[0]
 					lemmaInfo= l[1] # dict[id,beta,count,total]
 					if l[0] not in lexemes.keys():
-						lexemes[lemma]=lemmaInfo['id'] 
+						lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
 				for n in nodes:
-					words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
+					words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id'] }
+				   		for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
 					
 				
 			texts.append(text)
@@ -373,7 +374,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				if l[0] not in lexemes.keys():
 					lexemes[lemma]=lemmaInfo['id'] 
 			for n in request.sections:
-				words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
+				words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
 	
 	retObj= dict()
 	retObj['texts']=texts
