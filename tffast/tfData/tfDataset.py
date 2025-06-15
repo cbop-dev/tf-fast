@@ -1,24 +1,25 @@
 import sys, os
 from tf.app import use
 from ..env import debug,mylog
-
+from ..utils.greekUtils import GreekUtils
+GreekUtils.remove_diacritics
 
 class Lexeme:
 	def __init__(self,id,lemma,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0):
 		self.id = id if id else 0
 		self.total = total 
 		self.gloss = gloss
-		self.beta = beta 
-		self.translit = translit
+		self.translit = translit if translit else GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(lemma))
+		self.beta = beta if beta else translit
 		self.lemma = lemma
-		self.plain = plain if plain else lemma
+		self.plain = plain if plain else GreekUtils.remove_diacritics(lemma)
 		self.pos = pos
 		self.lang = lang
 
 
 class TfDataset:
 	def getBeta(self,wordid):
-		return self.api.F.lex.v(wordid)
+		return self.api.F.lex.v(wordid)#does not work for nt, must override.
 	def getGloss(self, wordid):
 		return self.api.F.gloss.v(wordid)
 	def getFreq(self,wordid):
@@ -37,7 +38,7 @@ class TfDataset:
 		return self.booksDict
 	def __init__(self,datasetPathname,version=None,dbname='lxx'):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
-		self.lexemes=set()
+		self.lexemes=dict() # lemma:str-->Lemma class instance
 		theTfDataset = use(datasetPathname,version=version) #if version else use(datasetPathname)
 		if (theTfDataset):
 			mylog("TfDataset() got data: ")
@@ -70,7 +71,7 @@ class TfDataset:
 		self.bookDict = self.getBooks()
 		mylog("buildLexData(): done with first loop")
 		
-		for i, lemLex in enumerate(sorted(self.lexemes.items())):
+		for i, lemLex in enumerate(sorted(self.lexemes.items(),key=lambda l: l[1].plain.lower())):
 			lemLex[1].id=i
 
 	def numWords(self,node):
@@ -81,10 +82,15 @@ class TfDataset:
 			self.bookDict = {b: {'name': self.api.F.book.v(b), 'abbrev':self.api.F.book.v(b), 'words':self.numWords(b)} for b in self.api.F.otype.s('book')}
 		return self.bookDict
 	
-	def getLexCount(self):
+	def getLexCount(self,wordid=0):
+
 		count = 0
-		if (self.lexemes):
+		if (wordid== 0 and self.lexemes):
 			count = len(self.lexemes)
+		else:
+			foundLexCounts = [t[1] for t in self.getLemmaFeature().freqList() if t[0]==self.getLemma(wordid)]
+			count = foundLexCounts[0] if len(foundLexCounts) > 0 else 0
+
 		return count
 	
 	def isProperNoun(self, wordid):
@@ -92,7 +98,9 @@ class TfDataset:
 	def getLexObj(self,wordid):
 		return None
 	
-	# getLex: returns Lexeme object with given ID. (NB: 'id' is assigned by buildLexData() function, using indexes of sorted lemmas. I.e., the first alphabetically listed lemma has an id of 0, the last one has 5395)
+	# getLex: returns Lexeme object with given ID. 
+	# (NB: 'id' is assigned by buildLexData() function, using indexes of sorted lemmas. 
+	# I.e., the first alphabetically listed lemma has an id of 0, the last one has 5395)
 	def getLex(self,lexID):
 		foundLexes = [l for l in self.lexemes.values() if l.id==lexID]
 		if len(foundLexes) > 0:
@@ -102,7 +110,9 @@ class TfDataset:
 
 	
 		# returns dict of lexemes and frequencies:
-	def getLexemes(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
+	
+	def getLexemes(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, 
+				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
 		#mylog("Min: " + str(min))
 		
 		lexemes = {}
@@ -112,8 +122,9 @@ class TfDataset:
 		totalLexemes = 0
 		totalWordsInSections = 0
 
-		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict]
-		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude]
+		
+		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
+		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
 		#print("restrictStrings: " + str(restrictStrings))
 		restricted = True if len(restrictStrings) > 0 else False
 		excluded  = True if len(excludeStrings) > 0 else False
@@ -171,7 +182,8 @@ class TfDataset:
 					totalInstances += 1
 					if (not self.getLemma(wordid) in lexemes.keys()):
 						totalLexemes +=1
-						lexemes[self.getLemma(wordid)] = {'count': 1, 'id': wordid}
+						lemma=self.getLemma(wordid)
+						lexemes[self.getLemma(wordid)] = {'count': 1, 'id': self.lexemes[lemma].id}
 						# track which of the give sections this word is in:
 						if (common):
 							sectionsLexemes[self.getLemma(wordid)]=set([int(s) for s in (set(L.u(wordid)) & set(sections))])
@@ -341,7 +353,7 @@ class TfDataset:
 		node=self.api.T.nodeFromSection((book,int(chapter),int(verse)))
 		if (type(node) != int):
 			node = 0
-		print("...got node" + str(node))
+		print(" " + str(node))
 		return node
 
 

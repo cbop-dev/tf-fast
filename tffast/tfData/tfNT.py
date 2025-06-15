@@ -46,3 +46,6 @@ class TfN1904(TfDataset):
 		
 	def getLemmaFeature(self):
 		return self.api.F.lemma
+	
+	def getBeta(self,wordid):
+		return self.api.F.lemmatranslit.v(wordid)

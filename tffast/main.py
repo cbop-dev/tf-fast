@@ -308,19 +308,48 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	texts = list()
 	tfAPI = getAPI(db)
 	showVerses= request.options['showVerses'] if request.options and 'showVerses' in request.options.keys() else False
+	lexparam = request.options['lexemes'] if request.options and 'lexemes' in request.options.keys() else False
+	getLexemes = True if lexparam or lexparam == "1" or lexparam == "True" or lexparam == 'true' else False
+	print("postTextsRoute request.options: ")
+	print(request.options)
+	print("postTextsRoute: getLexemes=" + str(getLexemes))
+	lexemes = dict() # dict[lemma:str,id:int]
+	words= list() # list[{'id':int,'word':str,'pos':str,...}]
 	mylog("postTextsRoute. showVerses = " + str(showVerses))
 	if request.refs:
 		for r in request.refs:
 			text=''
+			nodes = list()
+			words = list()
 			for v in r[2]:
-				mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
+				#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
 				node=tfAPI.TfData.getNodeFromBcV(r[0],r[1],v)## book, chap, verse
+					
 				textToAdd = tfAPI.TfData.getText(node)
-				mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
+				if (getLexemes and len(textToAdd) > 0):
+					nodes.append(node)
+
+				
+				#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
 				if (len(textToAdd) > 0 and showVerses):
-					print("ADDING VERSE:"+ str(v))
+					#print("ADDING VERSE:"+ str(v))
 					text+=str(v)+' '
 				text+= textToAdd
+			if (getLexemes):
+			#add all section lexemes to response 'lexemes' dictionary:
+				mylog("postTextsRoute: getting Lexemes...")
+				sectionLexemes=tfAPI.TfData.getLexemes(sections=nodes) 
+				mylog("got section Lexmes: ")
+				mylog(sectionLexemes)
+				for l in sectionLexemes['lexemes'].items():
+					lemma = l[0]
+					lemmaInfo= l[1] # dict[id,beta,count,total]
+					if l[0] not in lexemes.keys():
+						lexemes[lemma]=lemmaInfo['id'] 
+				for n in nodes:
+					words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
+					
+				
 			texts.append(text)
 	elif request.sections:
 		for node in request.sections:
@@ -332,7 +361,26 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					text+= str(sect[2])+' '
 			text+=textToAdd
 			texts.append(text)
-	return texts
+
+		if (getLexemes):
+			mylog("postTextsRoute: getting Lexemes from sections...")
+			sectionsLexemes=tfAPI.TfData.getLexemes(sections=request.sections)
+			print("postTextsRoute sectionsLexemes = ")
+			print(sectionsLexemes)
+			for l in sectionsLexemes['lexemes'].items():
+				lemma = l[0]
+				lemmaInfo= l[1] # dict[id,beta,count,total]
+				if l[0] not in lexemes.keys():
+					lexemes[lemma]=lemmaInfo['id'] 
+			for n in request.sections:
+				words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
+	
+	retObj= dict()
+	retObj['texts']=texts
+	if (getLexemes):
+		retObj['lexemes']=lexemes
+		retObj['words']=words
+	return retObj
 
 @app.get("/texts/")
 @app.get("/{db}/texts/")
@@ -579,7 +627,7 @@ def getNodeFromBcV(book,chapter,verse,db='lxx'):
 		node=api.T.nodeFromSection((book,int(chapter),int(verse)))
 		if (type(node) != int):
 			node = 0
-		print("...got node" + str(node))
+		print("...got node " + str(node))
 	return node
 TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
 def getAPI(db='lxx'):
