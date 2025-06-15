@@ -24,7 +24,7 @@ The server will return the text of a given TF node, at `http://localhost:8000/<d
 }
 ```
 
-### Texts Post Request
+### Texts Post Request
 
 Request several texts at once, and get lexical data using `options.lexemes` with either `refs` or `sections` with a `POST` request body to `http://localhost:8000/nt/texts` like the following:
 
