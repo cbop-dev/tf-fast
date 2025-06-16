@@ -9,6 +9,7 @@ from tffast.tfData.tfLXX import TfLXX
 from tffast.tfData.tfNT import TfN1904
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from tffast.env import mylog, debug
 import json
 
 @pytest.fixture()
@@ -63,14 +64,16 @@ def test_post_text(base_url, client):
         testRes = results[i]
         response =client.post(f"/nt/texts/",json=testReq).json()
         doLexes= testReq['options']['lexemes'] if 'options' in testReq.keys() and 'lexemes' in testReq['options'].keys() else False
+        mylog("the response: ")
+        mylog(response)
+       #assert not doLexes #for printing!
         if ('sections' in testReq.keys()):
             assert len(testReq['sections'])== len(testRes['texts'])
             assert len(response['texts']) == len(testReq['sections'])
             
-            print("===========")
-            print("response:  ")
-            print(response)
-            #assert not doLexes
+            mylog("===========")
+            mylog("response:  ")
+            
             
         elif('refs' in testReq.keys()):
             assert len(testReq['refs'])== len(testRes['texts'])

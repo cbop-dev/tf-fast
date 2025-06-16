@@ -72,7 +72,7 @@ See main.py for various url-paths and types of responses.
 
 ## Requirements
 
-* python3.9+
+* python3.13+
 * pip 25.1+
 * Disk space: 600GB-1TB (for TF installation and datasets)
 

@@ -21,7 +21,7 @@ from .env import mylog, debug
 debugOn=True
 debug = True
 
-print("LOADING APP!!!========================")
+mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
 posDict = TfLXX.posDict
 posGroups =TfLXX.posGroups
@@ -61,9 +61,9 @@ if (enableNT):
 mylog(f"about to load LXX. Python version: {sys.version}")
 
 #lxx = TfLXX()
-#print("Got lxx. dataset=")
-#print(lxx.dataset)
-#print("calling use(lxx) from __init__.")
+#mylog("Got lxx. dataset=")
+#mylog(lxx.dataset)
+#mylog("calling use(lxx) from __init__.")
 
 datapath="CenterBLC/LXX"
 version="1935"
@@ -71,13 +71,13 @@ version="1935"
 LXX = use("CenterBLC/LXX", version="1935")
 datapath="CenterBLC/LXX"
 version="1935"
-print("got LXX. api=")
-print(LXX.api)
+mylog("got LXX. api=")
+mylog(LXX.api)
 lxx =MyChild(datapath,vers=version)
-print("lxx.dataset = ")
-print(lxx.dataset)
+mylog("lxx.dataset = ")
+mylog(lxx.dataset)
 lxx2=TfDataset(datapath,version=version)
-#print("lxx2.dataset:")
+#mylog("lxx2.dataset:")
 '''
 #lxx3=TfLXX()
 app = FastAPI()
@@ -159,7 +159,7 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 		filteredLexemes= {}
 		if (not 'gloss' in list(theLexemes.values())[0].keys()):
 			filteredLexemes = {k:int(v['count']) for (k,v) in theLexemes.items()}
-			#print("Wait! no glosses??")
+			#mylog("Wait! no glosses??")
 		else:
 			#filteredLexemes = {v['gloss'].split(";")[0].strip():int(v['count'])
 			#	for (k,v) in sorted(theLexemes.items(),key=lambda i:i[1]['count'],reverse=True) if not (v['gloss'].split(";")[0].strip() in filteredLexemes)}
@@ -169,7 +169,7 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 					filteredLexemes[engGloss]=v['count']
 
 		
-		#print({l:v for (l,v) in filteredLexemes.items() if 'lord' in l or 'God' in l})
+		#mylog({l:v for (l,v) in filteredLexemes.items() if 'lord' in l or 'God' in l})
 		title=''
 		if(invert):
 			for (k,v) in filteredLexemes.items():
@@ -183,7 +183,7 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 				titles = titles + [str(sectionFromNode(int(s))) for s in sections if int(s) > 0]
 		
 			title = consolidateBibleRefs(titles)
-		#	print("title: " + title)
+		#	mylog("title: " + title)
 		
 		
 		if(maxWords):
@@ -201,10 +201,10 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',beta='',plain='',common='',groups='',min='',gloss='',):
 	theDicts=getDicts(db)
 	checkProper =  True if proper != 'false' else False
-	#print("lex route: checkProper = " + str(checkProper))
+	#mylog("lex route: checkProper = " + str(checkProper))
 	#sections = sections if sections else []
 	#if(sections and len(sections > 0 )):
-	#	print("Have sections: " + sections)
+	#	mylog("Have sections: " + sections)
 	#	sections = [int(s) for s in sections.split(',')]
 	sections = [int(s) for s in sections.split(',')] if (sections) else []
 	restrictParamsList= restrict.split(',') if (restrict) else []
@@ -214,7 +214,7 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	plain = plain if plain else False
 	common = True if common else False
 	#if (common):
-#		print("using common flag...")
+#		mylog("using common flag...")
 	restrictedIds=set([int(x) for x in restrictParamsList if x.isdigit()])
 
 	for (abbrev,iArray) in theDicts['groups'].items():
@@ -231,11 +231,11 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 
 	min = min if ( min) else 1
 	gloss = True if ( gloss and int(gloss) != 0) else False
-	#print("Gloss: " + str(gloss))
-	#print("calling getLexemes with common = " + str(common))
+	#mylog("Gloss: " + str(gloss))
+	#mylog("calling getLexemes with common = " + str(common))
 	returnObject= getLexemes(sections=sections, restrict=list(restrictedIds), 
 						exclude=list(excludedIds), min=min, gloss=gloss,pos=pos,checkProper=checkProper, beta=beta, common=common,db=db,plain=plain)
-	#print("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
+	#mylog("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
 	return returnObject
 
 @app.get("/chapters/")
@@ -294,7 +294,8 @@ def getWords(id,db='lxx',features=''):
 def textRoute(id,db='lxx'):
 	tf=getAPI(db)
 	api=tf.api
-	return {'section': getRef(id,db), 'text': getText(id,db), 'id':int(id), 'type': api.F.otype.v(int(id))} if api else ''
+	return {'section': getRef(id,db), 'text': getText(id,db), 'id':int(id), 
+	'type': api.F.otype.v(int(id))} if api else ''
 
 
 class TextsRequest(BaseModel):
@@ -310,9 +311,9 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	showVerses= request.options['showVerses'] if request.options and 'showVerses' in request.options.keys() else False
 	lexparam = request.options['lexemes'] if request.options and 'lexemes' in request.options.keys() else False
 	getLexemes = True if lexparam or lexparam == "1" or lexparam == "True" or lexparam == 'true' else False
-	print("postTextsRoute request.options: ")
-	print(request.options)
-	print("postTextsRoute: getLexemes=" + str(getLexemes))
+	mylog("postTextsRoute request.options: ")
+	mylog(request.options)
+	mylog("postTextsRoute: getLexemes=" + str(getLexemes))
 	lexemes = dict() # dict[lemma:str,dict{id:int,count:int}]
 	words= list() # list[{'id':int,'word':str,'pos':str,...}]
 	mylog("postTextsRoute. showVerses = " + str(showVerses))
@@ -332,7 +333,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				
 				#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
 				if (len(textToAdd) > 0 and showVerses):
-					#print("ADDING VERSE:"+ str(v))
+					#mylog("ADDING VERSE:"+ str(v))
 					text+=str(v)+' '
 				text+= textToAdd
 			if (getLexemes):
@@ -366,13 +367,13 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 		if (getLexemes):
 			mylog("postTextsRoute: getting Lexemes from sections...")
 			sectionsLexemes=tfAPI.TfData.getLexemes(sections=request.sections)
-			print("postTextsRoute sectionsLexemes = ")
-			print(sectionsLexemes)
+			mylog("postTextsRoute sectionsLexemes = ")
+			mylog(sectionsLexemes)
 			for l in sectionsLexemes['lexemes'].items():
 				lemma = l[0]
 				lemmaInfo= l[1] # dict[id,beta,count,total]
 				if l[0] not in lexemes.keys():
-					lexemes[lemma]=lemmaInfo['id'] 
+					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
 			for n in request.sections:
 				words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
 	
@@ -420,7 +421,7 @@ def getNodeFromRefRoute(db='lxx',book='',chapter='',verse=''):
 				theDB=BHS
 			elif(db=='nt'):
 				theDB=NT
-			print("getNodeFromRefRoute calling nodeFromSectionStr with ref=" + ref)
+			mylog("getNodeFromRefRoute calling nodeFromSectionStr with ref=" + ref)
 			secs = sections.nodeFromSectionStr(tf.TfData.dataset,ref)
 
 			if ((type(secs) is int) and secs > 0):
@@ -456,7 +457,7 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 		endNode = getNodeFromBcV(book,chapter,endVerse,db)
 		ref = ''
 		if (startNode == 0  and endNode == 0):
-			print("got nothing")
+			mylog("got nothing")
 		else:
 			if ((startNode == 0 or startNode == None) and (endNode != 0 and endNode != None)):
 				mylog(f"got end node {endNode} but no start node! trying to fix...")
@@ -471,14 +472,14 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 						endNode = getNodeFromBcV(book,chapter,i,db)
 			if (startNode != None and endNode != None and startNode > 0 and endNode > 0 and endNode >= startNode):
 				verses = getVersesFromNodeRange(startNode,endNode,showVerses,db)
-				print("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
+				mylog("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
 				start = api.T.sectionFromNode(startNode)
 				if (startNode < endNode):
 					ref = start[0] + " " + str(start[1]) +":"+str(start[2])+"-"+str(api.T.sectionFromNode(endNode)[-1])
 				else:
 					ref = start[0] + " " + str(start[1]) +":"+str(start[2])
 			else:
-				print("got no nodes from range!")
+				mylog("got no nodes from range!")
 			
 	return {'text': verses, 'reference': ref} if verses and ref else {}
 	
@@ -498,11 +499,11 @@ def getVerse(db='lxx',book='',chapter='',verse=''):
 		verse = int(verse.strip())
 		ref = ''
 		node = getNodeFromBcV(book,chapter,verse,db)
-		print("getVerse url calling getNodeFromBcV("+ ",".join([book,str(chapter),str(verse)])+")")
-		print("got node " + str(node))
+		mylog("getVerse url calling getNodeFromBcV("+ ",".join([book,str(chapter),str(verse)])+")")
+		mylog("got node " + str(node))
 		if ((type(int(node)) == int) and int(node) > 0):
 			text = getText(node,db)
-			print("Go text:'"+text+"' for node " + str(node))
+			mylog("Go text:'"+text+"' for node " + str(node))
 			sec = api.T.sectionFromNode(node)
 			ref = sec[0] + " "
 			if (sec[1] > 0):
@@ -520,13 +521,13 @@ def getVerse(db='lxx',book='',chapter='',verse=''):
 
 def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 	text = ''
-	print("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
+	mylog("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
 	tf=getAPI(db)
 	api=tf.api
 	if(api):
 		if (startNode == endNode):
 			text += api.T.text(startNode)
-			print("	got single node; text= " + text)
+			mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
 			for i in range(startNode,endNode+1,1):
 				if(api.F.otype.v(i) =='verse'):
@@ -536,8 +537,8 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 							text+= str(sec[2]) +'. '
 					text += api.T.text(i)
 				else:
-					print("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + api.T.text(i))
-			print("	got range. text = " + text)
+					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + api.T.text(i))
+			mylog("	got range. text = " + text)
 
 	return text.strip()
 
@@ -623,12 +624,12 @@ def getNodeFromBcV(book,chapter,verse,db='lxx'):
 	tf=getAPI(db)
 	api=tf.api
 	if(api):
-		print("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
+		mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
 		
 		node=api.T.nodeFromSection((book,int(chapter),int(verse)))
 		if (type(node) != int):
 			node = 0
-		print("...got node " + str(node))
+		mylog("...got node " + str(node))
 	return node
 TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
 def getAPI(db='lxx'):
@@ -729,11 +730,11 @@ def consolidateBibleRefs(strings):
 # returns dict of lexemes and frequencies:
 def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False, db='lxx',plain=False):
 	#mylog("Min: " + str(min))
-	#print("getLexmes.gloss: " + str(gloss))
+	#mylog("getLexmes.gloss: " + str(gloss))
 	
-	#print("getLexemes with sections = " + ",".join([str(s) for s in sections]) +"; common: " + str(common))
-	#print("getLexemes().Restricted: " + ",".join([str(x) for x in restrict]))
-	#print("getLexemes().Excluded: " + ",".join([str(x) for x in exclude]))
+	#mylog("getLexemes with sections = " + ",".join([str(s) for s in sections]) +"; common: " + str(common))
+	#mylog("getLexemes().Restricted: " + ",".join([str(x) for x in restrict]))
+	#mylog("getLexemes().Excluded: " + ",".join([str(x) for x in exclude]))
 	tf=getAPI(db)
 	api=tf.api
 	theResponseObj=None
@@ -754,7 +755,7 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 		elif (enableLXX and db=='lxx'):
 			restrictStrings=[v['desc'] for (k,v) in theDicts['dict'].items() if k in restrict]
 			excludeStrings=[v['desc'] for (k,v) in theDicts['dict'].items() if k in exclude]
-		#print("restrictStrings: " + str(restrictStrings))
+		#mylog("restrictStrings: " + str(restrictStrings))
 		restricted = True if len(restrictStrings) > 0 else False
 		excluded  = True if len(excludeStrings) > 0 else False
 		
@@ -819,16 +820,16 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 
 						if (totalCount):
 							if (db=='lxx'):
-								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lemma.v(wordid));
+								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lemma.v(wordid))
 							elif(db=='bhs'):
-								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lex.v(wordid));
+								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lex.v(wordid))
 						if (gloss):
 							lexemes[tf.getLemma(wordid)]['gloss'] = api.F.gloss.v(wordid)
 						if (beta):
 							lexemes[tf.getLemma(wordid)]['beta'] = tf.getLemma(wordid)
 						if (pos):
 							lexemes[tf.getLemma(wordid)]['pos'] = api.F.sp.v(wordid)
-							#print("Got pos!")
+							#mylog("Got pos!")
 							if ((db == 'lxx' and lexemes[tf.getLemma(wordid)]['pos'] == 'noun' and tf.getLemma(wordid)[0].isupper())
 								or (db == 'bhs' and lexemes[tf.getLemma(wordid)]['pos']=='nmpr')):
 								if (checkProper and db=='lxx'):
@@ -849,7 +850,7 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 			elif(api.F.otype.v(id) == 'word'):
 				addLex(id)
 			
-		#print("sections: " + str(sections))
+		#mylog("sections: " + str(sections))
 		if(len(sections) > 0):
 			for s in sections:
 				s=int(s)
@@ -862,7 +863,7 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 		else:
 			for o in api.N.walk():
 				addLexes(o)
-		#print(lexemes)		
+		#mylog(lexemes)		
 		# sort lexemes?
 		# 
 		# 	
@@ -875,8 +876,8 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 		
 		if (common):
 			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
-			#print("commonlexes length: " + str(len(commonLexes)))
-		#	print("set repon.common to: "+str(len(theResponseObj['common'])))
+			#mylog("commonlexes length: " + str(len(commonLexes)))
+		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
 			theResponseObj['common']=commonLexes
 	return  theResponseObj
 

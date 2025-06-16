@@ -10,6 +10,7 @@ from tffast.main import app
 from tffast.tfData.tfDataset import TfDataset
 from tffast.tfData.tfLXX import TfLXX
 from tffast.tfData.tfNT import TfN1904
+from tffast.env import mylog, debug
 NT=None
 
 @pytest.fixture()
@@ -38,11 +39,11 @@ def runner():
 
 #app = create_app
 #lexes = app.getLexemes(sections=[623751,623752],common=True)
-#print("; ".join(lexes['common']))
+#mylog("; ".join(lexes['common']))
 
-#print("hello world!")
+#mylog("hello world!")
 #lexes = app.getLexemes(sections=[623694,623694],common=True)
-#print(lexes['common'])
+#mylog(lexes['common'])
 
 #def not_getLex(runner,client):
 #   x = 1
@@ -50,7 +51,7 @@ def runner():
    # lexes = runner.getLexemes(sections=[623694])
    # assert lexes['totalLexemes'] == 2096
    # assert len(list(lexes['lexemes'])) == 2096
-    #print("hello")
+    #mylog("hello")
 
 '''
 def not_getCommonLexes(runner):
@@ -102,10 +103,10 @@ def not_test(client,runner):
 '''
 def test_get(client):
     response = client.get("/nt/text/1")
-    print("response = ")
-    print(response)
+    mylog("response = ")
+    mylog(response)
     
     mydata=response.json()
-    print(mydata)
+    mylog(mydata)
     assert(mydata['text']=='Βίβλος')
     #assert(False)

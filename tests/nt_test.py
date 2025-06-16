@@ -1,5 +1,6 @@
 import pytest, os,sys
 from tffast.tfData.tfNT import TfN1904
+from tffast.env import mylog, debug
 NT=None
 
 @pytest.fixture()
@@ -43,7 +44,7 @@ def test_getFreq(nt):
 
 def test_getBooks(nt):
     ntbooks = list(nt.getBooks().values())
-    print(ntbooks)
+    mylog(ntbooks)
     assert(len(ntbooks)==27)
     mattFoundAb = [b for b in ntbooks if b['abbrev']=='Matt']
     mattFoundNm = [b for b in ntbooks if b['name']=='Matthew']

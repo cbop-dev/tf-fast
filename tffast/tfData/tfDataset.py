@@ -125,7 +125,7 @@ class TfDataset:
 		
 		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
 		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
-		#print("restrictStrings: " + str(restrictStrings))
+		#mylog("restrictStrings: " + str(restrictStrings))
 		restricted = True if len(restrictStrings) > 0 else False
 		excluded  = True if len(excludeStrings) > 0 else False
 		
@@ -196,7 +196,7 @@ class TfDataset:
 							lexemes[self.getLemma(wordid)]['beta'] = self.getBeta(wordid)
 						if (pos):
 							lexemes[self.getLemma(wordid)]['pos'] = self.api.F.sp.v(wordid)
-							#print("Got pos!")
+							#mylog("Got pos!")
 							if (lexemes[self.getLemma(wordid)]['pos'] == 'noun' and self.getLemma(wordid)[0].isupper()):
 								if (checkProper):
 									lexemes[self.getLemma(wordid)]['pos'] = 'proper noun or name'
@@ -214,7 +214,7 @@ class TfDataset:
 			elif(self.api.F.otype.v(id) == 'word'):
 				addLex(id)
 			
-		#print("sections: " + str(sections))
+		#mylog("sections: " + str(sections))
 		if(len(sections) > 0):
 			for s in sections:
 				s=int(s)
@@ -227,7 +227,7 @@ class TfDataset:
 		else:
 			for o in self.api.N.walk():
 				addLexes(o)
-		#print(lexemes)		
+		#mylog(lexemes)		
 		# sort lexemes?
 		# 
 		# 	
@@ -240,8 +240,8 @@ class TfDataset:
 		
 		if (common):
 			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
-			#print("commonlexes length: " + str(len(commonLexes)))
-		#	print("set repon.common to: "+str(len(theResponseObj['common'])))
+			#mylog("commonlexes length: " + str(len(commonLexes)))
+		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
 			theResponseObj['common']=commonLexes
 		return  theResponseObj
 		
@@ -255,11 +255,11 @@ class TfDataset:
 ### pasted from init.py:
 	def getVersesFromNodeRange(self,startNode,endNode,showVerses=False):
 		text = ''
-		print("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
+		mylog("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
 		
 		if (startNode == endNode):
 			text += self.api.T.text(startNode)
-			print("	got single node; text= " + text)
+			mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
 			for i in range(startNode,endNode+1,1):
 				if(self.api.F.otype.v(i) =='verse'):
@@ -269,8 +269,8 @@ class TfDataset:
 							text+= str(sec[2]) +'. '
 					text += self.api.T.text(i)
 				else:
-					print("Node " + str(i) + " was not a verse, but is: " + self.api.F.otype.v(i) +", text = " + self.api.T.text(i))
-			print("	got range. text = " + text)
+					mylog("Node " + str(i) + " was not a verse, but is: " + self.api.F.otype.v(i) +", text = " + self.api.T.text(i))
+			mylog("	got range. text = " + text)
 
 		return text.strip()
 	
@@ -348,12 +348,12 @@ class TfDataset:
 	def getNodeFromBcV(self,book,chapter,verse):
 		node = 0
 		
-		print("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
+		mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
 		
 		node=self.api.T.nodeFromSection((book,int(chapter),int(verse)))
 		if (type(node) != int):
 			node = 0
-		print(" " + str(node))
+		mylog(" " + str(node))
 		return node
 
 
