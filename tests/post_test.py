@@ -45,18 +45,18 @@ def test_get_text(client):
 
 def test_post_text(base_url, client):
     requests=[{'sections': [385239]},
-              {'refs': [('Matthew',1,[1])],'options':{'lexemes': True}},
-              {'refs': [('Matthews',1,[1])]},
+              {'refs': [{'book':'Matthew','chapter':1,'verses':[1]}],'options':{'lexemes': True}},
+              {'refs': [{'book':'Matthews','chapter':1,'verses':[1]}]},
               {'sections': [382714,382715],'options':{'showVerses': True}},
               {'sections': [382714],'options':{'lexemes': True}},
     ]
     results=[
-        {'texts':["καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"]},
-        {'texts':["Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."]},
-        {'texts':['']},
-        {'texts':["1 Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ.", 
-                  "2 Ἀβραὰμ ἐγέννησεν τὸν Ἰσαάκ, Ἰσαὰκ δὲ ἐγέννησεν τὸν Ἰακώβ, Ἰακὼβ δὲ ἐγέννησεν τὸν Ἰούδαν καὶ τοὺς ἀδελφοὺς αὐτοῦ,"]},
-        {'texts':["Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."]},
+        {'texts':[{'text':"καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"}]},
+        {'texts':[{'text':"Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."}]},
+        {'texts':[{'text':''}]},
+        {'texts':[{'text':"(1) Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."}, 
+                  {'text':"(2) Ἀβραὰμ ἐγέννησεν τὸν Ἰσαάκ, Ἰσαὰκ δὲ ἐγέννησεν τὸν Ἰακώβ, Ἰακὼβ δὲ ἐγέννησεν τὸν Ἰούδαν καὶ τοὺς ἀδελφοὺς αὐτοῦ,"}]},
+        {'texts':[{'text':"Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."}]},
     ]
     assert len(requests) == len(results)
     for i in range(0,len(requests)):
@@ -79,7 +79,7 @@ def test_post_text(base_url, client):
             assert len(testReq['refs'])== len(testRes['texts'])
             assert len(response['texts']) == len(testReq['refs'])
         for x in range(0,len(testRes['texts'])):
-            assert response['texts'][x] == testRes['texts'][x]
+            assert response['texts'][x]['text'] == testRes['texts'][x]['text']
             if (doLexes):
-                assert(len(response['words'][x]) == len(testRes['texts'][x].split()))
-                assert(" ".join(map(lambda w: w['word'],response['words'][x]))==testRes['texts'][x])
+                assert(len(response['words'][x]) == len(testRes['texts'][x]['text'].split()))
+                assert(" ".join(map(lambda w: w['word'],response['words'][x]))==testRes['texts'][x]['text'])

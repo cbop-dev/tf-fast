@@ -8,4 +8,4 @@ def theSetup():
     app = app()
     #lexes = app.getLexemes(sections=[1])
 
-print("hello")
+mylog("hello")
