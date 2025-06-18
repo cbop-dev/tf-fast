@@ -551,15 +551,19 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 			text += api.T.text(startNode)
 			mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
+			onFirstNode = True
 			for i in range(startNode,endNode+1,1):
 				if(api.F.otype.v(i) =='verse'):
 					if(showVerses):
 						sec=api.T.sectionFromNode(i)
 						if (sec[2]):
-							text+= str(sec[2])
+							if(not onFirstNode):
+								text+=''
+							text+= '('+str(sec[2])+') '
 					text += api.T.text(i)
 				else:
 					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + api.T.text(i))
+				onFirstNode=False
 			mylog("	got range. text = " + text)
 
 	return text.strip()
