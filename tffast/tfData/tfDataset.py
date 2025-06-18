@@ -38,7 +38,7 @@ class TfDataset:
 		return self.booksDict
 	def __init__(self,datasetPathname,version=None,dbname='lxx'):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
-		self.lexemes=dict() # lemma:str-->Lemma class instance
+		self.lexemes=dict() # lemma:str-->Lexeme class instance
 		theTfDataset = use(datasetPathname,version=version) #if version else use(datasetPathname)
 		if (theTfDataset):
 			mylog("TfDataset() got data: ")

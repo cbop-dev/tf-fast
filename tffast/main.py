@@ -18,8 +18,8 @@ from .tfData.tfNT import TfN1904
 from .tfData.tfBhs import TfBHS
 from .env import mylog, debug
 #debugOn=debug
-debugOn=True
-debug = True
+#debugOn=True
+#debug = True
 
 mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
@@ -299,6 +299,7 @@ class TextsResponse(BaseModel):
 @app.post("/texts/")
 @app.post("/{db}/texts/")
 def postTextsRoute(request: TextsRequest, db='lxx'):
+	mylog("postTextsRoute", debugOn=True, showTime=True)
 	texts = list()
 	tfAPI = getAPI(db)
 
@@ -345,24 +346,24 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				firstVerse = False
 			if (getLexemes):
 			#add all section lexemes to response 'lexemes' dictionary:
-				mylog("postTextsRoute: getting Lexemes...")
-				sectionLexemes=tfAPI.TfData.getLexemes(sections=nodes) 
-				mylog("got section Lexmes: ")
-				mylog(sectionLexemes)
-				for l in sectionLexemes['lexemes'].items():
-					lemma = l[0]
-					lemmaInfo= l[1] # dict[id,beta,count,total]
-					if l[0] not in lexemes.keys():
-						lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
+				mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
+				
 				for n in nodes:
-					wordsToAdd = [{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id'] }
-				   		for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word']
-					words.extend(wordsToAdd)
-					
+					for w in tfAPI.api.L.d(n):
+						if tfAPI.api.F.otype.v(w) == 'word':
+							word=tfAPI.TfData.getText(w)
+							lemma=tfAPI.api.F.lemma.v(w)
+							id=tfAPI.TfData.lexemes[lemma].id
+							words.append({'word':word,'id':id })
+							if (lemma not in lexemes.keys()):
+								lexemes[lemma]={'id':id,'count':1}
+							else:
+								lexemes[lemma]['count']+=1
 			wordsArray.append(words)
 			txtRef = TextAndReference(text=text,reference=refString,words=words)
-				
+			
 			textsAndRefsResponse.append(txtRef)
+		mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
 	elif request.sections:
 		#firstNode = True
 
@@ -402,6 +403,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	if (getLexemes):
 		retObj['lexemes']=lexemes
 		#retObj['words']=wordsArray
+	mylog("postTextsRoute finishing.", debugOn=True, showTime=True)
 	return retObj
 
 @app.get("/texts/")
