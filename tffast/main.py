@@ -281,6 +281,7 @@ def textRoute(id,db='lxx'):
 class TextAndReference(BaseModel):
 	text: str
 	reference: str
+	words: list[dict]|None
 
 class TextReference(BaseModel):
 	book:str
@@ -310,7 +311,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	mylog(request.options)
 	mylog("postTextsRoute: getLexemes=" + str(getLexemes))
 	lexemes = dict() # dict[lemma:str,dict{id:int,count:int}]
-	words= list() # list[{'id':int,'word':str,'pos':str,...}]
+	wordsArray= list() # list[{'id':int,'word':str,'pos':str,...}]
 	mylog("postTextsRoute. showVerses = " + str(showVerses))
 	textsAndRefsResponse=list()#TextAndReference
 	if request.refs:
@@ -354,14 +355,30 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					if l[0] not in lexemes.keys():
 						lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
 				for n in nodes:
-					words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id'] }
-				   		for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
+					wordsToAdd = [{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id'] }
+				   		for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word']
+					words.extend(wordsToAdd)
 					
+			wordsArray.append(words)
+			txtRef = TextAndReference(text=text,reference=refString,words=words)
 				
-			textsAndRefsResponse.append(TextAndReference(text=text,reference=refString))
+			textsAndRefsResponse.append(txtRef)
 	elif request.sections:
 		#firstNode = True
+
+		if (getLexemes):
+			mylog("postTextsRoute: getting Lexemes from sections...")
+			sectionsLexemes=tfAPI.TfData.getLexemes(sections=request.sections)
+			mylog("postTextsRoute sectionsLexemes = ")
+			mylog(sectionsLexemes)
+			for l in sectionsLexemes['lexemes'].items():
+				lemma = l[0]
+				lemmaInfo= l[1] # dict[id,beta,count,total]
+				if l[0] not in lexemes.keys():
+					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
+		
 		for node in request.sections:
+			words=list()
 			sectRef = tfAPI.api.T.sectionFromNode(node)
 			refString = sectRef[0]
 			if(len(sectRef) > 1):
@@ -374,28 +391,17 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				sect = tfAPI.api.T.sectionFromNode(node)
 				if (len(sect)==3):
 					text+= '('+str(sect[2])+') '
+			if (getLexemes):
+				words.extend([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(node) if tfAPI.api.F.otype.v(w) == 'word'])
 			text+=textToAdd
-			textsAndRefsResponse.append(TextAndReference(text=text,reference=refString))
-			firstNode=False
-
-		if (getLexemes):
-			mylog("postTextsRoute: getting Lexemes from sections...")
-			sectionsLexemes=tfAPI.TfData.getLexemes(sections=request.sections)
-			mylog("postTextsRoute sectionsLexemes = ")
-			mylog(sectionsLexemes)
-			for l in sectionsLexemes['lexemes'].items():
-				lemma = l[0]
-				lemmaInfo= l[1] # dict[id,beta,count,total]
-				if l[0] not in lexemes.keys():
-					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
-			for n in request.sections:
-				words.append([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(n) if tfAPI.api.F.otype.v(w) == 'word'])
-	
+			txtRef = TextAndReference(text=text,reference=refString,words=words)
+			textsAndRefsResponse.append(txtRef)
+			
 	retObj= dict()
 	retObj['texts']=textsAndRefsResponse
 	if (getLexemes):
 		retObj['lexemes']=lexemes
-		retObj['words']=words
+		#retObj['words']=wordsArray
 	return retObj
 
 @app.get("/texts/")

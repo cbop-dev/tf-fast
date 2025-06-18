@@ -81,5 +81,5 @@ def test_post_text(base_url, client):
         for x in range(0,len(testRes['texts'])):
             assert response['texts'][x]['text'] == testRes['texts'][x]['text']
             if (doLexes):
-                assert(len(response['words'][x]) == len(testRes['texts'][x]['text'].split()))
-                assert(" ".join(map(lambda w: w['word'],response['words'][x]))==testRes['texts'][x]['text'])
+                assert(len(response['texts'][x]['words']) == len(testRes['texts'][x]['text'].split()))
+                assert(" ".join(map(lambda w: w['word'],response['texts'][x]['words']))==testRes['texts'][x]['text'])
