@@ -5,8 +5,9 @@ from ..utils.greekUtils import GreekUtils
 GreekUtils.remove_diacritics
 
 class Lexeme:
-	def __init__(self,id,lemma,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0):
+	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0):
 		self.id = id if id else 0
+		self.wordid=wordid # a node id in which this lexeme is found as a word in DB (important if self.id does not correspond to node ids)
 		self.total = total 
 		self.gloss = gloss
 		self.translit = translit if translit else GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(lemma))
@@ -27,6 +28,7 @@ class TfDataset:
 		freqs = [e[1] for e in self.getLemmaFeature().freqList() if e[0] == lem]
 		return freqs[0] if len(freqs) > 0 else 0
 	
+
 	def getLemma(self,wordid):
 		return self.getLemmaFeature().v(wordid)
 	
@@ -58,7 +60,7 @@ class TfDataset:
 		self.buildLexData()
 
 	def buildLexData(self):
-		self.lexemes = dict()
+		self.lexemes = dict()#lemma:str->Lexeme
 		lemmaFreqDict={o[0]:o[1] for o in self.getLemmaFeature().freqList()}
 		mylog("buildLexData(): gonna build self.lexemes...")
 		self.words = list()
@@ -98,6 +100,13 @@ class TfDataset:
 	def getLexObj(self,wordid):
 		return None
 	
+	# TODO: rethink/decide how to calculate lexID. Should this be the index of a sorted list of lexes? (thus only calculated after all lexemes have been processes/sorted)
+	# TODO: test this with LXX and lxx-web...
+	def getLexID(self,wordid):
+		lemma=self.getLemma(wordid)
+		return self.lexemes[lemma].id if lemma and self.lexemes[lemma] else 0
+		
+	# TODO: rethink "lexID" here, depending on implementation of getLexID().  and add "getLemmaByNodeID"?
 	# getLex: returns Lexeme object with given ID. 
 	# (NB: 'id' is assigned by buildLexData() function, using indexes of sorted lemmas. 
 	# I.e., the first alphabetically listed lemma has an id of 0, the last one has 5395)
@@ -357,7 +366,9 @@ class TfDataset:
 		return node
 
 
-
+	def getVerseNumberFromNode(self,node):
+		return self.api.T.sectionFromNode(int(node))[-1] if len(self.api.T.sectionFromNode(int(node))) >= 3 else None
+	
 	def sectionFromNode(self,node):
 		
 		section= self.api.T.sectionFromNode(node)

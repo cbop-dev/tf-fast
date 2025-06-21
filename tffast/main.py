@@ -278,20 +278,31 @@ def textRoute(id,db='lxx'):
 	return {'section': getRef(id,db), 'text': getText(id,db), 'id':int(id), 
 	'type': api.F.otype.v(int(id))} if api else ''
 
+class Word(BaseModel):
+	word:str
+	id:int=0
+
+class VerseWords(BaseModel):
+	verse: int
+	words: list[Word]
+
 class TextAndReference(BaseModel):
 	text: str
 	reference: str
-	words: list[dict]|None
+	words: list[VerseWords]=[]
 
 class TextReference(BaseModel):
 	book:str
 	chapter: int
 	verses: list[int]
+class TextsOptions(BaseModel):
+	showVerses:bool=False
+	lexemes:bool=False
 
 class TextsRequest(BaseModel):
 	refs: list[TextReference]|None =None# book name, chapter, verses
 	sections: list[int] |None = None
-	options: dict[str,bool|str|int]|None=None
+	options: TextsOptions =TextsOptions()
 class TextsResponse(BaseModel):
 	texts: list[TextAndReference]
 @app.post("/texts")
@@ -303,9 +314,8 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	texts = list()
 	tfAPI = getAPI(db)
 
-	showVerses= request.options['showVerses'] if request.options and 'showVerses' in request.options.keys() else False
-	lexparam = request.options['lexemes'] if request.options and 'lexemes' in request.options.keys() else False
-	getLexemes = True if lexparam or lexparam == "1" or lexparam == "True" or lexparam == 'true' else False
+	showVerses= request.options.showVerses
+	getLexemes = request.options.lexemes
 	mylog('postTextsRoute. request.refs = ' + str(request))
 	mylog('postTextsRoute. request.refs = ' + str(request.refs))
 	mylog("postTextsRoute. request.options: ")
@@ -344,23 +354,27 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					text+='('+str(v)+') '
 				text+= textToAdd
 				firstVerse = False
+			verses=list()
 			if (getLexemes):
 			#add all section lexemes to response 'lexemes' dictionary:
 				mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
 				
 				for n in nodes:
+					v=tfAPI.TfData.getVerseNumberFromNode(n)
+					verseData={'verse':v, 'words':[]}
 					for w in tfAPI.api.L.d(n):
-						if tfAPI.api.F.otype.v(w) == 'word':
+						if tfAPI.api.F.otype.v(w) == 'word':					
 							word=tfAPI.TfData.getText(w)
 							lemma=tfAPI.api.F.lemma.v(w)
 							id=tfAPI.TfData.lexemes[lemma].id
-							words.append({'word':word,'id':id })
+							verseData['words'].append({'word':word,'id':id })
 							if (lemma not in lexemes.keys()):
 								lexemes[lemma]={'id':id,'count':1}
 							else:
 								lexemes[lemma]['count']+=1
-			wordsArray.append(words)
-			txtRef = TextAndReference(text=text,reference=refString,words=words)
+					verses.append(verseData)
+			
+			txtRef = TextAndReference(text=text,reference=refString,words=verses)
 			
 			textsAndRefsResponse.append(txtRef)
 		mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
@@ -379,8 +393,14 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
 		
 		for node in request.sections:
-			words=list()
+			#words=list()
+			verses=list()
+			curVerse={'verse':0, 'words':list()}
 			sectRef = tfAPI.api.T.sectionFromNode(node)
+			if(len(sectRef)==3):
+				v=sectRef[2]
+				curVerse['verse']=v
+
 			refString = sectRef[0]
 			if(len(sectRef) > 1):
 				refString += ' ' +str(sectRef[1])
@@ -393,9 +413,9 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				if (len(sect)==3):
 					text+= '('+str(sect[2])+') '
 			if (getLexemes):
-				words.extend([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(node) if tfAPI.api.F.otype.v(w) == 'word'])
+				curVerse['words'].extend([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(node) if tfAPI.api.F.otype.v(w) == 'word'])
 			text+=textToAdd
-			txtRef = TextAndReference(text=text,reference=refString,words=words)
+			txtRef = TextAndReference(text=text,reference=refString,words=[curVerse])
 			textsAndRefsResponse.append(txtRef)
 			
 	retObj= dict()
@@ -837,37 +857,38 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 				if(includeWord(wordid)):	
 					
 					totalInstances += 1
-					if (not tf.getLemma(wordid) in lexemes.keys()):
+					theLemma = tf.getLemma(wordid)
+					if (not theLemma in lexemes.keys()):
 						totalLexemes +=1
-						lexemes[tf.getLemma(wordid)] = {'count': 1, 'id': wordid}
+						lexemes[theLemma] = {'count': 1, 'id': tf.TfData.lexemes[theLemma].id}
 						# track which of the give sections this word is in:
 						if (common):
-							sectionsLexemes[tf.getLemma(wordid)]=set([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
+							sectionsLexemes[theLemma]=set([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
 
 						if (totalCount):
 							if (db=='lxx'):
-								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lemma.v(wordid))
+								lexemes[theLemma]['total'] = int(api.F.freq_lemma.v(wordid))
 							elif(db=='bhs'):
-								lexemes[tf.getLemma(wordid)]['total'] = int(api.F.freq_lex.v(wordid))
+								lexemes[theLemma]['total'] = int(api.F.freq_lex.v(wordid))
 						if (gloss):
-							lexemes[tf.getLemma(wordid)]['gloss'] = api.F.gloss.v(wordid)
+							lexemes[theLemma]['gloss'] = api.F.gloss.v(wordid)
 						if (beta):
-							lexemes[tf.getLemma(wordid)]['beta'] = tf.getLemma(wordid)
+							lexemes[theLemma]['beta'] = theLemma
 						if (pos):
-							lexemes[tf.getLemma(wordid)]['pos'] = api.F.sp.v(wordid)
+							lexemes[theLemma]['pos'] = api.F.sp.v(wordid)
 							#mylog("Got pos!")
-							if ((db == 'lxx' and lexemes[tf.getLemma(wordid)]['pos'] == 'noun' and tf.getLemma(wordid)[0].isupper())
-								or (db == 'bhs' and lexemes[tf.getLemma(wordid)]['pos']=='nmpr')):
+							if ((db == 'lxx' and lexemes[theLemma]['pos'] == 'noun' and theLemma[0].isupper())
+								or (db == 'bhs' and lexemes[theLemma]['pos']=='nmpr')):
 								if (checkProper and db=='lxx'):
-									lexemes[tf.getLemma(wordid)]['pos'] = 'proper noun or name'
+									lexemes[theLemma]['pos'] = 'proper noun or name'
 								else:
-									lexemes[tf.getLemma(wordid)]['proper'] = True
+									lexemes[theLemma]['proper'] = True
 						if (plain and db=='bhs'):
-							lexemes[tf.getLemma(wordid)]['plain'] = tf.getLemma(wordid)
+							lexemes[theLemma]['plain'] = theLemma
 					else:
-						lexemes[tf.getLemma(wordid)]['count'] += 1
+						lexemes[theLemma]['count'] += 1
 						if (common):
-							sectionsLexemes[tf.getLemma(wordid)].update([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
+							sectionsLexemes[theLemma].update([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
 			
 			id=int(nodeid)
 			if (api.L.d(id) and not recursive):

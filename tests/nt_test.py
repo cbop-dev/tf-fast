@@ -52,3 +52,11 @@ def test_getBooks(nt):
     assert(mattFoundAb[0]['words']==18299)
     assert(len(mattFoundNm)>0)
     assert(mattFoundNm[0]['words']==18299)
+
+def test_getVerseFromNode(nt):
+    tests = [
+        {'node': 382741, 'verse': 3},#Matt 2:3
+        {'node': 137808, 'verse': None}#Matt 2
+        ]
+    for t in tests:
+        assert (nt.getVerseNumberFromNode(t['node']) == t['verse'])

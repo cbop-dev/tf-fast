@@ -1,5 +1,6 @@
 import pytest, os,sys
 from tffast.utils.greekUtils import GreekUtils
+from tffast.env import mylog, debug
 # Test the GreekUtils class
 
 def test_greekBeta():
@@ -13,13 +14,13 @@ def test_greekBeta():
     '''
     greek_text = "ἀγάπη"
     beta_text = GreekUtils.greek_to_beta(greek_text)
-    print(f"Greek to Beta: {greek_text} -> {beta_text}")  # Expected: ἀγάπη -> agaph
-    print(f"Beta to Greek: {beta_text} -> {GreekUtils.beta_to_greek(beta_text)}")  # Expected: agaph -> αγαπη
+    mylog(f"Greek to Beta: {greek_text} -> {beta_text}")  # Expected: ἀγάπη -> agaph
+    mylog(f"Beta to Greek: {beta_text} -> {GreekUtils.beta_to_greek(beta_text)}")  # Expected: agaph -> αγαπη
     assert(beta_text=='agaph')
     strings = ["ἀγάπη", "ἀγάπης", "λόγος", "ἀγάπῃ"]
     search_result = GreekUtils.fuzzy_search_array("αγαπη", strings)
-    print(f"Fuzzy search for 'αγαπη': {search_result}")  # Expected: ['ἀγάπη', 'ἀγάπης', 'ἀγάπῃ']
+    mylog(f"Fuzzy search for 'αγαπη': {search_result}")  # Expected: ['ἀγάπη', 'ἀγάπης', 'ἀγάπῃ']
 
     plain = GreekUtils.plain_greek("ἀγάπη")
-    print(f"Plain Greek: {plain}")  # Expected: αγαπη
+    mylog(f"Plain Greek: {plain}")  # Expected: αγαπη
     '''
