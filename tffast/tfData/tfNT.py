@@ -3,6 +3,7 @@ from tf.app import use
 #from tf.advanced import sections
 from pathlib import Path
 from .tfDataset import TfDataset
+from ..utils.greekUtils import GreekUtils
 from ..env import mylog
 
 class TfN1904(TfDataset):
@@ -48,4 +49,7 @@ class TfN1904(TfDataset):
 		return self.api.F.lemma
 	
 	def getBeta(self,wordid):
-		return self.api.F.lemmatranslit.v(wordid)
+		#return self.api.F.lemmatranslit.v(wordid)
+		return GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(self.getLemma(wordid)))
+	def getPlain(self,wordid):
+		return GreekUtils.remove_diacritics(self.getLemma(wordid))

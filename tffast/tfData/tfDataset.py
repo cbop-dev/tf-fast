@@ -21,6 +21,8 @@ class Lexeme:
 class TfDataset:
 	def getBeta(self,wordid):
 		return self.api.F.lex.v(wordid)#does not work for nt, must override.
+	def getPlain(self,wordid):
+		return self.getBeta(wordid) #treat same as beta; override in child class as necessary.
 	def getGloss(self, wordid):
 		return self.api.F.gloss.v(wordid)
 	def getFreq(self,wordid):
@@ -67,7 +69,7 @@ class TfDataset:
 		for w in self.api.F.otype.s('word'):
 			lem = self.getLemma(w)
 			if lem not in self.lexemes.keys():
-				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),
+				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),
 						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0)
 			self.words.append(self.getLemma(w))
 		self.bookDict = self.getBooks()
@@ -203,6 +205,8 @@ class TfDataset:
 							lexemes[self.getLemma(wordid)]['gloss'] = self.getGloss(wordid)
 						if (beta):
 							lexemes[self.getLemma(wordid)]['beta'] = self.getBeta(wordid)
+						if (plain):
+							lexemes[self.getLemma(wordid)]['beta'] = self.getPlain(wordid)							
 						if (pos):
 							lexemes[self.getLemma(wordid)]['pos'] = self.api.F.sp.v(wordid)
 							#mylog("Got pos!")

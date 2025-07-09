@@ -247,8 +247,9 @@ def booksRoute(db='lxx'):
 
 @app.get("/{db}/getrefs/{id}")
 @app.get("/getrefs/{id}")
-def getrefsRoute(id: int, db='lxx'):
-	return getLexRefs(id, db)
+def getrefsRoute(id: int, db='lxx',sections='',detail=''):
+
+	return getLexRefs(id, db,sections,detail)
 
 @app.get("/{db}/words/{id}")
 @app.get("/words/{id}")
@@ -367,6 +368,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 							word=tfAPI.TfData.getText(w)
 							lemma=tfAPI.api.F.lemma.v(w)
 							id=tfAPI.TfData.lexemes[lemma].id
+							beta=tfAPI.TfData.lexemes[lemma].beta
 							verseData['words'].append({'word':word,'id':id })
 							if (lemma not in lexemes.keys()):
 								lexemes[lemma]={'id':id,'count':1}
@@ -388,7 +390,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 			mylog(sectionsLexemes)
 			for l in sectionsLexemes['lexemes'].items():
 				lemma = l[0]
-				lemmaInfo= l[1] # dict[id,beta,count,total]
+				lemmaInfo= l[1] # dict[id,count,beta]
 				if l[0] not in lexemes.keys():
 					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
 		
@@ -591,14 +593,16 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 # returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
 def getLexRefs(id,db='lxx',sections='',detail=''):
 	tf=getAPI(db)
+	tf.TfData
 	api=tf.api
 	if(api):
 		# optionally limits to instances within any of the selected sections, exluding all others:
 		id=int(id)
+		
 		sectionsArray = [int(s) for s in sections.split(',')] if sections else []
 		mylog("getrefs: sections = [" + ",".join([str(s) for s in sectionsArray])+"]")
 		if(api.F.otype.v(id) == 'word'):
-			lex=tf.getLemma(id)
+			lex=tf.TfData.getLex(id).lemma
 			rNodes = {}
 			bookCounts = {}
 			queryDetail = 'verse'
