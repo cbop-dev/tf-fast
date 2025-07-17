@@ -85,28 +85,24 @@ def getLexInfo(lexid: int,db='lxx'):
 	tf=getAPI(db)
 	api=tf.api
 	lexid=int(lexid)
-	if (db == 'lxx'):
-		if (lexid > 0 and api.F.otype.v(lexid) == 'word'):
-			theLexObj = {'id': lexid}
-			theLexObj['total'] = api.F.freq_lemma.v(lexid)
-			theLexObj['gloss'] = api.F.gloss.v(lexid)
-			
-			theLexObj['beta']=tf.getLemma(lexid)
-			theLexObj['greek'] = tf.getLemma(lexid)
-			theLexObj['pos'] = api.F.sp.v(lexid) if theLexObj['greek'][0].islower() else 'proper noun or name'
-			
-			return theLexObj
-	elif (enableBHS and  db == 'bhs'):
-		#bhsF=BHS.api.F
-		if (lexid > 0 and api.otype.v(lexid) == 'word'):
-			theLexObj = {'id': lexid}
-			theLexObj['total'] = api.freq_lex.v(lexid)
-			theLexObj['gloss'] = api.gloss.v(lexid)
-			theLexObj['beta']=api.lex0.v(lexid)
-			theLexObj['hebrew'] = tf.getLemma(lexid)
-			theLexObj['hebrew_plain'] = api.lex_utf8.v(lexid)
-			theLexObj['pos'] = api.sp.v(lexid)
-			return theLexObj
+	lex=tf.TfData.getLex(lexid)
+	if (lex):
+		theLexObj = {'id': lexid}
+		theLexObj['total'] = lex.total
+		theLexObj['gloss'] = lex.gloss
+		theLexObj['beta']=lex.beta
+
+		if (db == 'lxx'):
+		
+			theLexObj['greek'] = lex.lemma
+			theLexObj['pos'] = lex.pos if lex.pos else 'proper noun or name'
+		elif (enableBHS and  db == 'bhs'):
+		
+			theLexObj['hebrew'] = lex.lemma
+			theLexObj['hebrew_plain'] = lex.plain
+			theLexObj['pos'] = lex.pos
+		
+		return theLexObj
 
 	else:
 		return ''
@@ -190,9 +186,9 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	sections = [int(s) for s in sections.split(',')] if (sections) else []
 	restrictParamsList= restrict.split(',') if (restrict) else []
 	excludeParamsList= exclude.split(',') if (exclude) else []
-	pos = pos
-	beta = beta if beta else True
-	plain = plain if plain else False
+	pos = True if pos else False
+	beta = True if beta else True
+	plain = True if plain else False
 	common = True if common else False
 	#if (common):
 #		mylog("using common flag...")
@@ -215,7 +211,8 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	#mylog("Gloss: " + str(gloss))
 	#mylog("calling getLexemes with common = " + str(common))
 	returnObject= getLexemes(sections=sections, restrict=list(restrictedIds), 
-						exclude=list(excludedIds), min=min, gloss=gloss,pos=pos,checkProper=checkProper, beta=beta, common=common,db=db,plain=plain)
+						exclude=list(excludedIds), min=int(min), gloss=gloss,pos=pos,checkProper=checkProper, 
+						beta=beta, common=common,db=db,plain=plain)
 	#mylog("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
 	return returnObject
 
@@ -593,16 +590,18 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 # returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
 def getLexRefs(id,db='lxx',sections='',detail=''):
 	tf=getAPI(db)
-	tf.TfData
+	#tf.TfData
 	api=tf.api
 	if(api):
 		# optionally limits to instances within any of the selected sections, exluding all others:
+		#NB: this should be lex id, not the node id!!
 		id=int(id)
 		
 		sectionsArray = [int(s) for s in sections.split(',')] if sections else []
 		mylog("getrefs: sections = [" + ",".join([str(s) for s in sectionsArray])+"]")
-		if(api.F.otype.v(id) == 'word'):
-			lex=tf.TfData.getLex(id).lemma
+		lex= tf.TfData.getLex(id) 
+		if(lex):
+			
 			rNodes = {}
 			bookCounts = {}
 			queryDetail = 'verse'
@@ -615,7 +614,7 @@ def getLexRefs(id,db='lxx',sections='',detail=''):
 
 			#refs = {}
 			for n in api.N.walk():
-				if (api.F.otype.v(n) == 'word' and tf.getLemma(n) == lex and (len(sectionsArray) == 0 or (len(set(api.L.u(n)) & set(sectionsArray)) > 0) )):
+				if (api.F.otype.v(n) == 'word' and tf.getLemma(n) == lex.lemma and (len(sectionsArray) == 0 or (len(set(api.L.u(n)) & set(sectionsArray)) > 0) )):
 					sectionTuple= api.T.sectionTuple(n)
 					if (queryDetail == 'book'):
 						sectionNode = sectionTuple[0]
@@ -877,7 +876,7 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 						if (gloss):
 							lexemes[theLemma]['gloss'] = api.F.gloss.v(wordid)
 						if (beta):
-							lexemes[theLemma]['beta'] = theLemma
+							lexemes[theLemma]['beta'] = tf.TfData.getBeta(wordid)
 						if (pos):
 							lexemes[theLemma]['pos'] = api.F.sp.v(wordid)
 							#mylog("Got pos!")
@@ -887,8 +886,9 @@ def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCou
 									lexemes[theLemma]['pos'] = 'proper noun or name'
 								else:
 									lexemes[theLemma]['proper'] = True
-						if (plain and db=='bhs'):
-							lexemes[theLemma]['plain'] = theLemma
+						if (plain):
+							#lexemes[theLemma]['plain'] = theLemma
+							lexemes[theLemma]['plain']=tf.TfData.getPlain(wordid)
 					else:
 						lexemes[theLemma]['count'] += 1
 						if (common):
