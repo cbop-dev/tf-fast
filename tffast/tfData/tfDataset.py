@@ -1,11 +1,13 @@
 import sys, os
+from collections import Counter
 from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
+
 GreekUtils.remove_diacritics
 
 class Lexeme:
-	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0):
+	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0,isProper=False):
 		self.id = id if id else 0
 		self.wordid=wordid # a node id in which this lexeme is found as a word in DB (important if self.id does not correspond to node ids)
 		self.total = total 
@@ -16,6 +18,7 @@ class Lexeme:
 		self.plain = plain if plain else GreekUtils.remove_diacritics(lemma)
 		self.pos = pos
 		self.lang = lang
+		self.isProper = isProper
 
 
 class TfDataset:
@@ -55,9 +58,9 @@ class TfDataset:
 			mylog("TfDataset() got no data!")
 			self.api = None
 		
-		self.posDict=None
-		self.posGroups=None
-		self.bookDict=None
+		self.posDict=None if not hasattr(self,'posDict') else self.posDict
+		self.posGroups=None if not hasattr(self,'posGroups') else self.posGroups
+		self.booksDict=None if not hasattr(self,'booksDict') else self.booksDict
 		self.dbname=dbname
 		self.buildLexData()
 
@@ -69,10 +72,10 @@ class TfDataset:
 		for w in self.api.F.otype.s('word'):
 			lem = self.getLemma(w)
 			if lem not in self.lexemes.keys():
-				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),
-						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0)
+				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),
+						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.api.F.sp.v(w))
 			self.words.append(self.getLemma(w))
-		self.bookDict = self.getBooks()
+		self.booksDict = self.getBooks()
 		mylog("buildLexData(): done with first loop")
 		
 		for i, lemLex in enumerate(sorted(self.lexemes.items(),key=lambda l: l[1].plain.lower())):
@@ -82,9 +85,9 @@ class TfDataset:
 		return len([w for w in self.api.L.d(node) if self.api.F.otype.v(w)=='word'])
 	
 	def getBooks(self):
-		if not self.bookDict:
-			self.bookDict = {b: {'name': self.api.F.book.v(b), 'abbrev':self.api.F.book.v(b), 'words':self.numWords(b)} for b in self.api.F.otype.s('book')}
-		return self.bookDict
+		if not self.booksDict:
+			self.booksDict = {b: {'name': self.api.F.book.v(b), 'abbrev':self.api.F.book.v(b), 'words':self.numWords(b)} for b in self.api.F.otype.s('book')}
+		return self.booksDict
 	
 	def getLexCount(self,wordid=0):
 
@@ -99,6 +102,7 @@ class TfDataset:
 	
 	def isProperNoun(self, wordid):
 		return (self.api.F.sp.v(wordid) == 'noun') and self.api.F.lex_utf8.v(wordid)[0].isupper()
+
 	def getLexObj(self,wordid):
 		return None
 	
@@ -119,9 +123,134 @@ class TfDataset:
 		else:
 			return None
 
-	
+	def properNounKey(self):
+		return -1
 		# returns dict of lexemes and frequencies:
+
+	def countLexInSection(self,lemma,section):
+		count = 0
+		if (self.api.F.otype.v(section) == 'word'):
+			if (self.getLemmaFeature().v(section) == lemma):
+				count = 1			
+		else:
+			count = len([self.getLemmaFeature().v(w) for w in self.api.L.d(section,'word') if self.getLemmaFeature().v(w) == lemma])
+		return count
+
+
+
+
+
 	
+	# return object:{
+	# 		totalInstances: number of relevant words found in this section according to query parameters. How to calculate efficiently?
+	#		totalLexemes: totalLexemes,
+	#		totalWords:totalWordsInSections,  total words, regardless of any query parameters
+	#		lexemes: (todo)
+	# }
+	def getLexemes2(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, 
+				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
+		#mylog("Min: " + str(min))
+		
+
+		# lexemes{dict}: {lex:{'lexObj':{Lexeme}, 'count':{number}} where lex{string}=lemma string (key to self.lexemes)
+		lexemes = {} 
+		sectionsLexemes = {}# nodeid:{string:number, where string is dict entry / key value {string}
+
+		#totalInstances = 0
+		totalLexemes = 0
+		totalWordsInSections = 0
+
+		
+		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
+		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
+		#mylog("restrictStrings: " + str(restrictStrings))
+		excludeProperNouns = self.properNounKey() in excludeStrings
+		restrictProperNouns = self.properNounKey() in restrictStrings
+		restricted = True if len(restrictStrings) > 0 else False
+		excluded  = True if len(excludeStrings) > 0 else False
+		#validLexes =[l for (l,lexObj) in self.lexemes.items() if 
+		#	(not checkProper or (lexObj.isProper and excludeProperNouns and not restrictProperNouns)) 
+		#	and (not excluded or (lexObj.pos not in excludeStrings)  
+		#		and (not restricted or (lexObj.pos in restrictStrings)))]
+
+		
+		
+		#get all word ids for each sections
+		for s in sections:
+
+			words=[]
+			if (self.api.F.otype.v(s) == 'word' or self.api.F.otype.v(s) == 'lex' or self.api.F.otype.v(s) == 'lemma'):
+				
+				sectionsLexemes[s]= self.getLemmaFeature().v(s)
+				totalWordsInSections+=1
+			#	totalInstances+=1
+			else:
+				words = self.api.L.d(s,'word')
+				totalWordsInSections+= len(words)
+				sectionsLexemes[s] = [self.getLemma(w) for w in words]
+
+				
+		tmpLexemes = []
+		sectionLexSets=[set(s) for s in sectionsLexemes.values()]
+		if (common):
+			tmpLexemes = list(set.intersection(*sectionLexSets))
+		else:
+			tmpLexemes = list(set.union(*sectionLexSets))
+
+		
+		#lexemes ={l:{'lexObj': self.lexemes[l]} for l in tmpLexemes if self.lexemes[l] and (
+		#	(not checkProper or (self.lexemes[l].isProper and excludeProperNouns and not restrictProperNouns)) 
+		#	and (not excluded or (self.lexemes[l].pos not in excludeStrings)  
+		#		and (not restricted or (self.lexemes[l].pos in restrictStrings))))}
+
+		for l in tmpLexemes:
+			lexObj = self.lexemes[l] if l in self.lexemes.keys() else None
+			if (lexObj and
+				(
+					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
+					and not excluded or (lexObj.pos not in excludeStrings)  
+					and not restricted or (lexObj.pos in restrictStrings)
+				)
+			):#include!
+				lexemes[l]={
+					'id':lexObj.id,
+					'beta':lexObj.beta,
+					 'gloss': lexObj.gloss,
+					 'pos': lexObj.pos,
+					 'total':lexObj.total,
+					 
+				}
+
+		keys=lexemes.keys()
+		lexCounts = Counter([l for s in sectionsLexemes.values() for l in s if l in keys])
+
+		for (l,obj) in lexemes.items():
+			obj['count']=lexCounts[l]
+
+
+
+
+		
+		#mylog(lexemes)		
+		# sort lexemes?
+		# 
+		# 	
+		theResponseObj = {
+			#'totalInstances': 0,#,sum([len(s) in sectionsLexemes,#i.e., number of relevant words found in this section according to query parameters. How to calculate efficiently?
+			'totalLexemes': totalLexemes,
+			'totalWords':totalWordsInSections, # total words, regardless of any query parameters
+			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
+		}
+		
+		if (common):
+			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
+			#mylog("commonlexes length: " + str(len(commonLexes)))
+		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
+			theResponseObj['common']=commonLexes
+		return  theResponseObj
+	
+
+
 	def getLexemes(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, 
 				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
 		#mylog("Min: " + str(min))
@@ -129,7 +258,7 @@ class TfDataset:
 		lexemes = {}
 		sectionsLexemes = {}
 
-		totalInstances = 0
+		#totalInstances = 0
 		totalLexemes = 0
 		totalWordsInSections = 0
 
@@ -153,7 +282,7 @@ class TfDataset:
 			nonlocal restrictStrings
 			nonlocal restricted
 			nonlocal totalCount
-			nonlocal totalInstances
+			#nonlocal totalInstances
 			nonlocal totalLexemes
 			nonlocal totalWordsInSections
 
@@ -179,7 +308,7 @@ class TfDataset:
 
 		def addLexes(nodeid,recursive=False):
 			def addLex(wordid):
-				nonlocal totalInstances
+				#nonlocal totalInstances
 				nonlocal totalLexemes
 				nonlocal totalWordsInSections
 				nonlocal beta
@@ -190,7 +319,7 @@ class TfDataset:
 
 				if(includeWord(wordid)):	
 					
-					totalInstances += 1
+					#totalInstances += 1
 					if (not self.getLemma(wordid) in lexemes.keys()):
 						totalLexemes +=1
 						lemma=self.getLemma(wordid)
@@ -245,7 +374,7 @@ class TfDataset:
 		# 
 		# 	
 		theResponseObj = {
-			'totalInstances': totalInstances,#i.e., number of words in this section
+			#'totalInstances': totalInstances,#i.e., number of words in this section
 			'totalLexemes': totalLexemes,
 			'totalWords':totalWordsInSections,
 			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
@@ -262,6 +391,13 @@ class TfDataset:
 		#mylog("getChapters(" + str(book) + "," + db +")")
 		return dict([(self.api.F.chapter.v(c), c) for c in self.api.L.d(book) if self.api.F.otype.v(c)=='chapter'])
 		
+	def getChapter(self,bookID,chapNum):
+		chapDict = self.getChaptersDict(bookID)
+		chapNode = None
+		if (chapNum in chapDict.keys()):
+			chapNode = chapDict[chapNum]
+
+		return chapNode
 	#def getBooksDict(self):
 	#	return dict([(b, self.api.F.book.v(b)) for b in self.api.N.walk() if self.api.F.otype.v(b) == 'book'])
 
@@ -430,5 +566,10 @@ class TfDataset:
 			outString = strings[0]
 		
 		return outString
-
+	def lookupBook(self,string):
+		matches=[n for (n,o) in self.booksDict.items() if string in o['syn']]
+		match=None
+		if (len(matches)):
+			match=matches[0]
+		return match
 	

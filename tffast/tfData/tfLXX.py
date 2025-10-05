@@ -51,7 +51,7 @@ class TfLXX(TfDataset):
 		"PRONOUN":list(range(6,14)),
 			
 	}
-	bookDict={#indexed by the tf node ids, with various synonyms for searching/looking-up.
+	booksDict={#indexed by the tf node ids, with various synonyms for searching/looking-up.
 		623694: {'abbrev': "Gen", 'syn': ['Gen', 'Genesis', 'Ge']},
 		623695: {'abbrev': "Exod", 'syn': ['Exod', 'Exodus']},
 		623696: {'abbrev': "Lev", 'syn': ['Lev', 'Leviticus']},
@@ -110,6 +110,10 @@ class TfLXX(TfDataset):
 		623749: {'abbrev': "Sus", 'syn': ['Susanna', 'SusOG', 'Sus OG', 'SusannaOG','Susanna OG']},
 		623750: {'abbrev': "SusTh", 'syn': ['Susanna Th','SusannaTh']},
 	}
+	
+	def properNounKey(self):
+		return 26
+		
 	def getLemmaFeature(self):
 		return self.api.F.lex_utf8
 	
@@ -117,9 +121,10 @@ class TfLXX(TfDataset):
 		
 		#mylog("TfLXX constructor()...")
 		datasetPathname = "CenterBLC/LXX"
+		self.booksDict = TfLXX.booksDict
 		version="1935"
 		mylog(f"TfLXX.init('{datasetPathname}','{version}')...")
-		super().__init__(datasetPathname, version=version)
+		super().__init__(datasetPathname, version=version,dbname='lxx')
 		mylog("TfLXX() done calling super().init(). self.dataset =")
 		mylog(self.dataset)
 
@@ -140,8 +145,8 @@ class TfLXX(TfDataset):
 			self.theAPI = None
 		self.datasets=["yes", "no"]
 		'''
-		self.posDict=None
-		self.posGroups=None
-		self.bookDict=None
+		self.posDict=TfLXX.posDict
+		self.posGroups=TfLXX.posGroups
+		#self.booksDict=None
 		self.dbname='lxx'
 		

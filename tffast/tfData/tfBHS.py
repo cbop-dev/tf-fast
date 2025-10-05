@@ -59,8 +59,7 @@ class TfBHS(TfDataset):
         426628:{"abbrev":"1Chr","syn":["Chronica_I",'1Chr','1Chronicles','1Chron','1Ch','IChronicles','IChron','ICh','IChr']},
         426629:{"abbrev":"2Chr","syn":["Chronica_II",'2Chr','2Chronicles','2Chron','2Ch','IIChronicles','IIChron','IICh','IIChr']},
     }
-    bookDict = booksDict
-
+    
     posGroups={
         "CONT":[0,1,2,3,4],
         "CONTENT":[0,1,2,3,4],
@@ -77,9 +76,19 @@ class TfBHS(TfDataset):
         "PRONOUN":[6,8,12],
     }
 
+    def properNounKey(self):
+        return 1
+        
     def __init__(self):
-        TfDataset.__init__(self,'etcbc/bhsa')
+        self.booksDict = TfBHS.booksDict
+        super().__init__('etcbc/bhsa',dbname="bhs")
 		
 
     def getLemmaFeature(self):
         return self.api.F.voc_lex_utf8
+
+    def getPlain(self,wordID):
+        return self.api.F.lex_utf8.v(wordID)
+
+    def isProperNoun(self,wordID):
+        return self.api.F.sp.v(wordID) == 'nmpr'

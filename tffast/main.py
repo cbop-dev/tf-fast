@@ -15,7 +15,7 @@ from wordcloud import WordCloud, STOPWORDS
 from .tfData.tfLXX import TfLXX
 from .tfData.tfDataset import TfDataset
 from .tfData.tfNT import TfN1904
-from .tfData.tfBhs import TfBHS
+from .tfData.tfBHS import TfBHS
 from .env import mylog, debug
 #debugOn=debug
 #debugOn=True
@@ -25,12 +25,12 @@ mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
 posDict = TfLXX.posDict
 posGroups =TfLXX.posGroups
-tfLxxBooksDict=TfLXX.bookDict
+tfLxxBooksDict=TfLXX.booksDict
 
 theBooksDict = tfLxxBooksDict
 enableLXX=True
 enableNT=True
-enableBHS=False
+enableBHS=True
 #debug = True
 LXX = None
 BHS=None
@@ -40,21 +40,21 @@ if (enableLXX):
 	LXX = TfLXX()
 
 if (enableBHS):
-	from .tfData.tfBhs import TfBHS
+	from .tfData.tfBHS import TfBHS
 	bhsPosGroups=TfBHS.posGroups
 	bhsPosDict=TfBHS.posDict
-	tfBhsBooksDict=TfBHS.bookDict
+	tfBHSBooksDict=TfBHS.booksDict
 	BHS=TfBHS()
 	bhsA = BHS.api
 	theDB = BHS
-	theBooksDict=BHS.bookDict
+	theBooksDict=BHS.booksDict
 
 if (enableNT):
 	from .tfData import tfNT
 	NT=TfN1904()
 	NTa = NT.api
 	theDB = NT
-	theBooksDict=NT.bookDict
+	theBooksDict=NT.booksDict
 mylog(f"about to load LXX. Python version: {sys.version}")
 
 
@@ -176,6 +176,8 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 @app.get("/{db}/lex")
 @app.get("/lex")
 def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',beta='',plain='',common='',groups='',min='',gloss='',):
+	tf=getAPI(db)
+	api=tf.api
 	theDicts=getDicts(db)
 	checkProper =  True if proper != 'false' else False
 	#mylog("lex route: checkProper = " + str(checkProper))
@@ -210,9 +212,9 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	gloss = True if ( gloss and int(gloss) != 0) else False
 	#mylog("Gloss: " + str(gloss))
 	#mylog("calling getLexemes with common = " + str(common))
-	returnObject= getLexemes(sections=sections, restrict=list(restrictedIds), 
+	returnObject= tf.TfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 
 						exclude=list(excludedIds), min=int(min), gloss=gloss,pos=pos,checkProper=checkProper, 
-						beta=beta, common=common,db=db,plain=plain)
+						beta=beta, common=common,plain=plain)
 	#mylog("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
 	return returnObject
 
@@ -225,7 +227,7 @@ def allChaptersRoute(db='lxx'):
 	#booksDict = tfLxxBooksDict
 	
 	if (enableBHS and db == 'bhs'):
-		booksDict = tfBhsBooksDict
+		booksDict = tfBHSBooksDict
 	
 	for bid in theBooksDict.keys():
 		booksChaps[bid]=getChaptersDict(bid, db)
@@ -382,7 +384,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 
 		if (getLexemes):
 			mylog("postTextsRoute: getting Lexemes from sections...")
-			sectionsLexemes=tfAPI.TfData.getLexemes(sections=request.sections)
+			sectionsLexemes=tfAPI.TfData.getLexemes2(sections=request.sections)
 			mylog("postTextsRoute sectionsLexemes = ")
 			mylog(sectionsLexemes)
 			for l in sectionsLexemes['lexemes'].items():
@@ -689,18 +691,18 @@ def getAPI(db='lxx'):
 	if (db=='lxx'):
 		api=LXX.api
 		getLemma =LXX.getLemma
-		theBooksDict=LXX.bookDict
+		theBooksDict=LXX.booksDict
 		dataSet=LXX
 	elif (enableNT and db=='nt'):
 		api=NTa
 		getLemma = NT.getLemma
-		theBooksDict=NT.bookDict
+		theBooksDict=NT.booksDict
 		dataSet=NT
 	elif (enableBHS and db=='bhs'):
 		api=BHS.api
 		#api.lex= lambda i : api.F.voc_lex_utf8.v(i) if api.F.voc_lex_utf8.v(i) else tf.getLemma(i)
 		getLemma=BHS.getLemma
-		theBooksDict=tfBhsBooksDict
+		theBooksDict=tfBHSBooksDict
 		dataSet=BHS
 		#api.lex =lambda i : api.F.lex_utf8.v(i)
 	return TfAPI(api,getLemma,dataSet)
@@ -776,162 +778,6 @@ def consolidateBibleRefs(strings):
 	return outString
 
 	
-# returns dict of lexemes and frequencies:
-def getLexemes(sections=[], restrict=[],exclude=[], min=1, gloss=False, totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False, db='lxx',plain=False):
-	#mylog("Min: " + str(min))
-	#mylog("getLexmes.gloss: " + str(gloss))
-	
-	#mylog("getLexemes with sections = " + ",".join([str(s) for s in sections]) +"; common: " + str(common))
-	#mylog("getLexemes().Restricted: " + ",".join([str(x) for x in restrict]))
-	#mylog("getLexemes().Excluded: " + ",".join([str(x) for x in exclude]))
-	tf=getAPI(db)
-	api=tf.api
-	theResponseObj=None
-	if(api):
-		theDicts=getDicts(db)
-	
-		lexemes = {}
-		sectionsLexemes = {}
-
-		totalInstances = 0
-		totalLexemes = 0
-		totalWordsInSections = 0
-		restrictStrings=''
-		excludeStrings=''
-		if (enableBHS and db=='bhs'):
-			restrictStrings=[v['abbrev'] for (k,v) in theDicts['dict'].items() if k in restrict]
-			excludeStrings=[v['abbrev'] for (k,v) in theDicts['dict'].items() if k in exclude]
-		elif (enableLXX and db=='lxx'):
-			restrictStrings=[v['desc'] for (k,v) in theDicts['dict'].items() if k in restrict]
-			excludeStrings=[v['desc'] for (k,v) in theDicts['dict'].items() if k in exclude]
-		#mylog("restrictStrings: " + str(restrictStrings))
-		restricted = True if len(restrictStrings) > 0 else False
-		excluded  = True if len(excludeStrings) > 0 else False
-		
-		def includeWord(wordid):
-			wordid=int(wordid)
-			include = False
-			nonlocal beta
-			nonlocal checkProper
-			nonlocal excludeStrings
-			nonlocal excluded
-			nonlocal gloss
-			nonlocal pos
-			nonlocal plain
-			nonlocal restrictStrings
-			nonlocal restricted
-			nonlocal totalCount
-			nonlocal totalInstances
-			nonlocal totalLexemes
-			nonlocal totalWordsInSections
-
-
-			if (api.F.otype.v(wordid) == 'word'):
-				#beta = F.lex.v(wordid)
-				totalWordsInSections += 1
-				#greek = F.lex_utf8.v(wordid)
-
-				if (checkProper and ((db == 'lxx' and api.F.sp.v(wordid) == 'noun') and tf.getLemma(wordid)[0].isupper())
-					or db=='bhs' and api.F.sp.v(wordid) == 'nmpr'): 
-					# we have a name, and must account for that fact:
-					if ((not excluded or 26 not in exclude) 
-						and (not restricted or 26 in restrict)): #we should include it
-						include = True
-				else:# don't need to worry about names
-					thePos = api.F.sp.v(wordid)
-					if ( (not excluded or thePos not in excludeStrings)  
-						and (not restricted or thePos in restrictStrings)):
-						include = True
-			
-			return include
-			
-
-		def addLexes(nodeid,recursive=False):
-			def addLex(wordid):
-				nonlocal totalInstances
-				nonlocal totalLexemes
-				nonlocal totalWordsInSections
-				nonlocal beta
-				nonlocal plain
-				nonlocal gloss
-				nonlocal totalCount
-				nonlocal pos
-
-				if(includeWord(wordid)):	
-					
-					totalInstances += 1
-					theLemma = tf.getLemma(wordid)
-					if (not theLemma in lexemes.keys()):
-						totalLexemes +=1
-						lexemes[theLemma] = {'count': 1, 'id': tf.TfData.lexemes[theLemma].id}
-						# track which of the give sections this word is in:
-						if (common):
-							sectionsLexemes[theLemma]=set([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
-
-						if (totalCount):
-							if (db=='lxx'):
-								lexemes[theLemma]['total'] = int(api.F.freq_lemma.v(wordid))
-							elif(db=='bhs'):
-								lexemes[theLemma]['total'] = int(api.F.freq_lex.v(wordid))
-						if (gloss):
-							lexemes[theLemma]['gloss'] = api.F.gloss.v(wordid)
-						if (beta):
-							lexemes[theLemma]['beta'] = tf.TfData.getBeta(wordid)
-						if (pos):
-							lexemes[theLemma]['pos'] = api.F.sp.v(wordid)
-							#mylog("Got pos!")
-							if ((db == 'lxx' and lexemes[theLemma]['pos'] == 'noun' and theLemma[0].isupper())
-								or (db == 'bhs' and lexemes[theLemma]['pos']=='nmpr')):
-								if (checkProper and db=='lxx'):
-									lexemes[theLemma]['pos'] = 'proper noun or name'
-								else:
-									lexemes[theLemma]['proper'] = True
-						if (plain):
-							#lexemes[theLemma]['plain'] = theLemma
-							lexemes[theLemma]['plain']=tf.TfData.getPlain(wordid)
-					else:
-						lexemes[theLemma]['count'] += 1
-						if (common):
-							sectionsLexemes[theLemma].update([int(s) for s in (set(api.L.u(wordid)) & set(sections))])
-			
-			id=int(nodeid)
-			if (api.L.d(id) and not recursive):
-				for w in api.L.d(id):
-					addLexes(w,recursive=True)
-			elif(api.F.otype.v(id) == 'word'):
-				addLex(id)
-			
-		#mylog("sections: " + str(sections))
-		if(len(sections) > 0):
-			for s in sections:
-				s=int(s)
-				foundSuper = False
-				for supersect in api.L.u(s):
-					if ((str(supersect) in sections) or (supersect in sections)):
-						foundSuper = True
-				if(not foundSuper):
-					addLexes(s)
-		else:
-			for o in api.N.walk():
-				addLexes(o)
-		#mylog(lexemes)		
-		# sort lexemes?
-		# 
-		# 	
-		theResponseObj = {
-			'totalInstances': totalInstances,#i.e., number of words in this section
-			'totalLexemes': totalLexemes,
-			'totalWords':totalWordsInSections,
-			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
-		}
-		
-		if (common):
-			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
-			#mylog("commonlexes length: " + str(len(commonLexes)))
-		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
-			theResponseObj['common']=commonLexes
-	return  theResponseObj
-
 
 def genWordCloudSVG(freqDataDict, title='',maxWords=200):
 	wc = WordCloud(font_path="lib/fonts/SBL_BibLit_Regular.ttf", background_color="white",width=800,height=600, max_words=maxWords)

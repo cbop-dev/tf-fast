@@ -7,7 +7,7 @@ from ..utils.greekUtils import GreekUtils
 from ..env import mylog
 
 class TfN1904(TfDataset):
-	bookDict={
+	booksDict={
 		137780 : {"name": "Matthew", "abbrev": "Matt" , "syn": ["Matthew", "Mt" ,"Mtt", "Mat", "Matt"] , "words": 18299 , "lemmas": 1670 , "chapters": 28 },
 		137781 : {"name": "Mark", "abbrev": "Mark" , "syn": ["Mark","Mar","Mk","Mc"] , "words": 11277 , "lemmas": 1336 , "chapters": 16 },
 		137782 : {"name": "Luke", "abbrev": "Luke" , "syn": ["Luke", "Lk","Luk","Lu"] , "words": 19456 , "lemmas": 2031 , "chapters": 24 },
@@ -37,10 +37,10 @@ class TfN1904(TfDataset):
 		137806 : {"name": "Revelation", "abbrev": "Rev" , "syn": ["Revelation", "Rev","Apocalypse", "Apoc", "Ap", "Re","Apo"] , "words": 9832 , "lemmas": 910 , "chapters": 22 }
 	}
 	def getBooks(self):
-		return TfN1904.bookDict
+		return TfN1904.booksDict
 	def __init__(self):
 		datasetPathname = "CenterBLC/N1904"
-		self.bookDict = TfN1904.bookDict
+		self.booksDict = TfN1904.booksDict
 		#version="1935"
 		mylog(f"TfN1904.init('{datasetPathname}'...")
 		super().__init__(datasetPathname,dbname='nt')

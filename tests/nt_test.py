@@ -60,3 +60,24 @@ def test_getVerseFromNode(nt):
         ]
     for t in tests:
         assert (nt.getVerseNumberFromNode(t['node']) == t['verse'])
+
+def test_getBook(nt):
+    tests=[
+        {'search':'Mt','node': 137780}
+    ]
+
+    for t in tests:
+        assert(nt.lookupBook(t['search'])==t['node'])
+
+def test_countLexSection(nt):
+    tests = [
+        {'section':137780, 'lemma': 'πληρόω', 'count': 16}, #matt
+        #{'section':137780, 'lemma': 'πληρόω', 'count': 15} #error
+       
+        
+        #lex id of 'זעק' is: 439447
+    ]
+
+    for t in tests:
+        assert(nt.countLexInSection(t['lemma'], t['section'])==t['count'])
+        assert(True)
