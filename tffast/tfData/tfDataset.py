@@ -157,7 +157,7 @@ class TfDataset:
 		sectionsLexemes = {}# nodeid:{string:number, where string is dict entry / key value {string}
 
 		#totalInstances = 0
-		totalLexemes = 0
+		#totalLexemes = 0
 		totalWordsInSections = 0
 
 		
@@ -237,7 +237,7 @@ class TfDataset:
 		# 	
 		theResponseObj = {
 			#'totalInstances': 0,#,sum([len(s) in sectionsLexemes,#i.e., number of relevant words found in this section according to query parameters. How to calculate efficiently?
-			'totalLexemes': totalLexemes,
+			'totalLexemes': len(lexemes.keys()),
 			'totalWords':totalWordsInSections, # total words, regardless of any query parameters
 			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
 		}
@@ -247,145 +247,10 @@ class TfDataset:
 			#mylog("commonlexes length: " + str(len(commonLexes)))
 		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
 			theResponseObj['common']=commonLexes
+		#print(f"getLexemes2() reponse obj.totalWords={theResponseObj['totalWords']}")
 		return  theResponseObj
 	
 
-
-	def getLexemes(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, 
-				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
-		#mylog("Min: " + str(min))
-		
-		lexemes = {}
-		sectionsLexemes = {}
-
-		#totalInstances = 0
-		totalLexemes = 0
-		totalWordsInSections = 0
-
-		
-		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
-		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
-		#mylog("restrictStrings: " + str(restrictStrings))
-		restricted = True if len(restrictStrings) > 0 else False
-		excluded  = True if len(excludeStrings) > 0 else False
-		
-		def includeWord(wordid):
-			wordid=int(wordid)
-			include = False
-			nonlocal beta
-			nonlocal checkProper
-			nonlocal excludeStrings
-			nonlocal excluded
-			nonlocal gloss
-			nonlocal pos
-			nonlocal plain
-			nonlocal restrictStrings
-			nonlocal restricted
-			nonlocal totalCount
-			#nonlocal totalInstances
-			nonlocal totalLexemes
-			nonlocal totalWordsInSections
-
-
-			if (self.api.F.otype.v(wordid) == 'word'):
-				#beta = F.lex.v(wordid)
-				totalWordsInSections += 1
-				#greek = F.lex_utf8.v(wordid)
-				
-				if (checkProper and self.isProperNoun(wordid)):
-					# we have a name, and must account for that fact:
-					if ((not excluded or 26 not in exclude) 
-						and (not restricted or 26 in restrict)): #we should include it
-						include = True
-				else:# don't need to worry about names
-					thePos = self.api.F.sp.v(wordid)
-					if ( (not excluded or thePos not in excludeStrings)  
-						and (not restricted or thePos in restrictStrings)):
-						include = True
-			
-			return include
-			
-
-		def addLexes(nodeid,recursive=False):
-			def addLex(wordid):
-				#nonlocal totalInstances
-				nonlocal totalLexemes
-				nonlocal totalWordsInSections
-				nonlocal beta
-				nonlocal plain
-				nonlocal gloss
-				nonlocal totalCount
-				nonlocal pos
-
-				if(includeWord(wordid)):	
-					
-					#totalInstances += 1
-					if (not self.getLemma(wordid) in lexemes.keys()):
-						totalLexemes +=1
-						lemma=self.getLemma(wordid)
-						lexemes[self.getLemma(wordid)] = {'count': 1, 'id': self.lexemes[lemma].id}
-						# track which of the give sections this word is in:
-						if (common):
-							sectionsLexemes[self.getLemma(wordid)]=set([int(s) for s in (set(L.u(wordid)) & set(sections))])
-
-						if (totalCount):
-							lexemes[self.getLemma(wordid)]['total'] = int(self.getLexCount(wordid));
-						if (gloss):
-							lexemes[self.getLemma(wordid)]['gloss'] = self.getGloss(wordid)
-						if (beta):
-							lexemes[self.getLemma(wordid)]['beta'] = self.getBeta(wordid)
-						if (plain):
-							lexemes[self.getLemma(wordid)]['beta'] = self.getPlain(wordid)							
-						if (pos):
-							lexemes[self.getLemma(wordid)]['pos'] = self.api.F.sp.v(wordid)
-							#mylog("Got pos!")
-							if (lexemes[self.getLemma(wordid)]['pos'] == 'noun' and self.getLemma(wordid)[0].isupper()):
-								if (checkProper):
-									lexemes[self.getLemma(wordid)]['pos'] = 'proper noun or name'
-								else:
-									lexemes[self.getLemma(wordid)]['proper'] = True
-					else:
-						lexemes[self.getLemma(wordid)]['count'] += 1
-						if (common):
-							sectionsLexemes[self.getLemma(wordid)].update([int(s) for s in (set(self.api.L.u(wordid)) & set(sections))])
-			
-			id=int(nodeid)
-			if (self.api.L.d(id) and not recursive):
-				for w in self.api.L.d(id):
-					addLexes(w,recursive=True)
-			elif(self.api.F.otype.v(id) == 'word'):
-				addLex(id)
-			
-		#mylog("sections: " + str(sections))
-		if(len(sections) > 0):
-			for s in sections:
-				s=int(s)
-				foundSuper = False
-				for supersect in self.api.L.u(s):
-					if ((str(supersect) in sections) or (supersect in sections)):
-						foundSuper = True
-				if(not foundSuper):
-					addLexes(s)
-		else:
-			for o in self.api.N.walk():
-				addLexes(o)
-		#mylog(lexemes)		
-		# sort lexemes?
-		# 
-		# 	
-		theResponseObj = {
-			#'totalInstances': totalInstances,#i.e., number of words in this section
-			'totalLexemes': totalLexemes,
-			'totalWords':totalWordsInSections,
-			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
-		}
-		
-		if (common):
-			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
-			#mylog("commonlexes length: " + str(len(commonLexes)))
-		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
-			theResponseObj['common']=commonLexes
-		return  theResponseObj
 		
 	def getChaptersDict(self,book):
 		#mylog("getChapters(" + str(book) + "," + db +")")

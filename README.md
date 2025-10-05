@@ -108,7 +108,9 @@ If all goes well, create, enable, and start a systemd service!
 
 ## TO DO:
 
+- [X] Enable BHSa
+- [ ] Update this README
+- [ ] Documentation of routes and usage
 - [ ] extending/testing `/texts/` route 
 - [ ] more (and major) refactoring...
-- [ ] Documentation of routes and usage
 - [ ] More awesome stuff!
