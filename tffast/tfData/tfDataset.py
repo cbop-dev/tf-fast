@@ -190,12 +190,14 @@ class TfDataset:
 				sectionsLexemes[s] = [self.getLemma(w) for w in words]
 
 				
-		tmpLexemes = []
+		
 		sectionLexSets=[set(s) for s in sectionsLexemes.values()]
-		if (common):
-			tmpLexemes = list(set.intersection(*sectionLexSets))
-		else:
-			tmpLexemes = list(set.union(*sectionLexSets))
+		#tmpLexemes = []
+		tmpLexemes = list(set.union(*sectionLexSets))
+		#if (common):
+#			tmpLexemes = list(set.intersection(*sectionLexSets))
+#		else:
+#			tmpLexemes = list(set.union(*sectionLexSets))
 
 		
 		#lexemes ={l:{'lexObj': self.lexemes[l]} for l in tmpLexemes if self.lexemes[l] and (
@@ -243,7 +245,8 @@ class TfDataset:
 		}
 		
 		if (common):
-			commonLexes = [g for (g,ss) in sectionsLexemes.items() if set(sections) <= ss]
+			commonLexes = list(set.intersection(*sectionLexSets))
+			#=[g for (g,ss) in sectionsLexemes.items() if set(sections) <= set(ss)]
 			#mylog("commonlexes length: " + str(len(commonLexes)))
 		#	mylog("set repon.common to: "+str(len(theResponseObj['common'])))
 			theResponseObj['common']=commonLexes
