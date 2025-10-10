@@ -210,10 +210,11 @@ class TfDataset:
 			if (lexObj and
 				(
 					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
-					and not excluded or (lexObj.pos not in excludeStrings)  
-					and not restricted or (lexObj.pos in restrictStrings)
+					and (not excluded or (lexObj.pos not in excludeStrings))  
+					and (not restricted or (lexObj.pos in restrictStrings))
 				)
 			):#include!
+				#mylog(f"including Lex '{lexObj.lemma}' with pos '{lexObj.pos}'")
 				lexemes[l]={
 					'id':lexObj.id,
 					'beta':lexObj.beta,

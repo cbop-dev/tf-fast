@@ -187,8 +187,8 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	#	mylog("Have sections: " + sections)
 	#	sections = [int(s) for s in sections.split(',')]
 	sections = [int(s) for s in sections.split(',')] if (sections) else []
-	restrictParamsList= restrict.split(',') if (restrict) else []
-	excludeParamsList= exclude.split(',') if (exclude) else []
+	restrictParamsList= restrict.split(',') if (restrict or len(restrict)) else []
+	excludeParamsList= exclude.split(',') if (len(exclude) or exclude) else []
 	pos = True if pos else False
 	beta = True if beta else True
 	plain = True if plain else False

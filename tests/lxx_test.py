@@ -28,3 +28,18 @@ def test_commonLexes(LXX):
         for l in t['lexes']:
             assert(l in commons['common'])
 #        assert(LXX.countLexInSection(t['lemma'], t['section'])==t['count'])
+
+def test_restricted(LXX):
+    tests=[
+        {'sections': [623751], 'total':114, 'nouns': 42,'noNouns':72}
+    ]
+    for t in tests:
+        lexes = LXX.getLexemes2(sections=t['sections'])
+        nouns = LXX.getLexemes2(sections=t['sections'],restrict=[0])
+        noNouns = LXX.getLexemes2(sections=t['sections'],exclude=[0])
+        assert(lexes and lexes['lexemes'] and (len(lexes['lexemes']) == t['total']))
+        #assert(nouns and nouns['lexemes'])
+        assert(len(nouns['lexemes']) == t['nouns'])
+        assert(len(noNouns['lexemes']) == t['noNouns'] and len(noNouns['lexemes']) == t['total'] - t['nouns'])
+
+
