@@ -4,6 +4,8 @@ from tf.advanced import sections
 from pathlib import Path
 from .tfDataset import TfDataset
 from ..env import mylog
+from ..utils.greekUtils import GreekUtils
+
 class TfLXX(TfDataset):
 	posDict={
 		0:  {'abbrev': 'n', 'desc':  'noun',},
@@ -130,23 +132,10 @@ class TfLXX(TfDataset):
 
 		self.posDict=TfLXX.posDict
 	
-		
-		#theTfDataset = use(datasetPathname,version) #if version else use(datasetPathname)
-		'''
-		if (self.dataset):
-			mylog("TfLxx.dataset= ")
-			mylog(self.dataset)
-			#self.dataset = theTfDataset
-			mylog("Got self.dataset: ")
-			mylog(self.dataset)
-			self.theAPI = self.dataset.api
-		else:
-			mylog("TfDataset() got no data!")
-			self.theAPI = None
-		self.datasets=["yes", "no"]
-		'''
 		self.posDict=TfLXX.posDict
 		self.posGroups=TfLXX.posGroups
 		#self.booksDict=None
 		self.dbname='lxx'
 		
+	def getPlain(self,wordid):
+		return GreekUtils.remove_diacritics(self.getLemma(wordid))

@@ -4,7 +4,7 @@ from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
 
-GreekUtils.remove_diacritics
+
 
 class Lexeme:
 	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0,isProper=False):

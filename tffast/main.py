@@ -91,6 +91,7 @@ def getLexInfo(lexid: int,db='lxx'):
 		theLexObj['total'] = lex.total
 		theLexObj['gloss'] = lex.gloss
 		theLexObj['beta']=lex.beta
+		theLexObj['plain']=lex.plain
 
 		if (db == 'lxx'):
 		

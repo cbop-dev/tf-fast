@@ -81,7 +81,7 @@ class TfBHS(TfDataset):
         
     def __init__(self):
         self.booksDict = TfBHS.booksDict
-        super().__init__('ETCBC/bhsa',dbname="bhs")
+        super().__init__('ETCBC/bhsa',dbname="bhs", version="2021")
 		
 
     def getLemmaFeature(self):
