@@ -334,7 +334,10 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 			nodes = list()
 			words = list()
 			firstVerse = True
-		
+			if (not ref.verses or not len(ref.verses)):
+				chapterNode=tfAPI.TfData.getChapter(tfAPI.TfData.lookupBook(ref.book),ref.chapter)
+				ref.verses = [tfAPI.api.F.verse.v(vn) for vn in tfAPI.api.L.d(chapterNode,'verse')]
+				
 			for v in ref.verses:
 				
 				#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
@@ -428,6 +431,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	mylog("postTextsRoute finishing.", debugOn=True, showTime=True)
 	return retObj
 
+@app.get("/texts")
 @app.get("/texts/")
 @app.get("/{db}/texts/")
 def textsRoute(db='lxx',sections='',refs=''):
