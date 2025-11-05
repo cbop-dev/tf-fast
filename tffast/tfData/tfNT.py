@@ -7,6 +7,7 @@ from ..utils.greekUtils import GreekUtils
 from ..env import mylog
 
 class TfN1904(TfDataset):
+	
 	booksDict={
 		137780 : {"name": "Matthew", "abbrev": "Matt" , "syn": ["Matthew", "Mt" ,"Mtt", "Mat", "Matt"] , "words": 18299 , "lemmas": 1670 , "chapters": 28 },
 		137781 : {"name": "Mark", "abbrev": "Mark" , "syn": ["Mark","Mar","Mk","Mc"] , "words": 11277 , "lemmas": 1336 , "chapters": 16 },
@@ -36,6 +37,7 @@ class TfN1904(TfDataset):
 		137805 : {"name": "Jude", "abbrev": "Jude" , "syn": ["Jude", "Jud"] , "words": 457 , "lemmas": 225 , "chapters": 1 },
 		137806 : {"name": "Revelation", "abbrev": "Rev" , "syn": ["Revelation", "Rev","Apocalypse", "Apoc", "Ap", "Re","Apo"] , "words": 9832 , "lemmas": 910 , "chapters": 22 }
 	}
+	
 	def getBooks(self):
 		return TfN1904.booksDict
 	def __init__(self):
@@ -53,3 +55,7 @@ class TfN1904(TfDataset):
 		return GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(self.getLemma(wordid)))
 	def getPlain(self,wordid):
 		return GreekUtils.remove_diacritics(self.getLemma(wordid))
+
+
+	def normalize(self,string):
+		return GreekUtils.normalize(string)

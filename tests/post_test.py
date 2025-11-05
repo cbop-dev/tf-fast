@@ -1,4 +1,4 @@
-import pytest, os
+import pytest, os, unicodedata
 import requests
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -43,7 +43,7 @@ def test_get_lexes(client):
     response = client.get(f"/nt/lex?sections={section}")
    # assert response.status_code == 200
    # assert response.json()['text'] == "καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"
-    assert(response.json()['lexemes']['πληρόω']['count']==16)
+    assert(response.json()['lexemes']['πληρόω']['count']==16)
 
 
 def test_get_text(client):

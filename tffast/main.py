@@ -369,7 +369,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					for w in tfAPI.api.L.d(n):
 						if tfAPI.api.F.otype.v(w) == 'word':					
 							word=tfAPI.TfData.getText(w)
-							lemma=tfAPI.api.F.lemma.v(w)
+							lemma=tfAPI.getLemma(w)
 							id=tfAPI.TfData.lexemes[lemma].id
 							beta=tfAPI.TfData.lexemes[lemma].beta
 							verseData['words'].append({'word':word,'id':id })

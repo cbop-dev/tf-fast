@@ -30,12 +30,12 @@ class TfDataset:
 		return self.api.F.gloss.v(wordid)
 	def getFreq(self,wordid):
 		lem = self.getLemma(wordid)
-		freqs = [e[1] for e in self.getLemmaFeature().freqList() if e[0] == lem]
+		freqs = [e[1] for e in self.getLemmaFeature().freqList() if self.normalize(e[0]) == lem]
 		return freqs[0] if len(freqs) > 0 else 0
 	
 
 	def getLemma(self,wordid):
-		return self.getLemmaFeature().v(wordid)
+		return self.normalize(self.getLemmaFeature().v(wordid))
 	
 	def getLemmaFeature(self):
 		return self.api.F.lemma
@@ -43,7 +43,7 @@ class TfDataset:
 		return self.api
 	def getBooksDict(self):
 		return self.booksDict
-	def __init__(self,datasetPathname,version=None,dbname='lxx'):
+	def __init__(self,datasetPathname,version=None,dbname='lxx', buildLexData=True):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
 		theTfDataset = use(datasetPathname,version=version) #if version else use(datasetPathname)
@@ -62,18 +62,22 @@ class TfDataset:
 		self.posGroups=None if not hasattr(self,'posGroups') else self.posGroups
 		self.booksDict=None if not hasattr(self,'booksDict') else self.booksDict
 		self.dbname=dbname
-		self.buildLexData()
+		if (buildLexData):
+			self.buildLexData()
+
+	def normalize(self,string):
+		return string
 
 	def buildLexData(self):
 		self.lexemes = dict()#lemma:str->Lexeme
-		lemmaFreqDict={o[0]:o[1] for o in self.getLemmaFeature().freqList()}
+		lemmaFreqDict={self.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList()}
 		mylog("buildLexData(): gonna build self.lexemes...")
 		self.words = list()
 		for w in self.api.F.otype.s('word'):
 			lem = self.getLemma(w)
 			if lem not in self.lexemes.keys():
 				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),
-						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.api.F.sp.v(w))
+						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
 			self.words.append(self.getLemma(w))
 		self.booksDict = self.getBooks()
 		mylog("buildLexData(): done with first loop")
@@ -83,12 +87,12 @@ class TfDataset:
 
 	def numWords(self,node):
 		return len([w for w in self.api.L.d(node) if self.api.F.otype.v(w)=='word'])
-	
+
 	def getBooks(self):
 		if not self.booksDict:
-			self.booksDict = {b: {'name': self.api.F.book.v(b), 'abbrev':self.api.F.book.v(b), 'words':self.numWords(b)} for b in self.api.F.otype.s('book')}
+			self.booksDict = {b: {'name': self.api.F.book.v(b), 'abbrev':self.api.F.book.v(b), 'words':self.numWords(b), 'chapters':len(self.api.L.d(b,'chapter')), 'lemmas':self.getLexemes2(sections=[b])['totalLexemes']} for b in self.api.F.otype.s('book')}
 		return self.booksDict
-	
+
 	def getLexCount(self,wordid=0):
 
 		count = 0
@@ -101,7 +105,7 @@ class TfDataset:
 		return count
 	
 	def isProperNoun(self, wordid):
-		return (self.api.F.sp.v(wordid) == 'noun') and self.api.F.lex_utf8.v(wordid)[0].isupper()
+		return (self.pos(wordid) == 'noun') and self.api.F.lex_utf8.v(wordid)[0].isupper()
 
 	def getLexObj(self,wordid):
 		return None
@@ -137,9 +141,8 @@ class TfDataset:
 		return count
 
 
-
-
-
+	def pos(self,wordid):
+		return self.api.F.sp.v(wordid)
 	
 	# return object:{
 	# 		totalInstances: number of relevant words found in this section according to query parameters. How to calculate efficiently?

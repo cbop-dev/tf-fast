@@ -15,7 +15,7 @@ def test_lexemesDict(nt):
     #assert(nt.getLex(1).lemma =='Αἰγύπτιος')
     found = False
     for l in nt.lexemes.keys():
-        if l=='Αἰγύπτιος':
+        if l=='Αἰγύπτιος':
             found = True
             break
     assert(found)
@@ -33,8 +33,8 @@ def test_lexCount(nt):
     
 def test_getLemma(nt):
     tests=[
-        {'id': 59428, 'lex':'πρό'},
-        {'id': 1, 'lex':'βίβλος'},
+        {'id': 59428, 'lex':'πρό'},
+        {'id': 1, 'lex':'βίβλος'},
     ]
     for t in tests:
         assert(nt.getLemma(t['id']) == t['lex'])

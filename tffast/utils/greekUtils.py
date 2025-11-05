@@ -1,3 +1,5 @@
+import unicodedata
+
 class GreekUtils:
     # Class-level attributes (equivalent to static properties in JavaScript)
     greek_letters = list("αβγδεζηιθκλμνξοπρσςτυφχψωϝΑΒΓΔΕΖΗΙΘΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩϜ")
@@ -63,6 +65,10 @@ class GreekUtils:
                 greek_chars.append(char)
         result = ''.join(greek_chars)
         return result.replace('ς', 'σ').replace(r'σ$', 'ς', 1)
+
+    @staticmethod
+    def normalize(string):
+        return unicodedata.normalize("NFD",string)
 
     @staticmethod
     def fuzzy_search_array(search_string, string_array, limit=-1):
