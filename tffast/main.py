@@ -31,13 +31,23 @@ theBooksDict = tfLxxBooksDict
 enableLXX=True
 enableNT=True
 enableBHS=True
+enableSBLGNT=True
 #debug = True
 LXX = None
 BHS=None
 NT = None
+SBLGNT=None
+SBLGNTa=None
 theDB = None
 if (enableLXX):
 	LXX = TfLXX()
+
+if (enableSBLGNT):
+	from .tfData.tfSBLGNT import TfSBLGNT
+	SBLGNT=TfSBLGNT()
+	SBLGNTa=SBLGNT.api
+	theDB=SBLGNT
+	theBooksDict=SBLGNT.booksDict
 
 if (enableBHS):
 	from .tfData.tfBHS import TfBHS
@@ -698,6 +708,11 @@ def getAPI(db='lxx'):
 		getLemma =LXX.getLemma
 		theBooksDict=LXX.booksDict
 		dataSet=LXX
+	elif (enableSBLGNT and db=='sblgnt'):
+		api=SBLGNTa
+		getLemma=SBLGNT.getLemma
+		theBooksDict=SBLGNT.booksDict
+		dataSet=NT
 	elif (enableNT and db=='nt'):
 		api=NTa
 		getLemma = NT.getLemma

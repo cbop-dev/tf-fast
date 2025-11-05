@@ -1,6 +1,7 @@
 import pytest, os,sys
 from tffast.tfData.tfNT import TfN1904
 from tffast.env import mylog, debug
+from tffast.utils.greekUtils import GreekUtils
 NT=None
 
 @pytest.fixture()
@@ -15,7 +16,7 @@ def test_lexemesDict(nt):
     #assert(nt.getLex(1).lemma =='Αἰγύπτιος')
     found = False
     for l in nt.lexemes.keys():
-        if l=='Αἰγύπτιος':
+        if l==GreekUtils.normalize('Αἰγύπτιος'):
             found = True
             break
     assert(found)
@@ -33,8 +34,8 @@ def test_lexCount(nt):
     
 def test_getLemma(nt):
     tests=[
-        {'id': 59428, 'lex':'πρό'},
-        {'id': 1, 'lex':'βίβλος'},
+        {'id': 59428, 'lex':GreekUtils.normalize('πρό')},
+        {'id': 1, 'lex':GreekUtils.normalize('βίβλος')},
     ]
     for t in tests:
         assert(nt.getLemma(t['id']) == t['lex'])
@@ -71,7 +72,7 @@ def test_getBook(nt):
 
 def test_countLexSection(nt):
     tests = [
-        {'section':137780, 'lemma': 'πληρόω', 'count': 16}, #matt
+        {'section':137780, 'lemma': GreekUtils.normalize('πληρόω'), 'count': 16}, #matt
         #{'section':137780, 'lemma': 'πληρόω', 'count': 15} #error
        
         

@@ -1,6 +1,7 @@
 import pytest, os,sys
 from tffast.tfData.tfSBLGNT import TfSBLGNT
 from tffast.env import mylog, debug
+from tffast.utils.greekUtils import GreekUtils
 SBLGNT=None
 
 @pytest.fixture()
@@ -15,7 +16,7 @@ def test_lexemesDict(sblgnt):
     #assert(sblgnt.getLex(1).lemma =='Αἰγύπτιος')
     found = False
     for l in sblgnt.lexemes.keys():
-        if l=='Αἰγύπτιος':
+        if l==GreekUtils.normalize('Αἰγύπτιος'):
             found = True
             break
     assert(found)
@@ -33,8 +34,8 @@ def test_lexCount(sblgnt):
     
 def test_getLemma(sblgnt):
     tests=[
-        {'id': 59428, 'lex':'νύξ'},
-        {'id': 1, 'lex':'βίβλος'},
+        {'id': 59428, 'lex':GreekUtils.normalize('νύξ')},
+        {'id': 1, 'lex':GreekUtils.normalize('βίβλος')},
     ]
     for t in tests:
         assert(sblgnt.getLemma(t['id']) == t['lex'])
@@ -71,7 +72,7 @@ def test_getBook(sblgnt):
 
 def test_countLexSection(sblgnt):
     tests = [
-        {'section':137555, 'lemma': 'πληρόω', 'count': 16}, #matt
+        {'section':137555, 'lemma': GreekUtils.normalize('πληρόω'), 'count': 16}, #matt
         #{'section':137780, 'lemma': 'πληρόω', 'count': 15} #error
         #lex id of 'זעק' is: 439447
     ]

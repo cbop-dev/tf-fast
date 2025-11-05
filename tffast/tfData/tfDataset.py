@@ -133,11 +133,12 @@ class TfDataset:
 
 	def countLexInSection(self,lemma,section):
 		count = 0
+		lemma=self.normalize(lemma)
 		if (self.api.F.otype.v(section) == 'word'):
-			if (self.getLemmaFeature().v(section) == lemma):
+			if (self.getLemma(section) == lemma):
 				count = 1			
 		else:
-			count = len([self.getLemmaFeature().v(w) for w in self.api.L.d(section,'word') if self.getLemmaFeature().v(w) == lemma])
+			count = len([self.getLemma(w) for w in self.api.L.d(section,'word') if self.getLemma(w) == lemma])
 		return count
 
 
