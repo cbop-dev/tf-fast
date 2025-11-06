@@ -48,11 +48,11 @@ class TfDataset:
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
 		theTfDataset = use(datasetPathname,version=version) #if version else use(datasetPathname)
 		if (theTfDataset):
-			mylog("TfDataset() got data: ")
+			mylog(f"TfDataset({dbname},{datasetPathname}) got data: ")
 			mylog(theTfDataset)
 			self.dataset = theTfDataset
-			mylog("Got self.dataset: ")
-			mylog(self.dataset)
+			#mylog("Got self.dataset: ")
+			#mylog(self.dataset)
 			self.api = self.dataset.api
 		else:
 			mylog("TfDataset() got no data!")
@@ -177,15 +177,16 @@ class TfDataset:
 		#	and (not excluded or (lexObj.pos not in excludeStrings)  
 		#		and (not restricted or (lexObj.pos in restrictStrings)))]
 
-		
-		
+		if(len(sections)==0):
 		#get all word ids for each sections
+			sections=self.booksDict.keys()
+
 		for s in sections:
 
 			words=[]
 			if (self.api.F.otype.v(s) == 'word' or self.api.F.otype.v(s) == 'lex' or self.api.F.otype.v(s) == 'lemma'):
 				
-				sectionsLexemes[s]= self.getLemmaFeature().v(s)
+				sectionsLexemes[s]= self.getLemma(s)
 				totalWordsInSections+=1
 			#	totalInstances+=1
 			else:
@@ -196,8 +197,9 @@ class TfDataset:
 				
 		
 		sectionLexSets=[set(s) for s in sectionsLexemes.values()]
-		#tmpLexemes = []
-		tmpLexemes = list(set.union(*sectionLexSets))
+		tmpLexemes = []
+		if (len(sectionLexSets)):
+			tmpLexemes = list(set.union(*sectionLexSets))
 		#if (common):
 #			tmpLexemes = list(set.intersection(*sectionLexSets))
 #		else:
@@ -370,12 +372,11 @@ class TfDataset:
 	def getNodeFromBcV(self,book,chapter,verse):
 		node = 0
 		
-		mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
-		
 		node=self.api.T.nodeFromSection((book,int(chapter),int(verse)))
+		mylog(f"calling nodeFromSection(('{book}', {str(chapter)},{str(verse)}))=>{node}")
 		if (type(node) != int):
 			node = 0
-		mylog(" " + str(node))
+		#mylog(" " + str(node))
 		return node
 
 

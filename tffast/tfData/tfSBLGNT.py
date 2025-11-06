@@ -1,6 +1,6 @@
 import sys, os, re
 from tf.app import use
-#from tf.advanced import sections
+from tf.advanced import sections as Sections
 from pathlib import Path
 from .tfDataset import TfDataset
 from ..utils.greekUtils import GreekUtils
@@ -75,12 +75,14 @@ class TfSBLGNT(TfDataset):
 
 
 	def __init__(self):
+		db="sblgnt"
 		datasetPathname = "CenterBLC/SBLGNT"
 		version="2022"
-		#self.booksDict = TfSBLGNT.booksDict
+		self.booksDict = TfSBLGNT.booksDict
+		self.dbname=db
 		#version="1935"
 		mylog(f"TfSBLGNT.init('{datasetPathname}'...")
-		super().__init__(datasetPathname,version=version,dbname='sblgnt')
+		super().__init__(datasetPathname,version=version,dbname=db)
 		
 
 	def getLemmaFeature(self):
@@ -93,7 +95,7 @@ class TfSBLGNT(TfDataset):
 		return GreekUtils.remove_diacritics(self.getLemma(wordid))
 
 	def isProperNoun(self,wordid):
-		return GreekUtils.remove_diacritics(self.getLemmaFeature().v(wordid))[0].isupper()
+		return GreekUtils.remove_diacritics(self.getLemma(wordid))[0].isupper()
 
 	def normalize(self,string):
 		return GreekUtils.normalize(string)

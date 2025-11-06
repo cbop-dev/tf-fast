@@ -1,6 +1,6 @@
 import sys, os
 from tf.app import use
-from tf.advanced import sections
+from tf.advanced import sections as Sections
 from pathlib import Path
 from .tfDataset import TfDataset
 from ..env import mylog

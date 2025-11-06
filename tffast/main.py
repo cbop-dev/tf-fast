@@ -3,7 +3,7 @@ from collections import namedtuple
 from .env import mylog, debug
 from pathlib import Path
 from tf.app import use
-from tf.advanced import sections
+from tf.advanced import sections as Sections
 
 from fastapi import Depends, FastAPI
 from fastapi.responses import Response
@@ -321,10 +321,10 @@ class TextsResponse(BaseModel):
 @app.post("/texts/")
 @app.post("/{db}/texts/")
 def postTextsRoute(request: TextsRequest, db='lxx'):
-	mylog("postTextsRoute", debugOn=True, showTime=True)
+	mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
 	texts = list()
 	tfAPI = getAPI(db)
-
+	#mylog(f"tfAPI={tfAPI.TfData.appName}")
 	showVerses= request.options.showVerses
 	getLexemes = request.options.lexemes
 	mylog('postTextsRoute. request.refs = ' + str(request))
@@ -339,6 +339,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	if request.refs:
 		
 		for ref in request.refs:
+			mylog("got request.refs	")
 			refString=ref.book + ' ' + str(ref.chapter) + ":" + ",".join(map(str,ref.verses))
 			text=''
 			nodes = list()
@@ -354,8 +355,10 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				node=tfAPI.TfData.getNodeFromBcV(ref.book,ref.chapter,v)## book, chap, verse
 					
 				textToAdd = tfAPI.TfData.getText(node)
+				mylog(f"got Text: '{textToAdd}'")
 				if (getLexemes and len(textToAdd) > 0):
 					nodes.append(node)
+					#mylog(f"node {node} appended!")
 
 				
 				#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
@@ -374,19 +377,21 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
 				
 				for n in nodes:
+					
 					v=tfAPI.TfData.getVerseNumberFromNode(n)
 					verseData={'verse':v, 'words':[]}
-					for w in tfAPI.api.L.d(n):
-						if tfAPI.api.F.otype.v(w) == 'word':					
-							word=tfAPI.TfData.getText(w)
-							lemma=tfAPI.getLemma(w)
-							id=tfAPI.TfData.lexemes[lemma].id
-							beta=tfAPI.TfData.lexemes[lemma].beta
-							verseData['words'].append({'word':word,'id':id })
-							if (lemma not in lexemes.keys()):
-								lexemes[lemma]={'id':id,'count':1}
-							else:
-								lexemes[lemma]['count']+=1
+					#mylog(f"checking for words in node {n}, verse {v}")
+					for w in tfAPI.api.L.d(n,'word'):			
+						word=tfAPI.TfData.getText(w)
+						#mylog(f"Got word '{w}'={word}")
+						lemma=tfAPI.getLemma(w)
+						id=tfAPI.TfData.lexemes[lemma].id
+						beta=tfAPI.TfData.lexemes[lemma].beta
+						verseData['words'].append({'word':word,'id':id })
+						if (lemma not in lexemes.keys()):
+							lexemes[lemma]={'id':id,'count':1}
+						else:
+							lexemes[lemma]['count']+=1
 					verses.append(verseData)
 			
 			txtRef = TextAndReference(text=text,reference=refString,words=verses)
@@ -438,7 +443,8 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 	if (getLexemes):
 		retObj['lexemes']=lexemes
 		#retObj['words']=wordsArray
-	mylog("postTextsRoute finishing.", debugOn=True, showTime=True)
+	mylog("postTextsRoute finishing. Here's the retObj:", debugOn=True, showTime=True)
+	mylog(retObj)
 	return retObj
 
 @app.get("/texts")
@@ -480,7 +486,7 @@ def getNodeFromRefRoute(db='lxx',book='',chapter='',verse=''):
 			elif(db=='nt'):
 				theDB=NT
 			mylog("getNodeFromRefRoute calling nodeFromSectionStr with ref=" + ref)
-			secs = sections.nodeFromSectionStr(tf.TfData.dataset,ref)
+			secs = Sections.nodeFromSectionStr(tf.TfData.dataset,ref)
 
 			if ((type(secs) is int) and secs > 0):
 				node = secs
@@ -511,8 +517,8 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 			endVerse = int(endVerse)
 
 		verses = ''
-		startNode = getNodeFromBcV(book,chapter,startVerse,db)
-		endNode = getNodeFromBcV(book,chapter,endVerse,db)
+		startNode = tf.TfData.getNodeFromBcV(book,chapter,startVerse)
+		endNode = tf.TfData.getNodeFromBcV(book,chapter,endVerse)
 		ref = ''
 		if (startNode == 0  and endNode == 0):
 			mylog("got nothing")
@@ -521,13 +527,13 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 				mylog(f"got end node {endNode} but no start node! trying to fix...")
 				for i in range(startVerse + 1,endVerse+1, 1):
 					if (startNode == None):
-						startNode = getNodeFromBcV(book,chapter,i,db)
+						startNode = tf.TfData.getNodeFromBcV(book,chapter,i)
 			
 			if ((endNode == 0 or endNode == None) and (startNode != None and startNode != 0)):
 				mylog(f"got start node {startNode} but no end node! trying to fix with range:")
 				for i in range(endVerse-1, startVerse-1, -1):
 					if (endNode == 0 or endNode == None):
-						endNode = getNodeFromBcV(book,chapter,i,db)
+						endNode = tf.TfData.getNodeFromBcV(book,chapter,i)
 			if (startNode != None and endNode != None and startNode > 0 and endNode > 0 and endNode >= startNode):
 				verses = getVersesFromNodeRange(startNode,endNode,showVerses,db)
 				mylog("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
@@ -556,7 +562,7 @@ def getVerse(db='lxx',book='',chapter='',verse=''):
 		chapter = int(chapter.strip())
 		verse = int(verse.strip())
 		ref = ''
-		node = getNodeFromBcV(book,chapter,verse,db)
+		node = tf.TfData.getNodeFromBcV(book,chapter,verse)
 		mylog("getVerse url calling getNodeFromBcV("+ ",".join([book,str(chapter),str(verse)])+")")
 		mylog("got node " + str(node))
 		if ((type(int(node)) == int) and int(node) > 0):
@@ -685,18 +691,18 @@ def getRef(nodeId, db='lxx'):
 		except:
 			return ''
 	return ''
-def getNodeFromBcV(book,chapter,verse,db='lxx'):
-	node = 0
-	tf=getAPI(db)
-	api=tf.api
-	if(api):
-		mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+")")
-		
-		node=api.T.nodeFromSection((book,int(chapter),int(verse)))
-		if (type(node) != int):
-			node = 0
-		mylog("...got node " + str(node))
-	return node
+#def getNodeFromBcV(book,chapter,verse,db='lxx'):
+#	node = 0
+	#tf=getAPI(db)
+	#api=tf.api
+	#if(api):
+		#mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+","+db+")")
+#		
+#		node=api.T.nodeFromSection((book,int(chapter),int(verse)))
+#		if (type(node) != int):
+#			node = 0
+#		mylog("...got node " + str(node))
+#	return node
 TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
 def getAPI(db='lxx'):
 	
@@ -712,7 +718,7 @@ def getAPI(db='lxx'):
 		api=SBLGNTa
 		getLemma=SBLGNT.getLemma
 		theBooksDict=SBLGNT.booksDict
-		dataSet=NT
+		dataSet=SBLGNT
 	elif (enableNT and db=='nt'):
 		api=NTa
 		getLemma = NT.getLemma
