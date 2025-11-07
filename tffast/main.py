@@ -301,6 +301,7 @@ class TextAndReference(BaseModel):
 	text: str
 	reference: str
 	words: list[VerseWords]=[]
+	notes: list[str]=[]
 
 class TextReference(BaseModel):
 	book:str
@@ -320,7 +321,7 @@ class TextsResponse(BaseModel):
 @app.post("/{db}/texts")
 @app.post("/texts/")
 @app.post("/{db}/texts/")
-def postTextsRoute(request: TextsRequest, db='lxx'):
+def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 	mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
 	texts = list()
 	tfAPI = getAPI(db)
@@ -344,13 +345,14 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 			text=''
 			nodes = list()
 			words = list()
+			notes=list()
 			firstVerse = True
 			if (not ref.verses or not len(ref.verses)):
 				chapterNode=tfAPI.TfData.getChapter(tfAPI.TfData.lookupBook(ref.book),ref.chapter)
 				ref.verses = [tfAPI.api.F.verse.v(vn) for vn in tfAPI.api.L.d(chapterNode,'verse')]
 				
 			for v in ref.verses:
-				
+					
 				#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
 				node=tfAPI.TfData.getNodeFromBcV(ref.book,ref.chapter,v)## book, chap, verse
 					
@@ -370,6 +372,8 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 					#	text+='FIRST VERSE!!:'
 					text+='('+str(v)+') '
 				text+= textToAdd
+				if(showNotes):
+					notes.append(tfAPI.TfData.apparatusNote(ref.book,ref.chapter,v))
 				firstVerse = False
 			verses=list()
 			if (getLexemes):
@@ -394,7 +398,7 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 							lexemes[lemma]['count']+=1
 					verses.append(verseData)
 			
-			txtRef = TextAndReference(text=text,reference=refString,words=verses)
+			txtRef = TextAndReference(text=text,reference=refString,words=verses,notes=notes)
 			
 			textsAndRefsResponse.append(txtRef)
 		mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
@@ -414,7 +418,8 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 		
 		for node in request.sections:
 			#words=list()
-			verses=list()
+			#verses=list()
+			
 			curVerse={'verse':0, 'words':list()}
 			sectRef = tfAPI.api.T.sectionFromNode(node)
 			if(len(sectRef)==3):
@@ -426,8 +431,11 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 				refString += ' ' +str(sectRef[1])
 				if(len(sectRef) > 2):
 					refString += ':' + str(sectRef[2])
+
+			
 			textToAdd = tfAPI.TfData.getText(node)
 			text=''
+
 			if(showVerses and textToAdd and (tfAPI.api.F.otype.v(node) == 'verse')):
 				sect = tfAPI.api.T.sectionFromNode(node)
 				if (len(sect)==3):
@@ -435,7 +443,11 @@ def postTextsRoute(request: TextsRequest, db='lxx'):
 			if (getLexemes):
 				curVerse['words'].extend([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(node) if tfAPI.api.F.otype.v(w) == 'word'])
 			text+=textToAdd
-			txtRef = TextAndReference(text=text,reference=refString,words=[curVerse])
+
+			if (showNotes):
+				notes=tfAPI.TfData.apparatusNotesForNode(node)
+
+			txtRef = TextAndReference(text=text,reference=refString,words=[curVerse],notes=notes)
 			textsAndRefsResponse.append(txtRef)
 			
 	retObj= dict()

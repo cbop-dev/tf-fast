@@ -1,4 +1,9 @@
 #!/bin/bash
 . .venv/bin/activate && \
 #pytest -vv tests
-pytest tests
+
+if [ $# -eq 0 ]; then
+    pytest tests
+else
+    pytest "$@"
+fi

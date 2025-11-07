@@ -80,3 +80,17 @@ def test_countLexSection(sblgnt):
     for t in tests:
         assert(sblgnt.countLexInSection(t['lemma'], t['section'])==t['count'])
         assert(True)
+
+def test_getNotes(sblgnt):
+    tests=[
+        {'b':"Acts",'c':10, 'v':19,'note':"νδρες RP ] + τρεῖς Treg NA28; + δύο WH"},
+        {'b':"1_Corinthians",'c':11,'v':15,'note':"δέδοται RP ] + αὐτῇ WH Treg NA28"},   
+        {'b':"1 Corinthians",'c':11,'v':15,'note':"δέδοται RP ] + αὐτῇ WH Treg NA28"}, # doesn't work: must use name as in this db, here with underscores, not spaces!
+        {'b':'2 John', 'c':1, 'v': 5, 'note':"καινὴν γράφων σοι Treg NA27 ] γράφων σοι καινὴν WH NA28 RP"}
+    ]
+
+    for t in tests:
+        note = sblgnt.apparatusNote(t['b'],t['c'],t['v'])
+        print(f"NOTE found for {t['b']} {t['c']}:{t['v']}: {note}")
+        assert(GreekUtils.normalize(t['note']) in GreekUtils.normalize(note))
+      

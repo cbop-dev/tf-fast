@@ -368,6 +368,24 @@ class TfDataset:
 		except:
 			return ''
 
+	
+	
+	def apparatusNote(self,book,chapter,verse):
+		return ""
+
+	def apparatusNotesForNode(self,node):
+		notes=[]
+		node=int(node)
+		if (type(node)== int):
+			if (self.api.F.otype.v(node)=='verse'):
+				ref=self.api.T.sectionFromNode(node)
+				notes.append(self.apparatusNote(ref[0],ref[1],ref[2]))
+			else:
+				for v in self.api.L.d(node,'verse'):
+					ref=self.api.T.sectionFromNode(v)
+					notes.append(self.apparatusNote(ref[0],ref[1],ref[2]))
+		
+		return notes
 
 	def getNodeFromBcV(self,book,chapter,verse):
 		node = 0
