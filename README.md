@@ -4,7 +4,7 @@
 
 A python [FastAPI](https://fastapi.tiangolo.com/) service handling some HTTP REST requests for Text-Fabric datasets. (This was ported from an earlier version, [tf-flask](https://github.com/cbop-dev/tf-flask), which used [Flask](https://flask.palletsprojects.com).)
 
-It currently handles a limited set of queries for versions of BHS, LXX, and the Greek NT (Nestle's 1904 edition).
+It currently handles a limited set of queries for versions of BHS, LXX, the Greek NT (SBL Greek NT and Nestle's 1904 edition).
 See [text-fabric](https://github.com/annotation/text-fabric) for information on the underlying data platform, and [ETCBC/bhsa](https://etcbc.github.io/bhsa/) (also on [github](https://github.com/ETCBC/bhsa)), [CBLC/LXX](https://github.com/CenterBLC/LXX), and [CBLC/N1904](https://github.com/CenterBLC/N1904) for info on the datasets here employed.
 
 This is a work in progress. 
@@ -73,8 +73,10 @@ See main.py for various url-paths and types of responses.
 ## Requirements
 
 * python3.13+
+* python3.13-venv
 * pip 25.1+
 * Disk space: 600GB-1TB (for TF installation and datasets)
+* RAM: if all the datasets are enabled (especially BHS), the service uses around 6-7 GB of RAM. Thus, the server needs at least 12 GB RAM to run smoothly; 16 GB minimum recommended.
 
 ### Packages installed automatically
 
@@ -109,7 +111,7 @@ If all goes well, create, enable, and start a systemd service!
 ## TO DO:
 
 - [X] Enable BHSa
-- [ ] Update this README
+- [ ] Update this README (on-going: last updated 14 Jan 2026)
 - [ ] Documentation of routes and usage
 - [ ] extending/testing `/texts/` route 
 - [ ] more (and major) refactoring...

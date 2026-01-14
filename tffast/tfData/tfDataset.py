@@ -15,7 +15,7 @@ class Lexeme:
 		self.translit = translit if translit else GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(lemma))
 		self.beta = beta if beta else translit
 		self.lemma = lemma
-		self.plain = plain if plain else GreekUtils.remove_diacritics(lemma)
+		self.plain = plain if plain else self.getPlain(wordid)
 		self.pos = pos
 		self.lang = lang
 		self.isProper = isProper
@@ -43,10 +43,11 @@ class TfDataset:
 		return self.api
 	def getBooksDict(self):
 		return self.booksDict
-	def __init__(self,datasetPathname,version=None,dbname='lxx', buildLexData=True):
+	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
-		theTfDataset = use(datasetPathname,version=version) #if version else use(datasetPathname)
+
+		theTfDataset = use(datasetPathname,version=version)  if not dataset else dataset
 		if (theTfDataset):
 			mylog(f"TfDataset({dbname},{datasetPathname}) got data: ")
 			mylog(theTfDataset)
@@ -260,6 +261,22 @@ class TfDataset:
 		#print(f"getLexemes2() reponse obj.totalWords={theResponseObj['totalWords']}")
 		return  theResponseObj
 	
+	def lookupChapters(self,name):
+		## name: name or abbreviation  of book to lookup
+		## returns: dictionary of {chapterNum : node ID} for given book.
+		ret = {}
+		bNode = self.lookupBook(name)
+		if (bNode):
+			ret = self.getChaptersDict(bNode)
+
+		return ret
+
+	def lookupChapter(self,bookname,chapNum) -> int:
+		
+		bNode = self.lookupBook(bookname)
+		return self.getChapter(bNode,chapNum) if bNode else None
+
+
 
 		
 	def getChaptersDict(self,book):
@@ -465,3 +482,25 @@ class TfDataset:
 			match=matches[0]
 		return match
 	
+	def getHandyDictionary(self,bookname,chapter=None,verses=[]):
+		bookNode=self.lookupBook(bookname)
+		
+		nodes=[]
+		if (bookNode):
+			if (chapter):
+				if (len(verses)): #book, chap, and vv!
+					nodes=[self.getNodeFromBcV(self.booksDict[bookNode]['name'],chapter,v) for v in verses]
+					print(f"Got book,chap,v:[{','.join(map(str,nodes))}]")
+				else:#chap only
+					nodes.append(self.lookupChapter(bookname,chapter))
+					print("Got book + chap only!")
+			else: #bookonly
+				nodes.append(bookNode)
+				print("Got book only!")
+		else:
+			print("Got no book node! Uh oh!")
+		
+		return {k:l['gloss'] for k,l in self.getLexemes2(sections=nodes)['lexemes'].items()} if len(nodes) else {}
+
+	def getBookWordsSorted(self):
+		return dict(sorted({self.booksDict[b]['abbrev']:len(self.api.L.d(b,'word')) for b in self.getBooks().keys()}.items(),key=lambda o:o[1],reverse=True))

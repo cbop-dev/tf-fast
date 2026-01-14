@@ -84,3 +84,13 @@ def test_getLexemes2(BHS):
             assert(l in lexes['lexemes'].keys())
             if (l in lexes['lexemes'].keys()):
                 assert(lexes['lexemes'][l]['count']==obj['count'])
+
+
+def test_handyDictionary(BHS):
+    tests=[
+        {'bookname': 'Genesis', 'chap':1,'verses':[1], 'numLexes':9},
+        {'bookname': 'Genesis', 'chap':1,'verses':[], 'numLexes':104}
+    ]
+    for t in tests:
+        d=BHS.getHandyDictionary(t['bookname'],t['chap'],t['verses'])
+        assert(len(d)==t['numLexes'])

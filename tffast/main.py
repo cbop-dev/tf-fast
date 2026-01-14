@@ -31,6 +31,7 @@ theBooksDict = tfLxxBooksDict
 enableLXX=True
 enableNT=True
 enableBHS=True
+#enableBHS=False
 enableSBLGNT=True
 #debug = True
 LXX = None
@@ -89,8 +90,8 @@ app.add_middleware(
 def getCommonRoute(db='lxx'):
 	return ''
 
-@app.get("/{db}/lex/{lexid}")
-@app.get("/lex/{lexid}")
+@app.get("/{db}/lex/{lexid:int}")
+@app.get("/lex/{lexid:int}")
 def getLexInfo(lexid: int,db='lxx'):
 	tf=getAPI(db)
 	api=tf.api
@@ -123,8 +124,8 @@ def getLexInfo(lexid: int,db='lxx'):
 def bhsTest():
 	return "Hello BHS World!"
 
-@app.get("/{db}/lex/freq/{lexid}")
-@app.get("/lex/freq/{lexid}")
+@app.get("/{db}/lex/freq/{lexid:int}")
+@app.get("/lex/freq/{lexid:int}")
 def getLexCount(lex: int, db='lxx'):
 	
 	if (db == 'lxx'):
@@ -255,14 +256,14 @@ def chaptersRoute(book: int, db='lxx'):
 def booksRoute(db='lxx'):
 	return getBooksDict(db)
 
-@app.get("/{db}/getrefs/{id}")
-@app.get("/getrefs/{id}")
+@app.get("/{db}/getrefs/{id:int}")
+@app.get("/getrefs/{id:int}")
 def getrefsRoute(id: int, db='lxx',sections='',detail=''):
 
 	return getLexRefs(id, db,sections,detail)
 
-@app.get("/{db}/words/{id}")
-@app.get("/words/{id}")
+@app.get("/{db}/words/{id:int}")
+@app.get("/words/{id:int}")
 def getWords(id,db='lxx',features=''):
 	tf=getAPI(db)
 	api=tf.api
@@ -376,6 +377,7 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 					notes.append(tfAPI.TfData.apparatusNote(ref.book,ref.chapter,v))
 				firstVerse = False
 			verses=list()
+			
 			if (getLexemes):
 			#add all section lexemes to response 'lexemes' dictionary:
 				mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
