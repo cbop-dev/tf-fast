@@ -7,11 +7,12 @@ from ..utils.greekUtils import GreekUtils
 
 
 class Lexeme:
-	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0,isProper=False):
+	def __init__(self,id,lemma,wordid=0,gloss=None,lexiconEntry=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0,isProper=False):
 		self.id = id if id else 0
 		self.wordid=wordid # a node id in which this lexeme is found as a word in DB (important if self.id does not correspond to node ids)
 		self.total = total 
 		self.gloss = gloss
+		self.lexiconEntry=lexiconEntry
 		self.translit = translit if translit else GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(lemma))
 		self.beta = beta if beta else translit
 		self.lemma = lemma
@@ -28,6 +29,11 @@ class TfDataset:
 		return self.getBeta(wordid) #treat same as beta; override in child class as necessary.
 	def getGloss(self, wordid):
 		return self.api.F.gloss.v(wordid)
+	def getLexiconEntry(self,wordNode):
+		output = self.getLexiconEntryFeature().v(wordNode) if self.getLexiconEntryFeature() else None
+		#if (not output):
+			#mylog(f"Got no LexiconEntry(${wordNode})")
+
 	def getFreq(self,wordid):
 		lem = self.getLemma(wordid)
 		freqs = [e[1] for e in self.getLemmaFeature().freqList() if self.normalize(e[0]) == lem]
@@ -37,21 +43,39 @@ class TfDataset:
 	def getLemma(self,wordid):
 		return self.normalize(self.getLemmaFeature().v(wordid))
 	
+	def getLexiconEntryFeature(self):
+		return None
+
 	def getLemmaFeature(self):
 		return self.api.F.lemma
 	def getAPI(self):
 		return self.api
 	def getBooksDict(self):
 		return self.booksDict
-	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True):
+	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True,modules=None,path=None,mod=None):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
-
-		theTfDataset = use(datasetPathname,version=version)  if not dataset else dataset
-		if (theTfDataset):
+		#theTfDataset=None
+		#locations=['~/tmp/tf-bhs-strong/my-bdb-features']
+		locations=[path] if path else ['']
+		mydata=dataset
+		if (not mydata):
+			if (modules and len(modules) and len(locations)):
+				print(f"invoking use() with modules='${','.join(modules)}'")
+				mydata = use(datasetPathname,version=version,locations=locations,modules=modules) if modules else use(datasetPathname,version=version)
+			elif (mod):
+				print(f"invoking use() with mod='${mod}'")
+				mydata = use(datasetPathname,version=version,mod=mod) 
+			else:
+				print(f"invoking vanilla use()!")
+				mydata=use(datasetPathname,version=version)
+		else:
+			print(f"Go some data: ${mydata}")
+			
+		if (mydata):
 			mylog(f"TfDataset({dbname},{datasetPathname}) got data: ")
-			mylog(theTfDataset)
-			self.dataset = theTfDataset
+			mylog(mydata)
+			self.dataset = mydata
 			#mylog("Got self.dataset: ")
 			#mylog(self.dataset)
 			self.api = self.dataset.api
@@ -72,16 +96,16 @@ class TfDataset:
 	def buildLexData(self):
 		self.lexemes = dict()#lemma:str->Lexeme
 		lemmaFreqDict={self.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList()}
-		mylog("buildLexData(): gonna build self.lexemes...")
+		#mylog("buildLexData(): gonna build self.lexemes...")
 		self.words = list()
 		for w in self.api.F.otype.s('word'):
 			lem = self.getLemma(w)
 			if lem not in self.lexemes.keys():
-				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),
+				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),lexiconEntry=self.getLexiconEntry(w),
 						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
 			self.words.append(self.getLemma(w))
 		self.booksDict = self.getBooks()
-		mylog("buildLexData(): done with first loop")
+		#mylog("buildLexData(): done with first loop")
 		
 		for i, lemLex in enumerate(sorted(self.lexemes.items(),key=lambda l: l[1].plain.lower())):
 			lemLex[1].id=i
@@ -152,7 +176,8 @@ class TfDataset:
 	#		totalWords:totalWordsInSections,  total words, regardless of any query parameters
 	#		lexemes: (todo)
 	# }
-	def getLexemes2(self,sections=[], restrict=[],exclude=[], min=1, gloss=False, 
+	# params: min/max: how many total BHS instances of lex
+	def getLexemes2(self,sections=[], restrict=[],exclude=[], min=0, gloss=False, max=0,
 				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
 		#mylog("Min: " + str(min))
 		
@@ -229,7 +254,10 @@ class TfDataset:
 					 'pos': lexObj.pos,
 					 'total':lexObj.total,
 					 
+					 
 				}
+				if (lexObj.lexiconEntry):
+					lexemes[l]['lexiconEntry']=lexObj.lexiconEntry
 
 		keys=lexemes.keys()
 		lexCounts = Counter([l for s in sectionsLexemes.values() for l in s if l in keys])
@@ -249,7 +277,7 @@ class TfDataset:
 			#'totalInstances': 0,#,sum([len(s) in sectionsLexemes,#i.e., number of relevant words found in this section according to query parameters. How to calculate efficiently?
 			'totalLexemes': len(lexemes.keys()),
 			'totalWords':totalWordsInSections, # total words, regardless of any query parameters
-			'lexemes': lexemes if min == 1 else {k:v for (k,v) in lexemes.items() if int(v['count']) >= int(min)}
+			'lexemes': lexemes if min <= 1 and max == 0 else {k:v for (k,v) in lexemes.items() if (int(v['total']) >= int(min) and int(v['total']) <= int(max))}
 		}
 		
 		if (common):
@@ -320,10 +348,11 @@ class TfDataset:
 		
 		# optionally limits to instances within any of the selected sections, exluding all others:
 		id=int(id)
-		sections = [int(s) for s in sections] if sections.length else []
+		sections = [int(s) for s in sections] if len(sections) else []
 		mylog("getrefs: sections = [" + ",".join([str(s) for s in sections])+"]")
 		if(self.api.F.otype.v(id) == 'word'):
-			lex=self.lex(id)
+			lex=self.getLex(id)
+			
 			rNodes = {}
 			bookCounts = {}
 			queryDetail = 'verse'
@@ -335,8 +364,8 @@ class TfDataset:
 					queryDetail = 'chapter'
 
 			#refs = {}
-			for n in self.api.N.walk():
-				if (self.api.F.otype.v(n) == 'word' and self.lex(n) == lex and (len(sections) == 0 or (len(set(self.api.L.u(n)) & set(sections)) > 0) )):
+			for n in self.api.F.otype.s('word'):
+				if (self.getLexID(n) == lex.id and (len(sections) == 0 or (len(set(self.api.L.u(n)) & set(sections)) > 0) )):
 					sectionTuple= self.api.T.sectionTuple(n)
 					if (queryDetail == 'book'):
 						sectionNode = sectionTuple[0]
@@ -354,7 +383,7 @@ class TfDataset:
 					else:
 						refString = refTuple[0] + " " + ":".join(map(str,refTuple[1:]))
 					#refs.add(refString)
-					bookid=api.L.u(n)[-1]
+					bookid=self.api.L.u(n,'book')[0]
 					if bookid not in bookCounts:
 						bookCounts[bookid]=1
 					else:
@@ -482,7 +511,7 @@ class TfDataset:
 			match=matches[0]
 		return match
 	
-	def getHandyDictionary(self,bookname,chapter=None,verses=[]):
+	def getHandyDictionary(self,bookname,chapter=None,verses=[],min=0,max=0):
 		bookNode=self.lookupBook(bookname)
 		
 		nodes=[]
@@ -500,7 +529,7 @@ class TfDataset:
 		else:
 			print("Got no book node! Uh oh!")
 		
-		return {k:l['gloss'] for k,l in self.getLexemes2(sections=nodes)['lexemes'].items()} if len(nodes) else {}
+		return {k:{'gloss':l['gloss'],'lexiconEntry':l['lexiconEntry']} for k,l in self.getLexemes2(sections=nodes,min=min,max=max)['lexemes'].items()} if len(nodes) else {}
 
 	def getBookWordsSorted(self):
 		return dict(sorted({self.booksDict[b]['abbrev']:len(self.api.L.d(b,'word')) for b in self.getBooks().keys()}.items(),key=lambda o:o[1],reverse=True))

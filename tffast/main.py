@@ -259,8 +259,9 @@ def booksRoute(db='lxx'):
 @app.get("/{db}/getrefs/{id:int}")
 @app.get("/getrefs/{id:int}")
 def getrefsRoute(id: int, db='lxx',sections='',detail=''):
-
-	return getLexRefs(id, db,sections,detail)
+	tf=getAPI(db)
+	api=tf.api
+	return tf.TfData.getLexRefs(id,sections,detail)
 
 @app.get("/{db}/words/{id:int}")
 @app.get("/words/{id:int}")
@@ -625,7 +626,7 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 	return text.strip()
 
 # returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
-def getLexRefs(id,db='lxx',sections='',detail=''):
+def getLexRefs2(id,db='lxx',sections='',detail=''):
 	tf=getAPI(db)
 	#tf.TfData
 	api=tf.api

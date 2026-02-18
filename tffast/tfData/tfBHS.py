@@ -1,4 +1,5 @@
 from .tfDataset import TfDataset
+import os
 
 class TfBHS(TfDataset):
 
@@ -122,10 +123,22 @@ class TfBHS(TfDataset):
         
     def __init__(self,dataset=None):
         self.booksDict = TfBHS.booksDict
-        super().__init__('ETCBC/bhsa',dbname="bhs", version="2021",dataset=dataset)
+        #super().__init__('ETCBC/bhsa',dbname="bhs", version="2021",dataset=dataset)
+        #modpath=my_path = os.path.abspath("/home/cbrannan/tmp/tf-bhs-strong/")
+        mod="cbop-dev/bhsa-bdb"
+        version="2021"
+
+        super().__init__('ETCBC/bhsa',dbname="bhs", mod=mod,version=version,dataset=dataset)
         #super().__init__('ETCBC/bhsa-min',dbname="bhs", version="2021",dataset=dataset)
 		
-
+    def getLexiconEntry(self,wordNode):
+        lemmaNodes=self.api.L.u(wordNode,'lex')
+        entry=None
+        if (len(lemmaNodes)):
+            entry=self.api.F.bdb_entry.v(lemmaNodes[0])
+        return entry
+    def getLexiconEntryFeature(self):
+        return self.api.F.bdb_entry
     def getLemmaFeature(self):
         return self.api.F.voc_lex_utf8
 
