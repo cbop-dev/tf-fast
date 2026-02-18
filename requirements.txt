@@ -1,5 +1,5 @@
 wordcloud
 fastapi[standard]
-text-fabric[github]==13.0.0
+text-fabric[github]
 pytest
 httpx
