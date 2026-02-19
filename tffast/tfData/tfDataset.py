@@ -55,8 +55,7 @@ class TfDataset:
 	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True,modules=None,path=None,mod=None):
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
-		#theTfDataset=None
-		#locations=['~/tmp/tf-bhs-strong/my-bdb-features']
+		
 		locations=[path] if path else ['']
 		mydata=dataset
 		if (not mydata):
