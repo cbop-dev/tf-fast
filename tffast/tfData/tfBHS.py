@@ -1,5 +1,7 @@
 from .tfDataset import TfDataset
 import os
+from tffast.utils.greekUtils import GreekUtils
+from tffast.utils.hebrewUtils import HebrewUtils
 
 class TfBHS(TfDataset):
 
@@ -141,3 +143,8 @@ class TfBHS(TfDataset):
 
     def isProperNoun(self,wordID):
         return self.api.F.sp.v(wordID) == 'nmpr'
+
+    def normalize(self,string):
+        
+        return HebrewUtils.normalize(string)
+

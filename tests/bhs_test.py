@@ -12,7 +12,7 @@ def BHS():
 
 def test_getLex_test(BHS):
     tests=[
-        {'id': 1437603, 'lex':'רֵאשִׁית'}
+        {'id': 1437603, 'lex':'רֵאשִׁית'}
     ]
     for t in tests:
         assert(BHS.getLemma(t['id']) == t['lex'])
@@ -282,3 +282,22 @@ def test_verify_strongs_alignment_cons(BHS):
     assert sam_strong is not None
 
     print("\nConsonantal alignment check passed!")
+
+def test_getLexemes2_counts(BHS):
+    tests=[{'lexid': 5950, 'total': 1,'sections':[426631],'secCount':1}] #rishon
+
+    for t in tests:
+        lex = BHS.getLex(t['lexid'])
+        print(f"got lex '${lex.lemma}'. Total: ${lex.total}")
+        assert lex.total == t['total']
+        res = BHS.getLexemes2(sections=t['sections'])
+        assert len(res)
+        print("here's the lexes!")
+        print(res)
+        found=[lex for lem,lex in res['lexemes'].items() if int(lex['id'])==int(t['lexid'])]
+        print(f"len of found=${len(found)}")
+        assert len(found)
+        assert found[0]['count']==t['secCount']
+        assert found[0]['total']==t['total']
+        
+#def test_normalize

@@ -3,16 +3,17 @@ from collections import Counter
 from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
+from ..utils.hebrewUtils import HebrewUtils
 
 
 
 class Lexeme:
-	def __init__(self,id,lemma,wordid=0,gloss=None,lexiconEntry=None,plain=None,translit=None,beta=None,pos=None,lang=None,total=0,isProper=False):
+	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,strongs=None,total=0,isProper=False):
 		self.id = id if id else 0
 		self.wordid=wordid # a node id in which this lexeme is found as a word in DB (important if self.id does not correspond to node ids)
 		self.total = total 
 		self.gloss = gloss
-		self.lexiconEntry=lexiconEntry
+		self.strongs=strongs
 		self.translit = translit if translit else GreekUtils.greek_to_beta(GreekUtils.remove_diacritics(lemma))
 		self.beta = beta if beta else translit
 		self.lemma = lemma
@@ -36,12 +37,12 @@ class TfDataset:
 
 	def getFreq(self,wordid):
 		lem = self.getLemma(wordid)
-		freqs = [e[1] for e in self.getLemmaFeature().freqList() if self.normalize(e[0]) == lem]
+		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if HebrewUtils.normalize(e[0]) == lem]
 		return freqs[0] if len(freqs) > 0 else 0
 	
 
 	def getLemma(self,wordid):
-		return self.normalize(self.getLemmaFeature().v(wordid))
+		return HebrewUtils.normalize(self.getLemmaFeature().v(wordid))
 	
 	def getLexiconEntryFeature(self):
 		return None
@@ -94,13 +95,13 @@ class TfDataset:
 
 	def buildLexData(self):
 		self.lexemes = dict()#lemma:str->Lexeme
-		lemmaFreqDict={self.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList()}
+		lemmaFreqDict={HebrewUtils.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList('word')}
 		#mylog("buildLexData(): gonna build self.lexemes...")
 		self.words = list()
 		for w in self.api.F.otype.s('word'):
 			lem = self.getLemma(w)
 			if lem not in self.lexemes.keys():
-				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),lexiconEntry=self.getLexiconEntry(w),
+				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),strongs=self.getStrongs(w),
 						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
 			self.words.append(self.getLemma(w))
 		self.booksDict = self.getBooks()
@@ -123,7 +124,7 @@ class TfDataset:
 		if (wordid== 0 and self.lexemes):
 			count = len(self.lexemes)
 		else:
-			foundLexCounts = [t[1] for t in self.getLemmaFeature().freqList() if t[0]==self.getLemma(wordid)]
+			foundLexCounts = [t[1] for t in self.getLemmaFeature().freqList('word') if t[0]==self.getLemma(wordid)]
 			count = foundLexCounts[0] if len(foundLexCounts) > 0 else 0
 
 		return count
@@ -140,6 +141,12 @@ class TfDataset:
 		lemma=self.getLemma(wordid)
 		return self.lexemes[lemma].id if lemma and self.lexemes[lemma] else 0
 		
+	def getStrongs(self,wordNodeId):
+		output=''
+		if 'strongs' in self.api.Fall():
+			output=self.api.F.strongs.v(wordNodeId)
+		return output
+
 	# TODO: rethink "lexID" here, depending on implementation of getLexID().  and add "getLemmaByNodeID"?
 	# getLex: returns Lexeme object with given ID. 
 	# (NB: 'id' is assigned by buildLexData() function, using indexes of sorted lemmas. 
@@ -157,7 +164,7 @@ class TfDataset:
 
 	def countLexInSection(self,lemma,section):
 		count = 0
-		lemma=self.normalize(lemma)
+		lemma=HebrewUtils.normalize(lemma)
 		if (self.api.F.otype.v(section) == 'word'):
 			if (self.getLemma(section) == lemma):
 				count = 1			
@@ -255,8 +262,8 @@ class TfDataset:
 					 
 					 
 				}
-				if (lexObj.lexiconEntry):
-					lexemes[l]['lexiconEntry']=lexObj.lexiconEntry
+				if (lexObj.strongs):
+					lexemes[l]['strongs']=lexObj.strongs
 
 		keys=lexemes.keys()
 		lexCounts = Counter([l for s in sectionsLexemes.values() for l in s if l in keys])
@@ -528,7 +535,7 @@ class TfDataset:
 		else:
 			print("Got no book node! Uh oh!")
 		
-		return {k:{'gloss':l['gloss'],'lexiconEntry':l['lexiconEntry']} for k,l in self.getLexemes2(sections=nodes,min=min,max=max)['lexemes'].items()} if len(nodes) else {}
+		return {k:{'gloss':l['gloss'],'strongs':l['strongs']} for k,l in self.getLexemes2(sections=nodes,min=min,max=max)['lexemes'].items()} if len(nodes) else {}
 
 	def getBookWordsSorted(self):
 		return dict(sorted({self.booksDict[b]['abbrev']:len(self.api.L.d(b,'word')) for b in self.getBooks().keys()}.items(),key=lambda o:o[1],reverse=True))

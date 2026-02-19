@@ -24,3 +24,20 @@ def test_greekBeta():
     plain = GreekUtils.plain_greek("ἀγάπη")
     mylog(f"Plain Greek: {plain}")  # Expected: αγαπη
     '''
+
+def test_hebrew_normalize:
+
+    unequals = [
+    ["שׁ","\uFB2A"],
+    ["שׂ","שׂ"],
+    ["שׁ","שׁ"],
+    ]
+
+    equals=[["שׁ","\uFB2A"]]
+
+    for u in unequals:
+        assert u[0] != u[1]
+
+    for e in equals:
+        assert u[0] == u[1]
+
