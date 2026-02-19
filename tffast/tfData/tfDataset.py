@@ -60,13 +60,13 @@ class TfDataset:
 		mydata=dataset
 		if (not mydata):
 			if (modules and len(modules) and len(locations)):
-				print(f"invoking use() with modules='${','.join(modules)}'")
+				#print(f"invoking use() with modules='${','.join(modules)}'")
 				mydata = use(datasetPathname,version=version,locations=locations,modules=modules) if modules else use(datasetPathname,version=version)
 			elif (mod):
-				print(f"invoking use() with mod='${mod}'")
+				#print(f"invoking use() with mod='${mod}'")
 				mydata = use(datasetPathname,version=version,mod=mod) 
 			else:
-				print(f"invoking vanilla use()!")
+				#print(f"invoking vanilla use()!")
 				mydata=use(datasetPathname,version=version)
 		else:
 			print(f"Go some data: ${mydata}")

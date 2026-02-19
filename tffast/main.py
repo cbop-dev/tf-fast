@@ -261,7 +261,8 @@ def booksRoute(db='lxx'):
 def getrefsRoute(id: int, db='lxx',sections='',detail=''):
 	tf=getAPI(db)
 	api=tf.api
-	return tf.TfData.getLexRefs(id,sections,detail)
+	sectionsArray = [int(s) for s in sections.split(',')] if sections else []
+	return tf.TfData.getLexRefs(id,sectionsArray,detail)
 
 @app.get("/{db}/words/{id:int}")
 @app.get("/words/{id:int}")

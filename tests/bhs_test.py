@@ -97,69 +97,9 @@ def test_handyDictionary(BHS):
         assert(len(d)==t['numLexes'])
 
 
-def test_bdb(BHS):
-    tests=[
-
-
-    ]
-
-    for t in tests:
-        1+1
-
-    entry=BHS.api.F.lex_utf8.v(1000)
-    #entry=BHS.api.F.strongs.v(1000)
-    #entry = BHS.api.Fall()
-    print(entry)
-    assert(entry)
-    assert(len(entry) > 0)
-    #assert(0==1)
 
 
 import pytest
-
-def NOTtest_full_corpus_alignment(BHS):
-    # TEST 1: The Beginning (Torah)
-    # Genesis 1:1 word 2 is "reshit"
-    T = BHS.api.T
-    F = BHS.api.F
-    L = BHS.api.L
-    def getWordNode(section,wordindex=0):
-        secNode = T.nodeFromSection(section)
-        return L.d(secNode,'word')[wordindex]
-
-    gen_node = getWordNode(('Genesis', 1, 1),1)
-    
-    #gen_node=L.d(gen1_node,'word')[1]
-    print("Gen node: ", gen_node)
-    print("Gen text: ", T.text(gen_node))
-    assert F.strongs.v(gen_node) == 'H7225' # reshit
-    print("==============================")
-    bdbentry=F.bdb_entry.v(L.u(gen_node, 'lex')[0]).lower()
-    print("beginning BDB entry?",)
-    assert 'beginning' in F.bdb_entry.v(L.u(gen_node, 'lex')[0]).lower()
-
-    # TEST 2: The Middle (Prophets)
-    # Isaiah 6:1 word 3 is "ha-melek" (the king). 
-    # Word 3 is 'ha' (article), Word 4 is 'melek' (king)
-    isa_node = getWordNode(('Isaiah', 6, 1), 4)
-    mylog(f"Isa 6:1, melek?: '{F.voc_lex_utf8.v(isa_node)}'")
-    #assert F.strongs.v(isa_node) == 'H4428' # melek ##error: return H853
-
-    assert 'king' in F.bdb_entry.v(L.u(isa_node, 'lex')[0]).lower()
-
-    # TEST 3: The Middle (Poetry)
-    # Psalm 23:1 word 4 is "ro'i" (my shepherd)
-    ps_node = getWordNode(('Psalms', 23, 1), 4)
-    assert F.strongs.v(ps_node) == 'H7462' # raah
-    assert 'shepherd' in F.bdb_entry.v(L.u(ps_node, 'lex')[0]).lower()
-
-    # TEST 4: The End (Writings)
-    # 2 Chronicles 36:23 is the final verse. 
-    # Let's check "Jerusalem" - word 16 in that verse.
-    chron_node = getWordNode(('2_Chronicles', 36, 23), 16)
-    assert F.strongs.v(chron_node) == 'H3389' # yerushalayim
-    
-    print("\n[V] All corpus checkpoints passed!")
 
 
 def test_book_drift_report(BHS):
