@@ -125,7 +125,7 @@ class TfBHS(TfDataset):
         self.booksDict = TfBHS.booksDict
         #super().__init__('ETCBC/bhsa',dbname="bhs", version="2021",dataset=dataset)
         #modpath=my_path = os.path.abspath("/home/cbrannan/tmp/tf-bhs-strong/")
-        mod="cbop-dev/bhsa-bdb/tf"
+        mod="cbop-dev/tf-bhsa-strongs/tf"
         version="2021"
 
         super().__init__('ETCBC/bhsa',dbname="bhs", mod=mod,version=version,dataset=dataset)
