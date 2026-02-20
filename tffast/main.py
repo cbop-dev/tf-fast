@@ -33,12 +33,14 @@ enableNT=True
 enableBHS=True
 #enableBHS=False
 enableSBLGNT=True
+enableWEB=True
 #debug = True
 LXX = None
 BHS=None
 NT = None
 SBLGNT=None
 SBLGNTa=None
+WEB=None
 theDB = None
 if (enableLXX):
 	LXX = TfLXX()
@@ -66,6 +68,12 @@ if (enableNT):
 	NTa = NT.api
 	theDB = NT
 	theBooksDict=NT.booksDict
+
+if (enableWEB):
+	from .tfData.tfWEB import TfWEB
+	WEB = TfWEB()
+	theDB = WEB
+	theBooksDict = WEB.booksDict
 mylog(f"about to load LXX. Python version: {sys.version}")
 
 
@@ -606,7 +614,7 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 	api=tf.api
 	if(api):
 		if (startNode == endNode):
-			text += api.T.text(startNode)
+			text += tf.TfData.getText(startNode)
 			mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
 			onFirstNode = True
@@ -618,9 +626,9 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 							if(not onFirstNode):
 								text+=''
 							text+= '('+str(sec[2])+') '
-					text += api.T.text(i)
+					text += tf.TfData.getText(i)
 				else:
-					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + api.T.text(i))
+					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + tf.TfData.getText(i))
 				onFirstNode=False
 			mylog("	got range. text = " + text)
 
@@ -694,7 +702,7 @@ def getText(nodeId,db='lxx'):
 	api=tf.api
 	if(api):
 		try:
-			return api.T.text(int(nodeId)).strip()
+			return tf.TfData.getText(int(nodeId)).strip()
 		except:
 			return ''
 	return ''
@@ -747,6 +755,11 @@ def getAPI(db='lxx'):
 		theBooksDict=tfBHSBooksDict
 		dataSet=BHS
 		#api.lex =lambda i : api.F.lex_utf8.v(i)
+	elif (enableWEB and db=='web'):
+		api=WEB.api
+		getLemma=WEB.getLemma
+		theBooksDict=WEB.booksDict
+		dataSet=WEB
 	return TfAPI(api,getLemma,dataSet)
 
 def getDicts(db='lxx'):

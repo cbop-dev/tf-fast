@@ -29,7 +29,7 @@ class TfDataset:
 	def getPlain(self,wordid):
 		return self.getBeta(wordid) #treat same as beta; override in child class as necessary.
 	def getGloss(self, wordid):
-		return self.api.F.gloss.v(wordid)
+		return self.api.F.gloss.v(wordid) if 'gloss' in self.api.Fall() else ''
 	def getLexiconEntry(self,wordNode):
 		output = self.getLexiconEntryFeature().v(wordNode) if self.getLexiconEntryFeature() else None
 		#if (not output):
