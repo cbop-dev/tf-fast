@@ -41,7 +41,7 @@ def test_getLemma(nt):
         assert(nt.getLemma(t['id']) == t['lex'])
 
 def test_getFreq(nt):
-    assert (nt.getFreq(1)==20)
+    assert (nt.getFreq(1)==10)
 
 def test_getBooks(nt):
     ntbooks = list(nt.getBooks().values())

@@ -88,15 +88,19 @@ class TfWEB(TfDataset):
     def __init__(self, dataset=None):
         db="web"
         # Since it's now on GitHub, we can let Text-Fabric resolve it automatically
-        
+        lemmaEnabled =False
+
+        betaEnabled = False
+        plainEnabled = False
         datasetPathname = "cbop-dev/tf-web-c"
             
         self.booksDict = TfWEB.booksDict
-        self.dbname=db
+        dbname=db
         version="1.0"
         mylog(f"TfWEB.init('{datasetPathname}')...")
         
-        super().__init__(datasetPathname, version='1.0', dbname=db, dataset=dataset)
+        super().__init__(datasetPathname, version='1.0', dbname=db, dataset=dataset,
+        lemmaEnabled=lemmaEnabled,betaEnabled=betaEnabled,plainEnabled=plainEnabled)
 
     def getLemmaFeature(self):
         # We don't have lemmas, just words, so return text feature
@@ -104,19 +108,19 @@ class TfWEB(TfDataset):
 
     def getLemma(self, wordid):
         # Fallback to the 'text' feature for lemma
-        return self.api.F.text.v(wordid)
+        return self.api.T.text(wordid)
 
     def getBeta(self,wordid):
-        return self.api.F.text.v(wordid)
+        return self.api.T.text(wordid)
 
     def getPlain(self,wordid):
-        return self.api.F.text.v(wordid)
+        return self.api.T.text(wordid)
         
     def getGloss(self,wordid):
         return ''
 
     def isProperNoun(self,wordid):
-        text = self.api.F.text.v(wordid)
+        text = self.api.T.text(wordid)
         if text and len(text) > 0:
             return text[0].isupper()
         return False

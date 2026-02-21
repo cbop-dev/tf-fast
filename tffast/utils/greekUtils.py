@@ -68,7 +68,7 @@ class GreekUtils:
 
     @staticmethod
     def normalize(string):
-        return unicodedata.normalize("NFC",string)
+        return unicodedata.normalize("NFC",string).strip()
 
     @staticmethod
     def fuzzy_search_array(search_string, string_array, limit=-1):

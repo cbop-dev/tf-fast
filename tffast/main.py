@@ -34,6 +34,7 @@ enableBHS=True
 #enableBHS=False
 enableSBLGNT=True
 enableWEB=True
+enableVulgate=True
 #debug = True
 LXX = None
 BHS=None
@@ -41,6 +42,7 @@ NT = None
 SBLGNT=None
 SBLGNTa=None
 WEB=None
+VUL=None
 theDB = None
 if (enableLXX):
 	LXX = TfLXX()
@@ -69,11 +71,20 @@ if (enableNT):
 	theDB = NT
 	theBooksDict=NT.booksDict
 
+if (enableVulgate):
+	from .tfData.tfVulgate import TfVulgate
+	VUL=TfVulgate()
+	theDB = VUL
+	theBooksDict=VUL.booksDict
+
 if (enableWEB):
 	from .tfData.tfWEB import TfWEB
 	WEB = TfWEB()
 	theDB = WEB
 	theBooksDict = WEB.booksDict
+
+
+
 mylog(f"about to load LXX. Python version: {sys.version}")
 
 
@@ -760,6 +771,11 @@ def getAPI(db='lxx'):
 		getLemma=WEB.getLemma
 		theBooksDict=WEB.booksDict
 		dataSet=WEB
+	elif (db=='vul' or db=='vulgate'):
+		api=VUL.api
+		getLemma=VUL.getLemma
+		theBooksDict=VUL.booksDict
+		dataSet=VUL
 	return TfAPI(api,getLemma,dataSet)
 
 def getDicts(db='lxx'):

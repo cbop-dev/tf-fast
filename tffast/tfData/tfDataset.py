@@ -1,9 +1,9 @@
-import sys, os
+import sys, os, re
 from collections import Counter
 from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
-from ..utils.hebrewUtils import HebrewUtils
+
 
 
 
@@ -21,9 +21,11 @@ class Lexeme:
 		self.pos = pos
 		self.lang = lang
 		self.isProper = isProper
+		
 
 
 class TfDataset:
+	
 	def getBeta(self,wordid):
 		return self.api.F.lex.v(wordid)#does not work for nt, must override.
 	def getPlain(self,wordid):
@@ -37,12 +39,12 @@ class TfDataset:
 
 	def getFreq(self,wordid):
 		lem = self.getLemma(wordid)
-		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if HebrewUtils.normalize(e[0]) == lem]
+		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if self.normalize(e[0]) == lem]
 		return freqs[0] if len(freqs) > 0 else 0
 	
 
 	def getLemma(self,wordid):
-		return HebrewUtils.normalize(self.getLemmaFeature().v(wordid))
+		return self.normalize(self.getLemmaFeature().v(wordid).strip())
 	
 	def getLexiconEntryFeature(self):
 		return None
@@ -53,8 +55,13 @@ class TfDataset:
 		return self.api
 	def getBooksDict(self):
 		return self.booksDict
-	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True,modules=None,path=None,mod=None):
+	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True,modules=None,path=None,mod=None,
+					lemmaEnabled=True,betaEnabled=True,plainEnabled=True):
+		
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
+		self.lemmaEnabled = lemmaEnabled
+		self.betaEnabled = betaEnabled
+		self.plainEnabled = plainEnabled
 		self.lexemes=dict() # lemma:str-->Lexeme class instance
 		
 		locations=[path] if path else ['']
@@ -95,20 +102,24 @@ class TfDataset:
 
 	def buildLexData(self):
 		self.lexemes = dict()#lemma:str->Lexeme
-		lemmaFreqDict={HebrewUtils.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList('word')}
-		#mylog("buildLexData(): gonna build self.lexemes...")
-		self.words = list()
-		for w in self.api.F.otype.s('word'):
-			lem = self.getLemma(w)
-			if lem not in self.lexemes.keys():
-				self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),strongs=self.getStrongs(w),
-						total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
-			self.words.append(self.getLemma(w))
-		self.booksDict = self.getBooks()
-		#mylog("buildLexData(): done with first loop")
-		
-		for i, lemLex in enumerate(sorted(self.lexemes.items(),key=lambda l: l[1].plain.lower())):
-			lemLex[1].id=i
+
+		if (self.lemmaEnabled):
+			lemmaFreqDict={self.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList('word')}
+			#mylog("buildLexData(): gonna build self.lexemes...")
+			self.words = list()
+			for w in self.api.F.otype.s('word'):
+				lem = self.getLemma(w)
+				if (len(re.sub('[]0-9!%*,.:;=?$]','',lem)) > 0):
+					
+					if (lem not in self.lexemes.keys()):
+						self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),strongs=self.getStrongs(w),
+								total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
+					self.words.append(self.getLemma(w))
+			self.booksDict = self.getBooks()
+			#mylog("buildLexData(): done with first loop")
+			
+			for i, lemLex in enumerate(sorted(self.lexemes.items(),key=lambda l: l[1].plain.lower())):
+				lemLex[1].id=i
 
 	def numWords(self,node):
 		return len([w for w in self.api.L.d(node) if self.api.F.otype.v(w)=='word'])
@@ -164,7 +175,7 @@ class TfDataset:
 
 	def countLexInSection(self,lemma,section):
 		count = 0
-		lemma=HebrewUtils.normalize(lemma)
+		lemma=self.normalize(lemma)
 		if (self.api.F.otype.v(section) == 'word'):
 			if (self.getLemma(section) == lemma):
 				count = 1			
@@ -539,3 +550,8 @@ class TfDataset:
 
 	def getBookWordsSorted(self):
 		return dict(sorted({self.booksDict[b]['abbrev']:len(self.api.L.d(b,'word')) for b in self.getBooks().keys()}.items(),key=lambda o:o[1],reverse=True))
+	
+	def normalize(self, string):
+		return string.strip()
+
+	

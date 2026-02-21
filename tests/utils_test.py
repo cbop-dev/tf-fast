@@ -25,7 +25,7 @@ def test_greekBeta():
     mylog(f"Plain Greek: {plain}")  # Expected: αγαπη
     '''
 
-def test_hebrew_normalize:
+def test_hebrew_normalize():
 
     unequals = [
     ["שׁ","\uFB2A"],
@@ -33,11 +33,17 @@ def test_hebrew_normalize:
     ["שׁ","שׁ"],
     ]
 
-    equals=[["שׁ","\uFB2A"]]
+    equals=[["שׁ","\uFB2A"]]
+
+    
 
     for u in unequals:
         assert u[0] != u[1]
 
     for e in equals:
-        assert u[0] == u[1]
+        assert e[0] == e[1]
 
+    for u in unequals:
+        assert GreekUtils.normalize(u[0]) == GreekUtils.normalize(u[1])
+
+    
