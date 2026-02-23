@@ -302,7 +302,8 @@ class TfDataset:
 		#excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
 
 		if (len(list(restrict))):
-			mylog("getLexemes2(): restrict: " + str(restrict),True)
+			#mylog("getLexemes2(): restrict: " + str(restrict),True)
+			pass
 		excludeProperNouns = POS.PROPER_NOUN.value in exclude#excludeStrings
 		restrictProperNouns = POS.PROPER_NOUN.value in restrict #Strings
 		restricted = True if len(restrict) else False#len(restrictStrings) > 0 else False
@@ -348,8 +349,8 @@ class TfDataset:
 
 		for l in tmpLexemes:
 			lexObj = self.lexemes[l] if l in self.lexemes.keys() else None
-			mylog(f"getLexemes2(): lexObj.pos= {lexObj.pos}",True)
-			mylog(f"getLexemes2(): lexObj.pos & restrict: {str(set(lexObj.pos) & set(restrict))}",True)
+			#mylog(f"getLexemes2(): lexObj.pos= {lexObj.pos}",True)
+			#mylog(f"getLexemes2(): lexObj.pos & restrict: {str(set(lexObj.pos) & set(restrict))}",True)
 			if (lexObj and
 				(
 					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
