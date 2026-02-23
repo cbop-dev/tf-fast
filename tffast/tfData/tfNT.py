@@ -2,11 +2,24 @@ import sys, os
 from tf.app import use
 from tf.advanced import sections as Sections
 from pathlib import Path
-from .tfDataset import TfDataset
+from .tfDataset import TfDataset,POS
 from ..utils.greekUtils import GreekUtils
 from ..env import mylog
+from enum import Enum
 
 class TfN1904(TfDataset):
+	posDict={
+	'subs':[POS.NOUN.value],
+	'verb':[POS.VERB.value],
+	'art':[POS.ARTICLE.value],
+	'conj':[POS.CONJUNCTION.value],
+	'pron':[POS.PRONOUN.value],
+	'prep':[POS.PREPOSITION.value],
+	'adjv':[POS.ADJECTIVE.value],
+	'advb':[POS.ADVERB.value],
+	'intj':[POS.INTERJECTION.value],
+	'num':[POS.NUMBER.value]
+	}
 	
 	booksDict={
 		137780 : {"name": "Matthew", "abbrev": "Matt" , "syn": ["Matthew", "Mt" ,"Mtt", "Mat", "Matt"] , "words": 18299 , "lemmas": 1670 , "chapters": 28 },

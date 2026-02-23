@@ -8,7 +8,9 @@ class DummyApp:
         self.api = api
 
 class TfWEB(TfDataset):
-    
+    posDict = {
+        
+    }
     booksDict = {
         1006953: {"name": "GEN", "abbrev": "GEN", "syn": ["GEN", "gen"], "words": 1, "chapters": 1, "lemmas": 0},
         1006954: {"name": "EXO", "abbrev": "EXO", "syn": ["EXO", "exo"], "words": 1, "chapters": 1, "lemmas": 0},
@@ -101,6 +103,7 @@ class TfWEB(TfDataset):
         
         super().__init__(datasetPathname, version='1.0', dbname=db, dataset=dataset,
         lemmaEnabled=lemmaEnabled,betaEnabled=betaEnabled,plainEnabled=plainEnabled)
+        self.lang="english"
 
     def getLemmaFeature(self):
         # We don't have lemmas, just words, so return text feature
@@ -137,8 +140,10 @@ class TfWEB(TfDataset):
     def normalize(self,string):
         return string
 
-    def pos(self,wordid):
+    def getPos(self,wordid):
         return ''
+
+    
         
     def apparatusNote(self,book,chapter,verse):
         return ''

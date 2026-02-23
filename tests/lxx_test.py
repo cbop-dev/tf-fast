@@ -1,5 +1,6 @@
 import pytest, os,sys
 from tffast.tfData.tfLXX import TfLXX
+from tffast.tfData.tfDataset import POS
 lxx=None
 @pytest.fixture()
 def LXX():
@@ -35,11 +36,16 @@ def test_restricted(LXX):
     ]
     for t in tests:
         lexes = LXX.getLexemes2(sections=t['sections'])
-        nouns = LXX.getLexemes2(sections=t['sections'],restrict=[0])
-        noNouns = LXX.getLexemes2(sections=t['sections'],exclude=[0])
+        nouns = LXX.getLexemes2(sections=t['sections'],restrict=[POS.NOUN.value])
+        noNouns = LXX.getLexemes2(sections=t['sections'],exclude=[POS.NOUN.value])
         assert(lexes and lexes['lexemes'] and (len(lexes['lexemes']) == t['total']))
         #assert(nouns and nouns['lexemes'])
         assert(len(nouns['lexemes']) == t['nouns'])
         assert(len(noNouns['lexemes']) == t['noNouns'] and len(noNouns['lexemes']) == t['total'] - t['nouns'])
 
-
+def test_posEnums(LXX):
+    tests=[
+        {'wordid':10363,'posEnums':[POS.CONJUNCTION.value,POS.PRONOUN_RELA.value]}
+    ]
+    for t in tests:
+        assert(set(LXX.getPosEnums(t['wordid'])) == set(t['posEnums']))

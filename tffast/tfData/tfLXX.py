@@ -1,42 +1,75 @@
 import sys, os
+from enum import Enum
 from tf.app import use
 from tf.advanced import sections as Sections
 from pathlib import Path
 from .tfDataset import TfDataset
 from ..env import mylog
 from ..utils.greekUtils import GreekUtils
+from .tfDataset import Lexeme, POS
 
 class TfLXX(TfDataset):
-	posDict={
-		0:  {'abbrev': 'n', 'desc':  'noun',},
-		1:  {'abbrev': 'v', 'desc':  'verb',},
-		2:  {'abbrev': 'adj', 'desc':  'adjective',},
-		3:  {'abbrev': 'adj1', 'desc':  'adjective, 1st declension, -??/-?/-?? pattern endings',},
-		4:  {'abbrev': 'adj3', 'desc': 'adjective, 3rd declension pattern endings',},
-		5:  {'abbrev': 'adv', 'desc': 'adverb',},
-		6:  {'abbrev': 'pers', 'desc': 'pronoun, personal/possessive',},
-		7:  {'abbrev': 'rel', 'desc':  'pronoun, relative',},
-		8:  {'abbrev': 'ar', 'desc':  'pronoun, article',},
-		9:  {'abbrev': 'demon', 'desc':  'pronoun, demonstrative',},
-		10:  {'abbrev': 'rel2', 'desc': 'pronoun, relative, ?????',},
-		11:  {'abbrev': 'c', 'desc': 'conjunction',},
-		12:  {'abbrev': 'prep', 'desc':  'preposition',},
-		13:  {'abbrev': 'part', 'desc': 'particle',},
-		14:  {'abbrev': 'num', 'desc':  'indeclinable number',},
-		15:  {'abbrev': 'intero', 'desc':  'pronoun, interrogative/indefinite',},
-		16:  {'abbrev': 'interj', 'desc':  'interjection',},
-		17:  {'abbrev': 'c+demon', 'desc':  'conjunction + pronoun, demonstrative',},
-		18:  {'abbrev': 'c+rel', 'desc': 'conjunction + pronoun, relative',},
-		19:  {'abbrev': 'c+part', 'desc': 'conjunction + particle',},
-		20:  {'abbrev': 'c+adv', 'desc': 'conjunction + adverb',},
-		21:  {'abbrev': 'ar+adj', 'desc': 'pronoun, article + adjective',},
-		22:  {'abbrev': 'pers+part', 'desc': 'pronoun, personal/possessive + particle',},
-		23:  {'abbrev': 'prep+adj', 'desc': 'preposition + adjective',},
-		24:  {'abbrev': 'prep+part', 'desc': 'preposition + particle',},
-		25:  {'abbrev': 'demon+n', 'desc':  'pronoun, demonstrative + noun'},
-		26:  {'abbrev': 'name', 'desc':  'proper noun or name'},
+	posDict={#these are the values for F.pos in the LXX TF dataset
+		'noun':	[POS.NOUN.value],
+		'verb':[POS.VERB.value],
+		'adjective':[POS.ADJECTIVE.value],
+		'adverb':[POS.ADVERB.value],
+		'pronoun, personal/possessive':[POS.PRONOUN_PRS.value],
+		'pronoun, relative':[POS.PRONOUN_RELA.value],
+		'pronoun, article':[POS.ARTICLE.value],
+		'pronoun, demonstrative':[POS.PRONOUN_DEM.value],
+		'pronoun, relative, ?????':[POS.PRONOUN_RELA.value],
+		'conjunction':[POS.CONJUNCTION.value],
+		'preposition':[POS.PREPOSITION.value],
+		'particle':[POS.PARTICLE.value],
+		'indeclinable number':[POS.NUMBER.value],
+		'pronoun, interrogative/indefinite':[POS.PRONOUN_INTER.value],
+		'interjection':[POS.INTERJECTION.value],
+		'conjunction + pronoun, demonstrative':[POS.CONJUNCTION.value, POS.PRONOUN_DEM.value],
+		'conjunction + pronoun, relative':[POS.CONJUNCTION.value, POS.PRONOUN_RELA.value],
+		'conjunction + particle':[POS.CONJUNCTION.value, POS.PARTICLE.value],
+		'conjunction + adverb':[POS.CONJUNCTION.value, POS.ADVERB.value],
+		'pronoun, article + adjective':[POS.ARTICLE.value, POS.ADJECTIVE.value],
+		'pronoun, personal/possessive + particle':[POS.PRONOUN_PRS.value, POS.PARTICLE.value],
+		'preposition + adjective':[POS.PREPOSITION.value, POS.ADJECTIVE.value],
+		'preposition + particle':[POS.PREPOSITION.value, POS.PARTICLE.value],
+		'pronoun, demonstrative + noun':[POS.PRONOUN_DEM.value, POS.NOUN.value],
+		'proper noun or name':[POS.PROPER_NOUN.value],
 	}
 
+	"""	
+			ADJECTIVE: 0,
+			CONJUNCTION: 1,
+			ADVERB: 2,
+			INTERJECTION: 3,
+			NOUN: 4,
+			PREPOSITION: 5,
+			ARTICLE: 6,
+			PRONOUN_DEM: 7,
+			PRONOUN_INTER: 8,
+			PRONOUN_PRS: 9,
+			PRONOUN_RELA: 10,
+			VERB: 11,
+			PARTICLE: 12,
+			PROPER_NOUN: 13,
+			NUMBER: 14,
+			UNSPECIFIED: 15
+				[Lexeme.PosEnum.NOUN]: ['n', 'demon+n'],//nound
+			[Lexeme.PosEnum.VERB]: ['v'],//verb
+			[Lexeme.PosEnum.ADJECTIVE]: ['adj', 'adj1', 'adj3', 'ar+adj', 'prep+adj'],//adjectives
+			[Lexeme.PosEnum.ADVERB]: ['adv', 'c+adv'],
+			[Lexeme.PosEnum.PRONOUN_PRS]: ['pers', 'pers+part'],//Pronoun, personal/possessive', },
+			[Lexeme.PosEnum.PRONOUN_RELA]: ['rel', 'rel2', 'c+rel'],//Pronoun, relative', },
+			[Lexeme.PosEnum.ARTICLE]: ['ar', 'ar+adj'],//Article', },
+			[Lexeme.PosEnum.PRONOUN_DEM]: ['demon', 'demon+n'],//Pronoun, demonstrative', },
+			[Lexeme.PosEnum.CONJUNCTION]: ['c', 'c+demon', 'c+rel', 'c+part', 'c+adv'],//Conjunction', },
+			[Lexeme.PosEnum.PREPOSITION]: ['prep', 'prep+adj', 'prep+part', 'prep+adj'],//Preposition', },
+			[Lexeme.PosEnum.PARTICLE]: ['part', 'c+part', 'pers+part', 'prep+part'],//Particle', },
+			[Lexeme.PosEnum.NUMBER]: ['num'],//Indeclinable number', },
+			[Lexeme.PosEnum.PRONOUN_INTER]: ['intero'],//Pronoun, interrogative/indefinite', },
+			[Lexeme.PosEnum.INTERJECTION]: ['interj'],// 'Interjection', },    
+			[Lexeme.PosEnum.PROPER_NOUN]: ['name']
+	"""		
 	posGroups={
 		"CONT":[0,1,2,3,4,5],
 		"CONTENT":[0,1,2,3,4,5],
@@ -130,12 +163,16 @@ class TfLXX(TfDataset):
 		mylog("TfLXX() done calling super().init(). self.dataset =")
 		mylog(self.dataset)
 
-		self.posDict=TfLXX.posDict
 	
 		self.posDict=TfLXX.posDict
-		self.posGroups=TfLXX.posGroups
+		#self.posGroups=TfLXX.posGroups
 		#self.booksDict=None
 		self.dbname='lxx'
+		self.lang="greek"
 		
 	def getPlain(self,wordid):
 		return GreekUtils.remove_diacritics(self.getLemma(wordid))
+
+	def getLemmaDictFormFeature():
+		return self.api.F.bol_lexeme_dict
+	

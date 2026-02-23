@@ -13,83 +13,49 @@ from pydantic import BaseModel
 from wordcloud import WordCloud, STOPWORDS
 
 from .tfData.tfLXX import TfLXX
-from .tfData.tfDataset import TfDataset
+from .tfData.tfDataset import TfDataset, POS, PosGroups
 from .tfData.tfNT import TfN1904
 from .tfData.tfBHS import TfBHS
+from .tfData.tfSBLGNT import TfSBLGNT
+from .tfData.tfVulgate import TfVulgate
+from .tfData.tfWEB import TfWEB
 from .env import mylog, debug
+from tffast.tfData.tfDataset import POS
+
 #debugOn=debug
 #debugOn=True
 #debug = True
 
 mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
-posDict = TfLXX.posDict
-posGroups =TfLXX.posGroups
+
 tfLxxBooksDict=TfLXX.booksDict
 
 theBooksDict = tfLxxBooksDict
-enableLXX=True
-enableNT=True
-enableBHS=True
-#enableBHS=False
-enableSBLGNT=True
-enableWEB=True
-enableVulgate=True
-#debug = True
-LXX = None
-BHS=None
-NT = None
-SBLGNT=None
-SBLGNTa=None
-WEB=None
-VUL=None
-theDB = None
-if (enableLXX):
-	LXX = TfLXX()
 
-if (enableSBLGNT):
-	from .tfData.tfSBLGNT import TfSBLGNT
-	SBLGNT=TfSBLGNT()
-	SBLGNTa=SBLGNT.api
-	theDB=SBLGNT
-	theBooksDict=SBLGNT.booksDict
 
-if (enableBHS):
-	from .tfData.tfBHS import TfBHS
-	bhsPosGroups=TfBHS.posGroups
-	bhsPosDict=TfBHS.posDict
-	tfBHSBooksDict=TfBHS.booksDict
-	BHS=TfBHS()
-	bhsA = BHS.api
-	theDB = BHS
-	theBooksDict=BHS.booksDict
+enabledDatasets = {
+	'lxx': TfLXX,
+	'nt': TfN1904,
+	'bhs': TfBHS,
+	'sblgnt': TfSBLGNT,
+	'web': TfWEB,
+	'vul': TfVulgate,
+}
 
-if (enableNT):
-	from .tfData import tfNT
-	NT=TfN1904()
-	NTa = NT.api
-	theDB = NT
-	theBooksDict=NT.booksDict
+dataSets={}
 
-if (enableVulgate):
-	from .tfData.tfVulgate import TfVulgate
-	VUL=TfVulgate()
-	theDB = VUL
-	theBooksDict=VUL.booksDict
+for [key,db] in enabledDatasets.items():
+	if key not in dataSets.keys() or not dataSets[key]:
+		dataSets[key] = db()
 
-if (enableWEB):
-	from .tfData.tfWEB import TfWEB
-	WEB = TfWEB()
-	theDB = WEB
-	theBooksDict = WEB.booksDict
-
+def getDataset(dbname='lxx'):
+	return dataSets[dbname] if dbname in dataSets.keys() else None
 
 
 mylog(f"about to load LXX. Python version: {sys.version}")
 
 
-datapath="CenterBLC/LXX"
-version="1935"
 
 app = FastAPI()
 origins = [
@@ -112,48 +78,34 @@ def getCommonRoute(db='lxx'):
 @app.get("/{db}/lex/{lexid:int}")
 @app.get("/lex/{lexid:int}")
 def getLexInfo(lexid: int,db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
-	lexid=int(lexid)
-	lex=tf.TfData.getLex(lexid)
-	if (lex):
-		theLexObj = {'id': lexid}
-		theLexObj['total'] = lex.total
-		theLexObj['gloss'] = lex.gloss
-		theLexObj['beta']=lex.beta
-		theLexObj['plain']=lex.plain
-		theLexObj['lemma'] = lex.lemma
-		if (db == 'lxx'):
-		
-			theLexObj['greek'] = lex.lemma
+	tfData=getDataset(db)
+	if(tfData):
+		api=tfData.api
+		lexid=int(lexid)
+		lex=tfData.getLex(lexid)
+		if (lex):
+			theLexObj = {'id': lexid}
+			theLexObj['total'] = lex.total
+			theLexObj['gloss'] = lex.gloss
+			theLexObj['beta']=lex.beta
+			theLexObj['plain']=lex.plain
+			theLexObj['lemma'] = lex.lemma
 			theLexObj['pos'] = lex.pos if lex.pos else 'proper noun or name'
-		elif (enableBHS and  db == 'bhs'):
-		
-			theLexObj['hebrew'] = lex.lemma
-			theLexObj['hebrew_plain'] = lex.plain
-			theLexObj['pos'] = lex.pos
-		
-		return theLexObj
+			lang=tfData.lang if tfData.lang else 'greek'
+			theLexObj['lemma'] = lex.lemma
+				
+			if (tfData.dbname == 'bhs'):
+			
+				theLexObj['hebrew'] = lex.lemma
+				theLexObj['hebrew_plain'] = lex.plain
+	
+			
+			return theLexObj
+		else:
+			return ''
 
 	else:
 		return ''
-
-
-@app.get("/bhs/test")
-def bhsTest():
-	return "Hello BHS World!"
-
-@app.get("/{db}/lex/freq/{lexid:int}")
-@app.get("/lex/freq/{lexid:int}")
-def getLexCount(lex: int, db='lxx'):
-	
-	if (db == 'lxx'):
-		return LXX.api.F.freq_lemma.v(lexid)
-	elif (enableBHS and db == 'bhs'):
-		mylog("db == bhs...")
-		count = str(bhsA.F.freq_lex.v(lexid))
-		mylog("count: " + count)
-		return count
 
 @app.get("/{db}/wordcloud")
 @app.get("/wordcloud")
@@ -207,9 +159,9 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 @app.get("/{db}/lex")
 @app.get("/lex")
 def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',beta='',plain='',common='',groups='',min='',gloss='',):
-	tf=getAPI(db)
-	api=tf.api
-	theDicts=getDicts(db)
+	tfData=getDataset(db)
+	api=tfData.api
+	#theDicts=getDicts(db)
 	checkProper =  True if proper != 'false' else False
 	#mylog("lex route: checkProper = " + str(checkProper))
 	#sections = sections if sections else []
@@ -227,23 +179,23 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 #		mylog("using common flag...")
 	restrictedIds=set([int(x) for x in restrictParamsList if x.isdigit()])
 
-	for (abbrev,iArray) in theDicts['groups'].items():
+	for (abbrev,posArray) in [(p.name,p.value) for p in PosGroups]:
 		if (abbrev in restrictParamsList):
-			restrictedIds.update(theDicts['groups'][abbrev])
+			restrictedIds.update(posArray)
 			#restrictedIds.remove(abbrev)
 	mylog("restrictedIds: " + str(restrictedIds))
 
 	excludedIds=set([int(x) for x in excludeParamsList if x.isdigit()])
-	for (abbrev,iArray) in theDicts['groups'].items():
+	for (abbrev,posArray) in [(p.name,p.value) for p in PosGroups]:
 		if (abbrev in excludeParamsList):
-			excludedIds.update(theDicts['groups'][abbrev])
+			excludedIds.update(posArray)
 	mylog("excludedIds: " + str(excludedIds))
 
 	min = min if ( min) else 1
 	gloss = True if ( gloss and int(gloss) != 0) else False
 	#mylog("Gloss: " + str(gloss))
 	#mylog("calling getLexemes with common = " + str(common))
-	returnObject= tf.TfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 
+	returnObject= tfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 
 						exclude=list(excludedIds), min=int(min), gloss=gloss,pos=pos,checkProper=checkProper, 
 						beta=beta, common=common,plain=plain)
 	#mylog("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
@@ -252,15 +204,11 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 @app.get("/chapters/")
 @app.get("/{db}/chapters/")
 def allChaptersRoute(db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	booksChaps={}
-	#booksDict = tfLxxBooksDict
-	
-	if (enableBHS and db == 'bhs'):
-		booksDict = tfBHSBooksDict
-	
-	for bid in theBooksDict.keys():
+		
+	for bid in tfData.booksDict.keys():
 		booksChaps[bid]=getChaptersDict(bid, db)
 	
 	return booksChaps
@@ -278,16 +226,16 @@ def booksRoute(db='lxx'):
 @app.get("/{db}/getrefs/{id:int}")
 @app.get("/getrefs/{id:int}")
 def getrefsRoute(id: int, db='lxx',sections='',detail=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	sectionsArray = [int(s) for s in sections.split(',')] if sections else []
-	return tf.TfData.getLexRefs(id,sectionsArray,detail)
+	return tfData.getLexRefs(id,sectionsArray,detail)
 
 @app.get("/{db}/words/{id:int}")
 @app.get("/words/{id:int}")
 def getWords(id,db='lxx',features=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	if (not features):
 		try:
 			words = [{'id': w, 'text': getText(w,db),'lemma': tf.getLemma(w)} for w in api.L.d(id) if api.F.otype.v(w) == 'word']
@@ -296,18 +244,24 @@ def getWords(id,db='lxx',features=''):
 	else:
 #		features = ['sp','gn','tense','mood']
 		words = [{'id': w, 'text': getText(w,db),'lemma': tf.getLemma(w),
-			'features': {'pos':api.F.sp.v(w)}} for w in api.L.d(id) if api.F.otype.v(w) == 'word']
+			'features': {'pos':tf.getPosEnums(w)}} for w in api.L.d(id) if api.F.otype.v(w) == 'word']
 		for w in words:
-			if (api.F.sp.v(w['id']) == "verb"):
+			if (tf.getPosEnums(w['id']) == "verb"):
 				w['features']['tense'] = api.F.tense.v(w['id'])
 		
 	return words
 
+@app.get("/{db}/pos")
+def getPosDict(db='lxx'):
+	tfData=getDataset(db)
+	api=tfData.api
+	return tfData.posDict if tfData.posDict else {}
+
 @app.get("/{db}/text/{id:int}")
 @app.get("/text/{id:int}")
 def textRoute(id,db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	return {'section': getRef(id,db), 'text': getText(id,db), 'id':int(id), 
 	'type': api.F.otype.v(int(id))} if api else ''
 
@@ -346,148 +300,156 @@ class TextsResponse(BaseModel):
 def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 	mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
 	texts = list()
-	tfAPI = getAPI(db)
-	#mylog(f"tfAPI={tfAPI.TfData.appName}")
-	showVerses= request.options.showVerses
-	getLexemes = request.options.lexemes
-	mylog('postTextsRoute. request.refs = ' + str(request))
-	mylog('postTextsRoute. request.refs = ' + str(request.refs))
-	mylog("postTextsRoute. request.options: ")
-	mylog(request.options)
-	mylog("postTextsRoute: getLexemes=" + str(getLexemes))
-	lexemes = dict() # dict[lemma:str,dict{id:int,count:int}]
-	wordsArray= list() # list[{'id':int,'word':str,'pos':str,...}]
-	mylog("postTextsRoute. showVerses = " + str(showVerses))
-	textsAndRefsResponse=list()#TextAndReference
-	if request.refs:
-		
-		for ref in request.refs:
-			mylog("got request.refs	")
-			refString=ref.book + ' ' + str(ref.chapter) + ":" + ",".join(map(str,ref.verses))
-			text=''
-			nodes = list()
-			words = list()
-			notes=list()
-			firstVerse = True
-			if (not ref.verses or not len(ref.verses)):
-				chapterNode=tfAPI.TfData.getChapter(tfAPI.TfData.lookupBook(ref.book),ref.chapter)
-				ref.verses = [tfAPI.api.F.verse.v(vn) for vn in tfAPI.api.L.d(chapterNode,'verse')]
-				
-			for v in ref.verses:
-					
-				#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
-				node=tfAPI.TfData.getNodeFromBcV(ref.book,ref.chapter,v)## book, chap, verse
-					
-				textToAdd = tfAPI.TfData.getText(node)
-				mylog(f"got Text: '{textToAdd}'")
-				if (getLexemes and len(textToAdd) > 0):
-					nodes.append(node)
-					#mylog(f"node {node} appended!")
-
-				
-				#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
-				if (len(textToAdd) > 0 and showVerses):
-					#mylog("ADDING VERSE:"+ str(v))
-					if (not firstVerse):
-						text+= ' '
-					#else:
-					#	text+='FIRST VERSE!!:'
-					text+='('+str(v)+') '
-				text+= textToAdd
-				if(showNotes):
-					notes.append(tfAPI.TfData.apparatusNote(ref.book,ref.chapter,v))
-				firstVerse = False
-			verses=list()
+	#tfAPI = getAPI(db)
+	tfData=getDataset(db)
+	if(tfData):
+		tfAPI=tfData.api
+		#mylog(f"tfAPI={tfData.appName}")
+		showVerses= request.options.showVerses
+		getLexemes = request.options.lexemes
+		mylog('postTextsRoute. request.refs = ' + str(request))
+		mylog('postTextsRoute. request.refs = ' + str(request.refs))
+		mylog("postTextsRoute. request.options: ")
+		mylog(request.options)
+		mylog("postTextsRoute: getLexemes=" + str(getLexemes))
+		lexemes = dict() # dict[lemma:str,dict{id:int,count:int}]
+		wordsArray= list() # list[{'id':int,'word':str,'pos':str,...}]
+		mylog("postTextsRoute. showVerses = " + str(showVerses))
+		textsAndRefsResponse=list()#TextAndReference
+		if request.refs:
 			
+			for ref in request.refs:
+				mylog("got request.refs	")
+				refString=ref.book + ' ' + str(ref.chapter) + ":" + ",".join(map(str,ref.verses))
+				text=''
+				nodes = list()
+				words = list()
+				notes=list()
+				firstVerse = True
+				if (not ref.verses or not len(ref.verses)):
+					chapterNode=tfData.getChapter(tfData.lookupBook(ref.book),ref.chapter)
+					ref.verses = [tfAPI.F.verse.v(vn) for vn in tfAPI.L.d(chapterNode,'verse')]
+					
+				for v in ref.verses:
+						
+					#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
+					node=tfData.getNodeFromBcV(ref.book,ref.chapter,v)## book, chap, verse
+						
+					textToAdd = tfData.getText(node)
+					mylog(f"got Text: '{textToAdd}'")
+					if (getLexemes and len(textToAdd) > 0):
+						nodes.append(node)
+						#mylog(f"node {node} appended!")
+
+					
+					#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
+					if (len(textToAdd) > 0):
+						if (not firstVerse):
+							text+= ' '
+						if(showVerses):
+							text+='('+str(v)+') '
+						text+= textToAdd
+					if(showNotes):
+						notes.append(tfData.apparatusNote(ref.book,ref.chapter,v))
+					firstVerse = False
+				verses=list()
+				
+				if (getLexemes):
+				#add all section lexemes to response 'lexemes' dictionary:
+					mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
+					
+					for n in nodes:
+						
+						v=tfData.getVerseNumberFromNode(n)
+						verseData={'verse':v, 'words':[]}
+						#mylog(f"checking for words in node {n}, verse {v}")
+						for w in tfAPI.L.d(n,'word'):			
+							word=tfData.getText(w)
+							#mylog(f"Got word '{w}'={word}")
+							lemma=tfData.getLemma(w)
+							id=tfData.lexemes[lemma].id
+							beta=tfData.lexemes[lemma].beta
+							verseData['words'].append({'word':word,'id':id })
+							if (lemma not in lexemes.keys()):
+								lexemes[lemma]={'id':id,'count':1}
+							else:
+								lexemes[lemma]['count']+=1
+						verses.append(verseData)
+				
+				txtRef = TextAndReference(text=text,reference=refString,words=verses,notes=notes)
+				
+				textsAndRefsResponse.append(txtRef)
+			mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
+		elif request.sections:
+			#firstNode = True
+
 			if (getLexemes):
-			#add all section lexemes to response 'lexemes' dictionary:
-				mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
+				mylog("postTextsRoute: getting Lexemes from sections...")
+				sectionsLexemes=tfData.getLexemes2(sections=request.sections)
+				mylog("postTextsRoute sectionsLexemes = ")
+				mylog(sectionsLexemes)
+				for l in sectionsLexemes['lexemes'].items():
+					lemma = l[0]
+					lemmaInfo= l[1] # dict[id,count,beta]
+					if l[0] not in lexemes.keys():
+						lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
+			
+			firstNode = True
+			for node in request.sections:
+				#words=list()
+				#verses=list()
 				
-				for n in nodes:
-					
-					v=tfAPI.TfData.getVerseNumberFromNode(n)
-					verseData={'verse':v, 'words':[]}
-					#mylog(f"checking for words in node {n}, verse {v}")
-					for w in tfAPI.api.L.d(n,'word'):			
-						word=tfAPI.TfData.getText(w)
-						#mylog(f"Got word '{w}'={word}")
-						lemma=tfAPI.getLemma(w)
-						id=tfAPI.TfData.lexemes[lemma].id
-						beta=tfAPI.TfData.lexemes[lemma].beta
-						verseData['words'].append({'word':word,'id':id })
-						if (lemma not in lexemes.keys()):
-							lexemes[lemma]={'id':id,'count':1}
-						else:
-							lexemes[lemma]['count']+=1
-					verses.append(verseData)
-			
-			txtRef = TextAndReference(text=text,reference=refString,words=verses,notes=notes)
-			
-			textsAndRefsResponse.append(txtRef)
-		mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
-	elif request.sections:
-		#firstNode = True
+				curVerse={'verse':0, 'words':list()}
+				sectRef = tfAPI.T.sectionFromNode(node)
+				if(len(sectRef)==3):
+					v=sectRef[2]
+					curVerse['verse']=v
 
+				refString = sectRef[0]
+				if(len(sectRef) > 1):
+					refString += ' ' +str(sectRef[1])
+					if(len(sectRef) > 2):
+						refString += ':' + str(sectRef[2])
+
+				
+				textToAdd = tfData.getText(node)
+				text=''
+				
+
+				if(showVerses and textToAdd and (tfAPI.F.otype.v(node) == 'verse')):
+					sect = tfAPI.T.sectionFromNode(node)
+					if (len(sect)==3):
+						text+= '('+str(sect[2])+') '
+
+				if (getLexemes):
+					curVerse['words'].extend([{'word':tfData.getText(w),'id':lexemes[tfData.getLemma(w)]['id']} for w in tfAPI.L.d(node) if tfAPI.F.otype.v(w) == 'word'])
+				if (not firstNode):
+					text=text.strip() + ' '
+				text+=textToAdd
+				firstNode = False
+				if (showNotes):
+					notes=tfData.apparatusNotesForNode(node)
+
+				txtRef = TextAndReference(text=text,reference=refString,words=[curVerse],notes=notes)
+				textsAndRefsResponse.append(txtRef)
+				
+		retObj= dict()
+		retObj['texts']=textsAndRefsResponse
 		if (getLexemes):
-			mylog("postTextsRoute: getting Lexemes from sections...")
-			sectionsLexemes=tfAPI.TfData.getLexemes2(sections=request.sections)
-			mylog("postTextsRoute sectionsLexemes = ")
-			mylog(sectionsLexemes)
-			for l in sectionsLexemes['lexemes'].items():
-				lemma = l[0]
-				lemmaInfo= l[1] # dict[id,count,beta]
-				if l[0] not in lexemes.keys():
-					lexemes[lemma]={'id': lemmaInfo['id'],'count':lemmaInfo['count']} 
+			retObj['lexemes']=lexemes
+			#retObj['words']=wordsArray
+		#mylog("postTextsRoute finishing. Here's the retObj:", debugOn=True, showTime=True)
+		#mylog(retObj)
+		return retObj
+	else:
+		return ''
 		
-		for node in request.sections:
-			#words=list()
-			#verses=list()
-			
-			curVerse={'verse':0, 'words':list()}
-			sectRef = tfAPI.api.T.sectionFromNode(node)
-			if(len(sectRef)==3):
-				v=sectRef[2]
-				curVerse['verse']=v
-
-			refString = sectRef[0]
-			if(len(sectRef) > 1):
-				refString += ' ' +str(sectRef[1])
-				if(len(sectRef) > 2):
-					refString += ':' + str(sectRef[2])
-
-			
-			textToAdd = tfAPI.TfData.getText(node)
-			text=''
-
-			if(showVerses and textToAdd and (tfAPI.api.F.otype.v(node) == 'verse')):
-				sect = tfAPI.api.T.sectionFromNode(node)
-				if (len(sect)==3):
-					text+= '('+str(sect[2])+') '
-			if (getLexemes):
-				curVerse['words'].extend([{'word':tfAPI.TfData.getText(w),'id':lexemes[tfAPI.getLemma(w)]['id']} for w in tfAPI.api.L.d(node) if tfAPI.api.F.otype.v(w) == 'word'])
-			text+=textToAdd
-
-			if (showNotes):
-				notes=tfAPI.TfData.apparatusNotesForNode(node)
-
-			txtRef = TextAndReference(text=text,reference=refString,words=[curVerse],notes=notes)
-			textsAndRefsResponse.append(txtRef)
-			
-	retObj= dict()
-	retObj['texts']=textsAndRefsResponse
-	if (getLexemes):
-		retObj['lexemes']=lexemes
-		#retObj['words']=wordsArray
-	mylog("postTextsRoute finishing. Here's the retObj:", debugOn=True, showTime=True)
-	mylog(retObj)
-	return retObj
-
 @app.get("/texts")
 @app.get("/texts/")
 @app.get("/{db}/texts/")
 def textsRoute(db='lxx',sections='',refs=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	texts = []
 	if(api):
 		
@@ -505,23 +467,15 @@ def textsRoute(db='lxx',sections='',refs=''):
 @app.get("/{db}/node")
 @app.get("/node")
 def getNodeFromRefRoute(db='lxx',book='',chapter='',verse=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	node = 0
 	if(api):
-		
-
 		if (book and len(book) > 0):
 			ref = book + " " + chapter if chapter and len(chapter) > 0 else book
 			ref += ":" + verse if chapter and len(chapter) > 0 and verse and len(verse) > 0 else ''
-			if (db=='lxx'):
-				theDB=LXX
-			elif(db=='bhs'):
-				theDB=BHS
-			elif(db=='nt'):
-				theDB=NT
 			mylog("getNodeFromRefRoute calling nodeFromSectionStr with ref=" + ref)
-			secs = Sections.nodeFromSectionStr(tf.TfData.dataset,ref)
+			secs = Sections.nodeFromSectionStr(tfData.dataset,ref)
 
 			if ((type(secs) is int) and secs > 0):
 				node = secs
@@ -531,8 +485,8 @@ def getNodeFromRefRoute(db='lxx',book='',chapter='',verse=''):
 @app.get("/{db}/verses")
 @app.get("/verses")
 def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	
 	if(api):
 		book = book.strip()
@@ -552,8 +506,8 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 			endVerse = int(endVerse)
 
 		verses = ''
-		startNode = tf.TfData.getNodeFromBcV(book,chapter,startVerse)
-		endNode = tf.TfData.getNodeFromBcV(book,chapter,endVerse)
+		startNode = tfData.getNodeFromBcV(book,chapter,startVerse)
+		endNode = tfData.getNodeFromBcV(book,chapter,endVerse)
 		ref = ''
 		if (startNode == 0  and endNode == 0):
 			mylog("got nothing")
@@ -562,13 +516,13 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 				mylog(f"got end node {endNode} but no start node! trying to fix...")
 				for i in range(startVerse + 1,endVerse+1, 1):
 					if (startNode == None):
-						startNode = tf.TfData.getNodeFromBcV(book,chapter,i)
+						startNode = tfData.getNodeFromBcV(book,chapter,i)
 			
 			if ((endNode == 0 or endNode == None) and (startNode != None and startNode != 0)):
 				mylog(f"got start node {startNode} but no end node! trying to fix with range:")
 				for i in range(endVerse-1, startVerse-1, -1):
 					if (endNode == 0 or endNode == None):
-						endNode = tf.TfData.getNodeFromBcV(book,chapter,i)
+						endNode = tfData.getNodeFromBcV(book,chapter,i)
 			if (startNode != None and endNode != None and startNode > 0 and endNode > 0 and endNode >= startNode):
 				verses = getVersesFromNodeRange(startNode,endNode,showVerses,db)
 				mylog("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
@@ -590,14 +544,14 @@ def getVersesPost(db='lxx'):
 @app.get("/{db}/verse")
 @app.get("/verse")
 def getVerse(db='lxx',book='',chapter='',verse=''):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	if(api):
 		book = book.strip()
 		chapter = int(chapter.strip())
 		verse = int(verse.strip())
 		ref = ''
-		node = tf.TfData.getNodeFromBcV(book,chapter,verse)
+		node = tfData.getNodeFromBcV(book,chapter,verse)
 		mylog("getVerse url calling getNodeFromBcV("+ ",".join([book,str(chapter),str(verse)])+")")
 		mylog("got node " + str(node))
 		if ((type(int(node)) == int) and int(node) > 0):
@@ -621,25 +575,25 @@ def getVerse(db='lxx',book='',chapter='',verse=''):
 def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 	text = ''
 	mylog("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	if(api):
 		if (startNode == endNode):
-			text += tf.TfData.getText(startNode)
+			text += tfData.getText(startNode)
 			mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
 			onFirstNode = True
 			for i in range(startNode,endNode+1,1):
 				if(api.F.otype.v(i) =='verse'):
+					if(not onFirstNode):
+						text+=' '
 					if(showVerses):
 						sec=api.T.sectionFromNode(i)
 						if (sec[2]):
-							if(not onFirstNode):
-								text+=''
 							text+= '('+str(sec[2])+') '
-					text += tf.TfData.getText(i)
+					text += tfData.getText(i)
 				else:
-					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + tf.TfData.getText(i))
+					mylog("Node " + str(i) + " was not a verse, but is: " + api.F.otype.v(i) +", text = " + tfData.getText(i))
 				onFirstNode=False
 			mylog("	got range. text = " + text)
 
@@ -647,9 +601,9 @@ def getVersesFromNodeRange(startNode,endNode,showVerses=False,db='lxx'):
 
 # returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
 def getLexRefs2(id,db='lxx',sections='',detail=''):
-	tf=getAPI(db)
-	#tf.TfData
-	api=tf.api
+	tfData=getDataset(db)
+	#tfData
+	api=tfData.api
 	if(api):
 		# optionally limits to instances within any of the selected sections, exluding all others:
 		#NB: this should be lex id, not the node id!!
@@ -657,7 +611,7 @@ def getLexRefs2(id,db='lxx',sections='',detail=''):
 		
 		sectionsArray = [int(s) for s in sections.split(',')] if sections else []
 		mylog("getrefs: sections = [" + ",".join([str(s) for s in sectionsArray])+"]")
-		lex= tf.TfData.getLex(id) 
+		lex= tfData.getLex(id) 
 		if(lex):
 			
 			rNodes = {}
@@ -709,17 +663,17 @@ def getLexRefs2(id,db='lxx',sections='',detail=''):
 		return {}
 
 def getText(nodeId,db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	if(api):
 		try:
-			return tf.TfData.getText(int(nodeId)).strip()
+			return tfData.getText(int(nodeId)).strip()
 		except:
 			return ''
 	return ''
 def getRef(nodeId, db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	if(api):
 		try:
 			return " ".join(map(str, api.T.sectionFromNode(int(nodeId))))
@@ -728,8 +682,8 @@ def getRef(nodeId, db='lxx'):
 	return ''
 #def getNodeFromBcV(book,chapter,verse,db='lxx'):
 #	node = 0
-	#tf=getAPI(db)
-	#api=tf.api
+	#tfData=getDataset(db)
+	#api=tfData.api
 	#if(api):
 		#mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+","+db+")")
 #		
@@ -738,7 +692,10 @@ def getRef(nodeId, db='lxx'):
 #			node = 0
 #		mylog("...got node " + str(node))
 #	return node
-TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
+#TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
+
+
+"""
 def getAPI(db='lxx'):
 	
 	api=None
@@ -778,6 +735,8 @@ def getAPI(db='lxx'):
 		dataSet=VUL
 	return TfAPI(api,getLemma,dataSet)
 
+"""
+"""
 def getDicts(db='lxx'):
 	if (db=='lxx'):
 		return {'dict': posDict, 'groups': posGroups}
@@ -785,14 +744,12 @@ def getDicts(db='lxx'):
 		return {'dict': bhsPosDict, 'groups': bhsPosGroups}
 	else:
 		return {'dict':{}, 'groups':{}}
-
+"""
 def sectionFromNode(node,db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	string=''
 	if(api):
-		if (enableBHS and db=='bhs'):
-			api=BHS.api
 		section= api.T.sectionFromNode(node)
 		string = ''
 		if (len(section) == 3):
@@ -863,16 +820,16 @@ def genWordCloudSVG(freqDataDict, title='',maxWords=200):
 
 def getChaptersDict(book, db='lxx'):
 	mylog("getChapters(" + str(book) + "," + db +")")
-	tf = getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	theDict=dict()
 	if(api):
 		theDict= dict([(api.F.chapter.v(c), c) for c in api.L.d(book) if api.F.otype.v(c)=='chapter'])
 	return theDict
 	
 def getBooksDict(db='lxx'):
-	tf=getAPI(db)
-	api=tf.api
+	tfData=getDataset(db)
+	api=tfData.api
 	theDict=dict()
 	if(api):
 		theDict= dict([(b, api.F.book.v(b)) for b in api.N.walk() if api.F.otype.v(b) == 'book'])

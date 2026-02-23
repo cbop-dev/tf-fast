@@ -3,12 +3,57 @@ from collections import Counter
 from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
+from enum import Enum
+
+class POS(Enum):
+	ADJECTIVE= 0
+	CONJUNCTION= 1
+	ADVERB= 2
+	INTERJECTION= 3
+	NOUN= 4
+	PREPOSITION= 5
+	ARTICLE= 6
+	PRONOUN_DEM= 7
+	PRONOUN_INTER= 8
+	PRONOUN_PRS= 9
+	PRONOUN_RELA= 10
+	VERB= 11
+	PARTICLE= 12
+	PROPER_NOUN= 13
+	NUMBER= 14
+	UNSPECIFIED= 15
+	PRONOUN= 16
+	
+	@staticmethod
+	def has(name):
+		return name in POS.__members__.values()
 
 
+class PosGroups(Enum):
+	CONT= [0, 11, 2, 4]
+	CONTENT= [0, 11, 2, 4]
+	SYNT= [1, 5, 12]
+	SYNTAX= [1, 5, 12]
+	PREP= [5]
+	PREPOSITIONS= [5]
+	PREPOSITION= [5]
+	PART= [12]
+	PARTICLES= [12, 3]
+	PARTICLE= [12, 3]
+	PRON= [7, 8, 9,16]
+	PRONOUNS= [7, 8, 9,16]
+	PRONOUN= [7, 8, 9,16]
 
+class posGroupsUIDesc(Enum):
+	CONTENT= "Content words (nounds, verbs, adjectives, adverbs)",
+	SYNTAX= "Syntax words (conjuctions, particles, prepositions)",
+	PREPOSITIONS= "Prepositions",
+	PARTICLES= "Particles",
+	PRONOUNS= "Pronouns"
 
 class Lexeme:
-	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,pos=None,lang=None,strongs=None,total=0,isProper=False):
+	def __init__(self,id,lemma,wordid=0,gloss=None,plain=None,translit=None,beta=None,
+				pos=None,lang=None,strongs=None,total=0,isProper=False):
 		self.id = id if id else 0
 		self.wordid=wordid # a node id in which this lexeme is found as a word in DB (important if self.id does not correspond to node ids)
 		self.total = total 
@@ -18,14 +63,21 @@ class Lexeme:
 		self.beta = beta if beta else translit
 		self.lemma = lemma
 		self.plain = plain if plain else self.getPlain(wordid)
-		self.pos = pos
+		self.pos = list(pos) if pos is not None else [POS.UNSPECIFIED.value]
+		if (isProper):
+			if (not lemma[0].isupper()):
+				#mylog(f"Lexeme(), improper Proper Noun!: {lemma}")
+				pass
+			if ((POS.PROPER_NOUN.value not in self.pos)):
+				self.pos.append(POS.PROPER_NOUN.value)
+				#mylog(f"Lexeme(): Added proper noun tag to {lemma}")
 		self.lang = lang
 		self.isProper = isProper
-		
+		self.posDict={}
 
 
 class TfDataset:
-	
+	posDict={}
 	def getBeta(self,wordid):
 		return self.api.F.lex.v(wordid)#does not work for nt, must override.
 	def getPlain(self,wordid):
@@ -41,6 +93,21 @@ class TfDataset:
 		lem = self.getLemma(wordid)
 		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if self.normalize(e[0]) == lem]
 		return freqs[0] if len(freqs) > 0 else 0
+
+		
+	def getPos(self,wordid):
+		return self.api.F.sp.v(wordid)
+
+
+	def getPosEnums(self,wordid):
+		pos = self.getPos(wordid)
+		retVal=self.posDict[pos] if pos in self.posDict.keys() else [POS.UNSPECIFIED.value]
+		
+		if(len(retVal) > 1):
+			#mylog(f"getPosEnums({wordid},'{self.getLemma(wordid)}',pos='{pos}'): selfDict[pos]='{self.posDict[pos]}'",debugOn=True)
+			#mylog(f"getPosEnums({wordid},pos='{pos}'): {self.getLemma(wordid)} has multiple POS tags: {str(retVal)}",debugOn=True)
+			pass
+		return retVal
 	
 
 	def getLemma(self,wordid):
@@ -57,7 +124,7 @@ class TfDataset:
 		return self.booksDict
 	def __init__(self,datasetPathname,version=None,dbname='lxx', dataset=None,buildLexData=True,modules=None,path=None,mod=None,
 					lemmaEnabled=True,betaEnabled=True,plainEnabled=True):
-		
+		self.lang="unspecified"
 		mylog(f"TfDataset.init('{datasetPathname}','{version}')...")
 		self.lemmaEnabled = lemmaEnabled
 		self.betaEnabled = betaEnabled
@@ -90,16 +157,16 @@ class TfDataset:
 			mylog("TfDataset() got no data!")
 			self.api = None
 		
-		self.posDict=None if not hasattr(self,'posDict') else self.posDict
-		self.posGroups=None if not hasattr(self,'posGroups') else self.posGroups
-		self.booksDict=None if not hasattr(self,'booksDict') else self.booksDict
+		#self.posDict=None if not hasattr(self,'posDict') else self.posDict
+		#self.posGroups=None if not hasattr(self,'posGroups') else self.posGroups
+		#self.booksDict=None if not hasattr(self,'booksDict') else self.booksDict
 		self.dbname=dbname
 		if (buildLexData):
 			self.buildLexData()
 
 	def normalize(self,string):
 		return string
-
+	
 	def buildLexData(self):
 		self.lexemes = dict()#lemma:str->Lexeme
 
@@ -112,8 +179,8 @@ class TfDataset:
 				if (len(re.sub('[]0-9!%*,.:;=?$]','',lem)) > 0):
 					
 					if (lem not in self.lexemes.keys()):
-						self.lexemes[lem] = Lexeme(0,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),strongs=self.getStrongs(w),
-								total=lemmaFreqDict[lem] if lemmaFreqDict[lem] else 0,isProper=self.isProperNoun(w),pos=self.pos(w))
+						self.lexemes[lem] = Lexeme(-1,lem,gloss=self.getGloss(w),beta=self.getBeta(w),plain=self.getPlain(w),strongs=self.getStrongs(w),
+								total=lemmaFreqDict[lem] if lem in lemmaFreqDict.keys() else 0,isProper=self.isProperNoun(w),pos=self.getPosEnums(w))
 					self.words.append(self.getLemma(w))
 			self.booksDict = self.getBooks()
 			#mylog("buildLexData(): done with first loop")
@@ -141,7 +208,14 @@ class TfDataset:
 		return count
 	
 	def isProperNoun(self, wordid):
-		return (self.pos(wordid) == 'noun') and self.api.F.lex_utf8.v(wordid)[0].isupper()
+		posEnums=self.getPosEnums(wordid)
+		check1= (POS.PROPER_NOUN.value in posEnums)
+		check2= (POS.NOUN.value in posEnums and self.getLemma(wordid)[0].isupper())
+		returnVal = check1 or check2
+		if (returnVal):
+			pass
+			#mylog(f"isProperNoun({wordid},posEnums=[str({posEnums})]): {self.getLemma(wordid)} is a proper noun. posEnums: {str(posEnums)}. check1/2: [{check1}/{check2}]",debugOn=True)
+		return returnVal
 
 	def getLexObj(self,wordid):
 		return None
@@ -150,7 +224,7 @@ class TfDataset:
 	# TODO: test this with LXX and lxx-web...
 	def getLexID(self,wordid):
 		lemma=self.getLemma(wordid)
-		return self.lexemes[lemma].id if lemma and self.lexemes[lemma] else 0
+		return self.lexemes[lemma].id if lemma and lemma in self.lexemes.keys() else 0
 		
 	def getStrongs(self,wordNodeId):
 		output=''
@@ -184,8 +258,8 @@ class TfDataset:
 		return count
 
 
-	def pos(self,wordid):
-		return self.api.F.sp.v(wordid)
+	#def pos(self,wordid):
+	#	return self.api.F.sp.v(wordid)
 	
 	# return object:{
 	# 		totalInstances: number of relevant words found in this section according to query parameters. How to calculate efficiently?
@@ -196,6 +270,22 @@ class TfDataset:
 	# params: min/max: how many total BHS instances of lex
 	def getLexemes2(self,sections=[], restrict=[],exclude=[], min=0, gloss=False, max=0,
 				totalCount=True,pos=False,checkProper=True, beta=True,type='all',common=False,plain=False):
+		""" getLexemes for given sections (or whole corpus), with various options.
+		
+		Keyword arguments:
+			sections: list of section node ids
+			restrict: list of pos (enum) codes to restrict to
+			exclude: list of pos (enum) codes to exclude
+			min: minimum number of total lexeme instances in sections to return
+			max: maximum number of total lexeme instances in sections to return
+			totalCount: whether to include total count of lexemes
+			pos: whether to include pos of lexemes
+			checkProper: whether to check for proper nouns
+			beta: whether to include beta of lexemes
+			type: type of lexemes to include
+			common: whether to do a common lexemes search (only return those common to all sections)
+			plain: whether to include plain lexemes
+		"""
 		#mylog("Min: " + str(min))
 		
 
@@ -208,13 +298,15 @@ class TfDataset:
 		totalWordsInSections = 0
 
 		
-		restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
-		excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
-		#mylog("restrictStrings: " + str(restrictStrings))
-		excludeProperNouns = self.properNounKey() in excludeStrings
-		restrictProperNouns = self.properNounKey() in restrictStrings
-		restricted = True if len(restrictStrings) > 0 else False
-		excluded  = True if len(excludeStrings) > 0 else False
+		#restrictStrings=[v['desc'] for (k,v) in self.posDict.items() if k in restrict] if(self.posDict and len(self.posDict.items())) else []
+		#excludeStrings=[v['desc'] for (k,v) in self.posDict.items() if k in exclude] if(self.posDict and len(self.posDict.items())) else []
+
+		if (len(list(restrict))):
+			mylog("getLexemes2(): restrict: " + str(restrict),True)
+		excludeProperNouns = POS.PROPER_NOUN.value in exclude#excludeStrings
+		restrictProperNouns = POS.PROPER_NOUN.value in restrict #Strings
+		restricted = True if len(restrict) else False#len(restrictStrings) > 0 else False
+		excluded  = True if len(exclude) else False #len(excludeStrings) > 0 else False
 		#validLexes =[l for (l,lexObj) in self.lexemes.items() if 
 		#	(not checkProper or (lexObj.isProper and excludeProperNouns and not restrictProperNouns)) 
 		#	and (not excluded or (lexObj.pos not in excludeStrings)  
@@ -256,21 +348,23 @@ class TfDataset:
 
 		for l in tmpLexemes:
 			lexObj = self.lexemes[l] if l in self.lexemes.keys() else None
+			mylog(f"getLexemes2(): lexObj.pos= {lexObj.pos}",True)
+			mylog(f"getLexemes2(): lexObj.pos & restrict: {str(set(lexObj.pos) & set(restrict))}",True)
 			if (lexObj and
 				(
 					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
-					and (not excluded or (lexObj.pos not in excludeStrings))  
-					and (not restricted or (lexObj.pos in restrictStrings))
+					and (not excluded or len(set(lexObj.pos) & set(exclude))==0)  
+					and (not restricted or len(set(lexObj.pos) & set(restrict)) > 0)
 				)
 			):#include!
 				#mylog(f"including Lex '{lexObj.lemma}' with pos '{lexObj.pos}'")
 				lexemes[l]={
 					'id':lexObj.id,
 					'beta':lexObj.beta,
-					 'gloss': lexObj.gloss,
-					 'pos': lexObj.pos,
-					 'total':lexObj.total,
-					 
+					'gloss': lexObj.gloss,
+					'pos': lexObj.pos,
+					'total':lexObj.total,
+						
 					 
 				}
 				if (lexObj.strongs):
@@ -361,15 +455,21 @@ class TfDataset:
 		return text.strip()
 	
 	# returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
-	def getLexRefs(self,id,sections=[],detail=''):
+	def getLexRefs(self,lexid,sections=[],detail=''):
+		"""getLexRefs
+
+		id: lex ID (integer). NB: this is not a node id to use with TF! This is the id in self.lexemes!
+		sections: ids of TF sections (like chapters, books) to limit the search to. If emtpy, finds all instances.
+		details: not sure what this does. probably something. Possible values: are 'book', 'chapter', or 'verse'.
+		
+		"""
 		
 		# optionally limits to instances within any of the selected sections, exluding all others:
-		id=int(id)
+		lexid=int	(lexid)
 		sections = [int(s) for s in sections] if len(sections) else []
 		mylog("getrefs: sections = [" + ",".join([str(s) for s in sections])+"]")
-		if(self.api.F.otype.v(id) == 'word'):
-			lex=self.getLex(id)
-			
+		lex=self.getLex(lexid)
+		if(lex and lex.id >= 0):			
 			rNodes = {}
 			bookCounts = {}
 			queryDetail = 'verse'
@@ -430,8 +530,6 @@ class TfDataset:
 			return " ".join(map(str, self.api.T.sectionFromNode(int(nodeId))))
 		except:
 			return ''
-
-	
 	
 	def apparatusNote(self,book,chapter,verse):
 		return ""
@@ -553,5 +651,10 @@ class TfDataset:
 	
 	def normalize(self, string):
 		return string.strip()
-
 	
+	def getLemmaDictFormFeature(self):
+		return None
+	
+	def lemmaDictForm(wordid):
+		feature=self.getLemmaDictFormFeature()
+		return feature.v(wordid) if feature else ''

@@ -93,4 +93,25 @@ def test_getNotes(sblgnt):
         note = sblgnt.apparatusNote(t['b'],t['c'],t['v'])
         print(f"NOTE found for {t['b']} {t['c']}:{t['v']}: {note}")
         assert(GreekUtils.normalize(t['note']) in GreekUtils.normalize(note))
-      
+
+def test_properNouns(sblgnt):
+    notProper = [
+        {'lexId': 226, 'proper': False}
+
+    ]
+    
+    for t in notProper:
+        #assert(sblgnt.countLexInSection(t['lemma'], t['section'])==t['count'])
+        
+        assert(sblgnt.isProperNoun(t['lexId']))
+def test_lexes(sblgnt):
+    tests=[
+        {'lexId': 1537, 'lemma': 'ἐκδαπανάομαι'}
+    ]
+
+    for t in tests:
+        lex = sblgnt.getLex(t['lexId'])
+        print(f"{lex.lemma} should == 'ἐκδαπανάομαι'")
+        assert  GreekUtils.normalize(lex.lemma) ==  GreekUtils.normalize(t['lemma'])
+        print(lex.gloss)
+        #assert 'exhaust' in lex.gloss # this is a mistaken in the TF data! someday I'll fork, fix, and make pull request!

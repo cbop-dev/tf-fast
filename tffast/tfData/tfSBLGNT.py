@@ -2,12 +2,30 @@ import sys, os, re
 from tf.app import use
 from tf.advanced import sections as Sections
 from pathlib import Path
-from .tfDataset import TfDataset
+from .tfDataset import TfDataset, POS
 from ..utils.greekUtils import GreekUtils
 from ..env import mylog
 from .SblGntAppNotes2 import SblGntAppNotes, getAppNote
+from enum import Enum
 
 class TfSBLGNT(TfDataset):
+	posDict={
+	    'adj':[POS.ADJECTIVE.value],
+	    'conj':[POS.CONJUNCTION.value],
+	    'adv':[POS.ADVERB.value],
+	    'interj':[POS.INTERJECTION.value],
+	    'noun':[POS.NOUN.value],
+	    'prep':[POS.PREPOSITION.value],
+	    'art-def':[POS.ARTICLE.value],
+	    'pron-dem':[POS.PRONOUN_DEM.value],
+	    'pron-inter':[POS.PRONOUN_INTER.value],
+	    'pron-prs':[POS.PRONOUN_PRS.value],
+	    'pron-rela':[POS.PRONOUN_RELA.value],
+	    'verb':[POS.VERB.value],
+	    'partcl':[POS.PARTICLE.value],
+	    'prop-noun':[POS.PROPER_NOUN.value]
+	}
+	
 	"""
 	booksDict={
 		137780 : {"name": "Matthew", "abbrev": "Matt" , "syn": ["Matthew", "Mt" ,"Mtt", "Mat", "Matt"] , "words": 18299 , "lemmas": 1670 , "chapters": 28 },
@@ -82,7 +100,8 @@ class TfSBLGNT(TfDataset):
 		#version="1935"
 		mylog(f"TfSBLGNT.init('{datasetPathname}'...")
 		super().__init__(datasetPathname,version=version,dbname=db)
-		
+		self.lang="greek"
+		#self.posDict=TfSBLGNT.posDict
 
 	def getLemmaFeature(self):
 		return self.api.F.lemma
@@ -100,8 +119,7 @@ class TfSBLGNT(TfDataset):
 		return GreekUtils.normalize(string)
 
 	
-
-	def pos(self,wordid):
+	def getPos(self,wordid):
 		morphCode = self.api.F.morphology.v(wordid)
 		if re.search('^A.*', str(morphCode)):
 			return 'adj'    
@@ -112,7 +130,10 @@ class TfSBLGNT(TfDataset):
 		if re.search('^I.*', str(morphCode)):
 			return 'interj'    
 		if re.search('^N-.*', str(morphCode)):
-			return 'noun'      
+			if(self.isProperNoun(wordid)):
+				return 'prop-noun'
+			else:
+				return 'noun'      
 		if re.search('^P.*', str(morphCode)):
 			return 'prep'
 		if re.search('^RA.*', str(morphCode)):
@@ -141,7 +162,9 @@ class TfSBLGNT(TfDataset):
 			note=getAppNote(bName,chapter,verse)
 		return note
 
+
+	def getLemmaDictFormFeature():
+		return self.api.F.lemma_dictform
 		
 
-	
 	

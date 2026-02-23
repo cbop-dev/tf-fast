@@ -1,4 +1,4 @@
-from .tfDataset import TfDataset
+from .tfDataset import TfDataset, POS
 import os
 from tffast.utils.greekUtils import GreekUtils
 from tffast.utils.hebrewUtils import HebrewUtils
@@ -6,20 +6,20 @@ from tffast.utils.hebrewUtils import HebrewUtils
 class TfBHS(TfDataset):
 
     posDict ={
-        0: {'abbrev': 'subs', 'desc':'noun, substantive'},
-        1: {'abbrev': 'nmpr', 'desc':'proper noun'},
-        2: {'abbrev': 'verb', 'desc':'verb'},
-        3: {'abbrev': 'adjv', 'desc':'adjective'},
-        4: {'abbrev': 'advb', 'desc':'adverb'},
-        5: {'abbrev': 'intj', 'desc':'interjection'},
-        6: {'abbrev': 'prps', 'desc':'personal pronoun'},
-        7: {'abbrev': 'prep', 'desc':'preposition'},
-        8: {'abbrev': 'prde', 'desc':'demonstrative pronoun'},
-        9: {'abbrev': 'inrg', 'desc':'interogative'},
-        10: {'abbrev': 'conj', 'desc':'conjunction'},
-        11: {'abbrev': 'nega', 'desc':'negative particle'},
-        12: {'abbrev': 'prin', 'desc':'interogative pronoun'},
-        13: {'abbrev': 'art', 'desc':'article'},	
+        'subs': [POS.NOUN.value],
+        'nmpr': [POS.PROPER_NOUN.value],
+        'verb': [POS.VERB.value],
+        'adjv': [POS.ADJECTIVE.value],
+        'advb': [POS.ADVERB.value],
+        'intj': [POS.INTERJECTION.value],
+        'prps': [POS.PRONOUN_PRS.value],
+        'prep': [POS.PREPOSITION.value],
+        'prde': [POS.PRONOUN_DEM.value],
+        'inrg': [POS.PRONOUN_INTER.value],
+        'conj': [POS.CONJUNCTION.value],
+        'nega': [POS.PARTICLE.value],
+        'prin': [POS.PRONOUN_RELA.value],
+        'art': [POS.ARTICLE.value],	
     }
     booksDictOLD = """
     {
@@ -129,8 +129,9 @@ class TfBHS(TfDataset):
         #modpath=my_path = os.path.abspath("/home/cbrannan/tmp/tf-bhs-strong/")
         mod="cbop-dev/tf-bhsa-strongs/tf"
         version="2021"
-
+        
         super().__init__('ETCBC/bhsa',dbname="bhs", mod=mod,version=version,dataset=dataset)
+        self.lang="hebrew"
         #super().__init__('ETCBC/bhsa-min',dbname="bhs", version="2021",dataset=dataset)
 		
     def getLemma(self,wordid):
@@ -148,4 +149,3 @@ class TfBHS(TfDataset):
     def normalize(self,string):
         
         return HebrewUtils.normalize(string)
-

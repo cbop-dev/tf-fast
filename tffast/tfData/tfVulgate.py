@@ -1,10 +1,38 @@
 import re
 from tf.app import use
-from .tfDataset import TfDataset
+from .tfDataset import TfDataset,POS
 from ..env import mylog
-
+from enum import Enum
 class TfVulgate(TfDataset):
-    
+    posDict={
+        "ADJadv.mul":[POS.ADJECTIVE.value],
+        "ADJadv.ord":[POS.ADJECTIVE.value],
+        "ADJcar":[POS.ADJECTIVE.value],
+        "ADJdis":[POS.ADJECTIVE.value],
+        "ADJmul":[POS.ADJECTIVE.value],
+        "ADJord":[POS.ADJECTIVE.value],
+        "ADJqua":[POS.ADJECTIVE.value],
+        "ADV":[POS.ADVERB.value],
+        "ADVint":[POS.ADVERB.value],
+        "ADVint.neg":[POS.ADVERB.value],
+        "ADVneg":[POS.ADVERB.value],
+        "ADVrel":[POS.ADVERB.value],
+        "CONcoo":[POS.CONJUNCTION.value],
+        "CONsub":[POS.CONJUNCTION.value],
+        "INJ":[POS.INTERJECTION.value],
+        "NOMcom":[POS.NOUN.value],
+        "NOMpro":[POS.NOUN.value],
+        "PRE":[POS.PREPOSITION.value],
+        "PROdem":[POS.PRONOUN.value],
+        "PROind":[POS.PRONOUN.value],
+        "PROint":[POS.PRONOUN.value],
+        "PROper":[POS.PRONOUN.value],
+        "PROpos":[POS.PRONOUN.value],
+        "PROpos.ref":[POS.PRONOUN.value],
+        "PROref":[POS.PRONOUN.value],
+        "PROrel":[POS.PRONOUN.value],
+        "VER":[POS.VERB.value]
+    }
     booksDict = {
         597910: {"name": "Matthew", "abbrev": "MAT", "syn": ['MAT', 'mat', 'Matthew', 'matthew'], "words": 1, "chapters": 1, "lemmas": 1, "morphs": 1},
         597911: {"name": "Mark", "abbrev": "MRK", "syn": ['MRK', 'mrk', 'Mark', 'mark'], "words": 1, "chapters": 1, "lemmas": 1, "morphs": 1},
@@ -101,7 +129,8 @@ class TfVulgate(TfDataset):
         mylog(f"TfVulgate.init('{datasetPathname}')...")
         
         super().__init__(datasetPathname, version=version, dbname=db, dataset=dataset)
-
+        self.lang="latin"
+    
 
 
 
@@ -129,9 +158,6 @@ class TfVulgate(TfDataset):
             text = text.replace(" ,", ",").replace(" .", ".").replace(" :", ":").replace(" ;", ";").replace(" ?", "?").replace(" !", "!")
         return text
 
-
-    def pos(self,wordid):
-        return self.api.F.pos.v(wordid)
         
     def apparatusNote(self,book,chapter,verse):
         return ''
@@ -140,3 +166,8 @@ class TfVulgate(TfDataset):
         filtered = re.sub('[\]0-9!%*,.:;=?$]','',lemma)
         return lemma if filtered else ''
 
+    def getPos(self,wordid):
+        return self.api.F.pos.v(wordid)
+
+    
+    
