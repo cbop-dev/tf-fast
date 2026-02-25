@@ -71,10 +71,10 @@ class TfBHS(TfDataset):
         426595: {'abbrev': 'Deut',   'syn': ['Deuteronomium', 'Deut', 'Deuteronomy', 'Dt', 'Deu'], 'name': 'Deuteronomy'},
         426596: {'abbrev': 'Josh',   'syn': ['Josua', 'Josh', 'Joshua', 'Josua'], 'name': 'Joshua'},
         426597: {'abbrev': 'Judg',   'syn': ['Judices', 'Judg', 'Judges', 'Jdg', 'Jdgs', 'Judgs'], 'name': 'Judges'},
-        426598: {'abbrev': '1Sam',   'syn': ['Samuel_I',    '1Sam',    '1Samuel',    'ISamuel',    '1Sa',    '1Sam',    'ISa',    'ISam'], 'name': '1_Samuel'},
-        426599: {'abbrev': '2Sam',   'syn': ['Samuel_II',    '2Sam',    '2Samuel',    'IISamuel',    '2Sa',    '2Sam',    'IISa',    'IISam'], 'name': '2_Samuel'},
-        426600: {'abbrev': '1Kgs',   'syn': ['Reges_I', '1Kgs', '1Kings', 'IKings', '1Kg', 'IKg'], 'name': '1_Kings'},
-        426601: {'abbrev': '2Kgs',   'syn': ['Reges_II', '2Kgs', '2Kings', 'IIKings', '2Kg', 'IIKg'], 'name': '2_Kings'},
+        426598: {'abbrev': '1Sam',   'syn': ['Samuel_I',    '1Sam',    '1Samuel',    'ISamuel',    '1Sa',    '1Sam',    'ISa',    'ISam', '1 Sam', '1 Samuel', 'I Samuel', '1 Sa', 'I Sa'], 'name': '1_Samuel'},
+        426599: {'abbrev': '2Sam',   'syn': ['Samuel_II',    '2Sam',    '2Samuel',    'IISamuel',    '2Sa',    '2Sam',    'IISa',    'IISam', '2 Sam', '2 Samuel', 'II Samuel', '2 Sa', 'II Sa'], 'name': '2_Samuel'},
+        426600: {'abbrev': '1Kgs',   'syn': ['Reges_I', '1Kgs', '1Kings', 'IKings', '1Kg', 'IKg', '1 Kgs', '1 Kings', 'I Kings', '1 Kg', 'I Kg'], 'name': '1_Kings'},
+        426601: {'abbrev': '2Kgs',   'syn': ['Reges_II', '2Kgs', '2Kings', 'IIKings', '2Kg', 'IIKg', '2 Kgs', '2 Kings', 'II Kings', '2 Kg', 'II Kg'], 'name': '2_Kings'},
         426602: {'abbrev': 'Isa',   'syn': ['Jesaia', 'Isa', 'Isaiah', 'Is', 'Jesaia'], 'name': 'Isaiah'},
         426603: {'abbrev': 'Jer',   'syn': ['Jeremia', 'Jer', 'Jeremiah', 'Jeremia', 'Jerem', 'Jere'], 'name': 'Jeremiah'},
         426604: {'abbrev': 'Ezek',   'syn': ['Ezechiel', 'Ezek', 'Ezekiel', 'Ezechiel'], 'name': 'Ezekiel'},
@@ -101,8 +101,8 @@ class TfBHS(TfDataset):
         426625: {'abbrev': 'Dan', 'syn': ['Daniel', 'Dan'], 'name': 'Daniel'},
         426626: {'abbrev': 'Ezra', 'syn': ['Esra', 'Ezr'], 'name': 'Ezra'},
         426627: {'abbrev': 'Neh',   'syn': ['Nehemia', 'Nehemiah', 'Neh'], 'name': 'Nehemiah'},
-        426628: {'abbrev': '1Chr',   'syn': ['Chronica_I',    '1Chr',    '1Chronicles',    '1Chron',    '1Ch',    'IChronicles',    'IChron',    'ICh',    'IChr'], 'name': '1_Chronicles'},
-        426629: {'abbrev': '2Chr',   'syn': ['Chronica_II',    '2Chr',    '2Chronicles',    '2Chron',    '2Ch',    'IIChronicles',    'IIChron',    'IICh',    'IIChr'], 'name': '2_Chronicles'}}
+        426628: {'abbrev': '1Chr',   'syn': ['Chronica_I',    '1Chr',    '1Chronicles',    '1Chron',    '1Ch',    'IChronicles',    'IChron',    'ICh',    'IChr', '1 Chr', '1 Chronicles', '1 Chron', '1 Ch', 'I Chronicles', 'I Chron', 'I Ch', 'I Chr'], 'name': '1_Chronicles'},
+        426629: {'abbrev': '2Chr',   'syn': ['Chronica_II',    '2Chr',    '2Chronicles',    '2Chron',    '2Ch',    'IIChronicles',    'IIChron',    'IICh',    'IIChr', '2 Chr', '2 Chronicles', '2 Chron', '2 Ch', 'II Chronicles', 'II Chron', 'II Ch', 'II Chr'], 'name': '2_Chronicles'}}
  
     posGroups={
         "CONT":[0,1,2,3,4],

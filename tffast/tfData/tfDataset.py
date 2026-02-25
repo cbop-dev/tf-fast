@@ -421,13 +421,13 @@ class TfDataset:
 		
 	def getChaptersDict(self,book):
 		#mylog("getChapters(" + str(book) + "," + db +")")
-		return dict([(self.api.F.chapter.v(c), c) for c in self.api.L.d(book) if self.api.F.otype.v(c)=='chapter'])
+		return dict([(str(self.api.F.chapter.v(c)), c) for c in self.api.L.d(book) if self.api.F.otype.v(c)=='chapter'])
 		
 	def getChapter(self,bookID,chapNum):
 		chapDict = self.getChaptersDict(bookID)
 		chapNode = None
-		if (chapNum in chapDict.keys()):
-			chapNode = chapDict[chapNum]
+		if (str(chapNum) in chapDict.keys()):
+			chapNode = chapDict[str(chapNum)]
 
 		return chapNode
 	#def getBooksDict(self):
@@ -551,12 +551,18 @@ class TfDataset:
 
 	def getNodeFromBcV(self,book,chapter,verse):
 		node = 0
+		bookNode = self.lookupBook(book) if type(book) != int else book
+		if not bookNode: return 0
 		
-		node=self.api.T.nodeFromSection((book,int(chapter),int(verse)))
-		mylog(f"calling nodeFromSection(('{book}', {str(chapter)},{str(verse)}))=>{node}")
-		if (type(node) != int):
-			node = 0
-		#mylog(" " + str(node))
+		cnode = self.getChapter(bookNode, chapter)
+		if cnode:
+			vnodes = self.api.L.d(cnode, 'verse')
+			for v in vnodes:
+				if self.api.F.verse.v(v) == str(verse) or self.api.F.verse.v(v) == verse:
+					node = v
+					break
+		
+		mylog(f"calling graph traversal getNodeFromBcV('{book}', {str(chapter)},{str(verse)})=>{node}")
 		return node
 
 

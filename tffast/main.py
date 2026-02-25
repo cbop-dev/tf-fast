@@ -109,7 +109,7 @@ def getLexInfo(lexid: int,db='lxx'):
 
 @app.get("/{db}/wordcloud")
 @app.get("/wordcloud")
-def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='',pos='',maxWords='0'):
+def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='',pos='',maxWords='0',gloss='0'):
 	
 	theLexemesResp=lexemesRoute(db,restrict=restrict,exclude=exclude,pos='',sections=sections)
 	theLexemes=theLexemesResp['lexemes']
@@ -117,7 +117,9 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 
 	if (theLexemes.values()):
 		filteredLexemes= {}
-		if (not 'gloss' in list(theLexemes.values())[0].keys()):
+		list(theLexemes.values())[0].keys() 
+		if ((not gloss or int(gloss) == 0 or gloss == 'false' or gloss == False or gloss == '0')
+			or 'gloss' not in list(theLexemes.values())[0].keys()):
 			filteredLexemes = {k:int(v['count']) for (k,v) in theLexemes.items()}
 			#mylog("Wait! no glosses??")
 		else:
@@ -201,6 +203,8 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 	#mylog("getLexemes about to return with common value of: [" + ",".join(returnObject['common']) + "]")
 	return returnObject
 
+
+
 @app.get("/chapters/")
 @app.get("/{db}/chapters/")
 def allChaptersRoute(db='lxx'):
@@ -281,7 +285,7 @@ class TextAndReference(BaseModel):
 
 class TextReference(BaseModel):
 	book:str
-	chapter: int
+	chapter: int | None = None
 	verses: list[int]
 class TextsOptions(BaseModel):
 	showVerses:bool=False
@@ -291,8 +295,83 @@ class TextsRequest(BaseModel):
 	refs: list[TextReference]|None =None# book name, chapter, verses
 	sections: list[int] |None = None
 	options: TextsOptions =TextsOptions()
+class LexOptions(BaseModel):
+	common:bool=False
+	pos:bool=False
+	beta:bool=True
+	plain:bool=False
+	checkProper:bool=True
+	gloss:bool=True
+
+class LexRequest(BaseModel):
+	refs: list[TextReference]|None =None# book name, chapter, verses
+	sections: list[int] |None = None
+	options: LexOptions =LexOptions()
+	restrict: list[str] =[]
+	exclude: list[str] =[]
+	min: int = 1
+	max: int = 0
+
 class TextsResponse(BaseModel):
 	texts: list[TextAndReference]
+
+@app.post("/{db}/lex")
+@app.post("/lex")
+@app.post("/{db}/lex/")
+@app.post("/lex/")
+def postLexemesRoute(request: LexRequest, db='lxx'):
+	tfData = getDataset(db)
+	if not tfData:
+		return ''
+	sections = request.sections if request.sections else []
+
+	# convert refs to sections
+	if request.refs:
+		found_any_node = False
+		for ref in request.refs:
+			bookNode = tfData.lookupBook(ref.book)
+			if not bookNode:
+				continue
+
+			if not ref.chapter:
+				sections.append(bookNode)
+				found_any_node = True
+			elif not ref.verses or not len(ref.verses):
+				chapterNode = tfData.getChapter(bookNode, ref.chapter)
+				if chapterNode:
+					sections.append(chapterNode)
+					found_any_node = True
+			else:
+				for v in ref.verses:
+					node = tfData.getNodeFromBcV(bookNode, ref.chapter, v)
+					if node:
+						sections.append(node)
+						found_any_node = True
+		
+		# If the user supplied refs but none of them could be resolved to TF nodes, return empty.
+		if not found_any_node and not request.sections:
+			return {
+				'totalInstances': 0,
+				'totalLexemes': 0,
+				'totalWords': 0,
+				'lexemes': {}
+			}
+
+	restrictedIds = set()
+	for (abbrev, posArray) in [(p.name, p.value) for p in PosGroups]:
+		if abbrev in request.restrict:
+			restrictedIds.update(posArray)
+	
+	excludedIds = set()
+	for (abbrev, posArray) in [(p.name, p.value) for p in PosGroups]:
+		if abbrev in request.exclude:
+			excludedIds.update(posArray)
+
+	return tfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 
+					exclude=list(excludedIds), min=request.min, max=request.max,
+					gloss=request.options.gloss, pos=request.options.pos, 
+					checkProper=request.options.checkProper, beta=request.options.beta, 
+					common=request.options.common, plain=request.options.plain)
 @app.post("/texts")
 @app.post("/{db}/texts")
 @app.post("/texts/")
@@ -807,14 +886,14 @@ def consolidateBibleRefs(strings):
 
 	
 
-def genWordCloudSVG(freqDataDict, title='',maxWords=200):
-	wc = WordCloud(font_path="lib/fonts/SBL_BibLit_Regular.ttf", background_color="white",width=800,height=600, max_words=maxWords)
+def genWordCloudSVG(freqDataDict, title='',maxWords=200,width=1600, height=1200):
+	wc = WordCloud(font_path="lib/fonts/SBL_BibLit_Regular.ttf", background_color="white",width=width,height=height, max_words=maxWords)
 	wc.generate_from_frequencies(freqDataDict)
 	svg = wc.to_svg(embed_font=True)
 	
 	if(title):
 		svg = svg.replace("</svg>",'<text font-size="50" style="text-decoration: underline; font-family: \'Arial\'; font-variant: small-caps; font-weight: bold" transform="translate(149,650)">' + title +'</text></svg>')
-		svg = svg.replace('height="600"', 'height="700"')
+		svg = svg.replace(f'height="{str(height)}"', f'height="{str(height-100)}"')
 	return svg
 
 
