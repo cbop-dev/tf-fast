@@ -364,7 +364,7 @@ def postLexemesRoute(request: LexRequest, db='lxx'):
 	
 	excludedIds = set()
 	for (name, num) in [(p.name, p.value) for p in POS]:
-		if name in request.exclude:
+		if num in [int(x) for x in request.exclude]:
 			excludedIds.add(num)
 
 	return tfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 

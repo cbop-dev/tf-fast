@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tffast.main import app,TextsRequest
 from tffast.tfData.tfDataset import TfDataset
 from tffast.tfData.tfLXX import TfLXX
+from tffast.tfData.tfSBLGNT import TfSBLGNT
 from tffast.tfData.tfNT import TfN1904
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -17,6 +18,9 @@ from tffast.tfData.tfDataset import POS
 def base_url():
     return "http://localhost:5000/"
 NT=None
+TC=None
+
+
 @pytest.fixture()
 def nt():
     global NT
@@ -30,8 +34,14 @@ def lxx():
 
 @pytest.fixture()
 def client():
-    return TestClient(app)
+    global TC
+    if (not TC):
+        TC=TestClient(app)
+    return TC
 
+@pytest.fixture()
+def sblgnt():
+    return TfSBLGNT()
 
 @pytest.fixture()
 def runner():
@@ -98,11 +108,17 @@ def test_post_text(base_url, client):
 
 def test_post_ref(base_url, client):
     tests=[
-          {'input':{"refs":[],"sections":[137582],"min":1,"max":0,"options":{"common":false,"pos":true,"beta":true,"plain":false,"checkProper":true,"gloss":true}},
+          {'input':{"refs":[],"sections":[137582],"min":1,"max":0,"options":{"common":False,"pos":True,"beta":True,"plain":False,"checkProper":True,"gloss":True}},
          'output':{"totalLexemes":129}},
-         {'input':{"refs":[],"sections":[137582],"restrict":[0,2,4,11],"exclude":[],"min":1,"max":0,"options":{"common":false,"pos":true,"beta":true,"plain":false,"checkProper":true,"gloss":true}},
-         'output':{"totalLexemes":57}}
+         {'input':{"refs":[],"sections":[137582],"restrict":[0,2,4,11],"exclude":[],"min":1,"max":0,"options":{"common":False,"pos":True,"beta":True,"plain":False,"checkProper":True,"gloss":True}},
+         'output':{"totalLexemes":57}},
+         {'input':{"refs":[],"sections":[137582],"exclude":[0,2,4,11],"min":1,"max":0,"options":{"common":False,"pos":True,"beta":True,"plain":False,"checkProper":True,"gloss":True}},
+         'output':{"totalLexemes":72}}
     ]
     for test in tests:
-        response =client.post(f"/sblgnt/ref",json=test['input']).json()
-        assert response['total'] == test['output']['total']
+        response =client.post(f"/sblgnt/lex",json=test['input']).json()
+        #mylog("the response: ",True)
+        #mylog(response,True)
+        print(str(response))
+        assert 'totalLexemes' in response.keys()
+        assert response['totalLexemes'] == test['output']['totalLexemes']
