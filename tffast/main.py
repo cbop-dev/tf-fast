@@ -181,7 +181,7 @@ def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',be
 #		mylog("using common flag...")
 	restrictedIds=set([int(x) for x in restrictParamsList if x.isdigit()])
 
-	for (abbrev,posArray) in [(p.name,p.value) for p in PosGroups]:
+	for (abbrev,posArray) in [(p.name,p.value) for p in POS]:
 		if (abbrev in restrictParamsList):
 			restrictedIds.update(posArray)
 			#restrictedIds.remove(abbrev)
@@ -307,8 +307,8 @@ class LexRequest(BaseModel):
 	refs: list[TextReference]|None =None# book name, chapter, verses
 	sections: list[int] |None = None
 	options: LexOptions =LexOptions()
-	restrict: list[str] =[]
-	exclude: list[str] =[]
+	restrict: list[int] =[]
+	exclude: list[int] =[]
 	min: int = 1
 	max: int = 0
 
@@ -358,14 +358,14 @@ def postLexemesRoute(request: LexRequest, db='lxx'):
 			}
 
 	restrictedIds = set()
-	for (abbrev, posArray) in [(p.name, p.value) for p in PosGroups]:
-		if abbrev in request.restrict:
-			restrictedIds.update(posArray)
+	for (name, num) in [(p.name, p.value) for p in POS]:
+		if num in [int(x) for x in request.restrict]:
+			restrictedIds.add(num)
 	
 	excludedIds = set()
-	for (abbrev, posArray) in [(p.name, p.value) for p in PosGroups]:
-		if abbrev in request.exclude:
-			excludedIds.update(posArray)
+	for (name, num) in [(p.name, p.value) for p in POS]:
+		if name in request.exclude:
+			excludedIds.add(num)
 
 	return tfData.getLexemes2(sections=sections, restrict=list(restrictedIds), 
 					exclude=list(excludedIds), min=request.min, max=request.max,

@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from tffast.env import mylog, debug
 from tffast.utils.greekUtils import GreekUtils
 import json
-
+from tffast.tfData.tfDataset import POS
 @pytest.fixture()
 def base_url():
     return "http://localhost:5000/"
@@ -55,7 +55,7 @@ def test_get_text(client):
 
 def test_post_text(base_url, client):
     requests=[{'sections': [385239]},
-              {'refs': [{'book':'Matthew','chapter':1,'verses':[1]}],'options':{'lexemes': True}},
+              {'refs': [{'book':'Matthew','chapter':1,'verses':[1]}],'options':{'lexemes': True}},             
               {'refs': [{'book':'Matthews','chapter':1,'verses':[1]}]},
               {'sections': [382714,382715],'options':{'showVerses': True}},
               {'sections': [382714],'options':{'lexemes': True}},
@@ -94,3 +94,15 @@ def test_post_text(base_url, client):
             if (doLexes):
                 assert(len(response['texts'][x]['words'][0]['words']) == len(testRes['texts'][x]['text'].split()))
                 assert(" ".join(map(lambda w: w['word'],response['texts'][x]['words'][0]['words']))==testRes['texts'][x]['text'])
+
+
+def test_post_ref(base_url, client):
+    tests=[
+          {'input':{"refs":[],"sections":[137582],"min":1,"max":0,"options":{"common":false,"pos":true,"beta":true,"plain":false,"checkProper":true,"gloss":true}},
+         'output':{"totalLexemes":129}},
+         {'input':{"refs":[],"sections":[137582],"restrict":[0,2,4,11],"exclude":[],"min":1,"max":0,"options":{"common":false,"pos":true,"beta":true,"plain":false,"checkProper":true,"gloss":true}},
+         'output':{"totalLexemes":57}}
+    ]
+    for test in tests:
+        response =client.post(f"/sblgnt/ref",json=test['input']).json()
+        assert response['total'] == test['output']['total']
