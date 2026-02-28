@@ -64,7 +64,12 @@ def test_getVerseFromNode(sblgnt):
 
 def test_getBook(sblgnt):
     tests=[
-        {'search':'Mt','node': 137555}
+        {'search':'Mt','node': 137555},
+        {'search':'1 Cor','node': 137561},
+        {'search':'1 Thess','node': 137567},
+        {'search':'1_Thessalonians','node': 137567},
+        {'search':'1 Pet','node': 137575},
+        {'search':'2_Peter','node': 137576},
     ]
 
     for t in tests:

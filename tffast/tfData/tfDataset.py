@@ -627,7 +627,8 @@ class TfDataset:
 		
 		return outString
 	def lookupBook(self,string):
-		matches=[n for (n,o) in self.booksDict.items() if string in o['syn']]
+		matches=[n for (n,o) in self.booksDict.items() if string in o['syn'] or ('abbrev' in o.keys() and string == o['abbrev']) 
+			or ('name' in o.keys() and string == o['name'])]
 		match=None
 		if (len(matches)):
 			match=matches[0]
