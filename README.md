@@ -82,11 +82,13 @@ See main.py for various url-paths and types of responses.
 
 When installing (see below), the following packages will automatically be installed in the local tf-fast project directory:
 
-* pytest
-* fastapi[standard]
-* httpx
 * wordcloud
-* text-fabric
+* fastapi[standard]
+* text-fabric[github]
+* pytest
+* httpx
+* gunicorn
+* uvicorn
 
 ## Installation
 
@@ -97,13 +99,19 @@ When installing (see below), the following packages will automatically be instal
 	pip install -r requirements.txt
 
 	# run development server (defaults to http://localhost:8000):
-	fastapi dev tffast/main.py
+	## old: fastapi dev tffast/main.py
+	##new:
+	# development run:
+	APP_ENV=dev gunicorn -c gunicorn_conf.py #edit this first and customize as needed
 
-	## change port:
-	fastapi dev --port 5000 tffast/main.py
+	# or more explictly on command line
+	gunicorn tffast.main:app -w 3 -k uvicorn.workers.UvicornWorker --preload
+	
+	## or run on custom port (e.g., 5000):
+	# gunicorn tffast.main:app -w 3 -k uvicorn.workers.UvicornWorker --preload --bind 0.0.0.0:5000
 
-	#production run (change port with `... run --port XXXX ... `):
-	fastapi run tffast/main.py
+	#production run (mutatis mutandis, as above)
+	gunicorn -c gunicorn_conf.py 
 
 
 If all goes well, create, enable, and start a systemd service! 
@@ -111,7 +119,8 @@ If all goes well, create, enable, and start a systemd service!
 ## TO DO:
 
 - [X] Enable BHSa
-- [ ] Update this README (on-going: last updated 14 Jan 2026)
+- [X] Added Vulgate and an English bible (World English Bible, Catholic Edition)
+- [ ] Update this README (on-going: last updated 3 March 2026)
 - [ ] Documentation of routes and usage
 - [ ] extending/testing `/texts/` route 
 - [ ] more (and major) refactoring...

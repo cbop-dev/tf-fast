@@ -3,3 +3,5 @@ fastapi[standard]
 text-fabric[github]
 pytest
 httpx
+gunicorn
+uvicorn

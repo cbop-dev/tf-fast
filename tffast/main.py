@@ -4,7 +4,7 @@ from .env import mylog, debug
 from pathlib import Path
 from tf.app import use
 from tf.advanced import sections as Sections
-
+import gc
 from fastapi import Depends, FastAPI
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,34 +29,67 @@ from tffast.tfData.tfDataset import POS
 mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
 
-tfLxxBooksDict=TfLXX.booksDict
-
-theBooksDict = tfLxxBooksDict
-
 
 enabledDatasets = {
 	'lxx': TfLXX,
 	'nt': TfN1904,
 	'bhs': TfBHS,
 	'sblgnt': TfSBLGNT,
-	'web': TfWEB,
 	'vul': TfVulgate,
 }
 
-dataSets={}
+from contextlib import asynccontextmanager
 
-for [key,db] in enabledDatasets.items():
-	if key not in dataSets.keys() or not dataSets[key]:
-		dataSets[key] = db()
+# Removed threading import and lock as they are no longer needed for lazy loading
+# import threading
+
+dataSets={}
+# _dataset_lock = threading.Lock() # Removed
 
 def getDataset(dbname='lxx'):
-	return dataSets[dbname] if dbname in dataSets.keys() else None
+	# Datasets are now eagerly loaded by lifespan, so no lazy loading logic is needed here.
+	# We just return the pre-loaded dataset.
+	return dataSets.get(dbname)
+
+def loadDatasets():
+	for [key,db] in enabledDatasets.items():
+		if key not in dataSets:
+			mylog(f"Eagerly loading: {key}")
+			dataSets[key] = db()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	# Eagerly load the datasets *inside* the worker process at startup
+	mylog("Lifespan Startup: Eagerly loading databases...")
+	loadDatasets()
+	yield
+	# Shutdown
+	dataSets.clear()
+"""
+@app.on_event("startup")
+def startup_event():
+	loadDatasets()
+"""
 
 
-mylog(f"about to load LXX. Python version: {sys.version}")
+"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	# Eagerly load the datasets *inside* the worker process at startup
+	mylog("Lifespan Startup: Eagerly loading databases...")
+	for [key,db] in enabledDatasets.items():
+		if key not in dataSets:
+			mylog(f"Eagerly loading: {key}")
+			dataSets[key] = db()
+	yield
+	# Shutdown
+	dataSets.clear()
+"""
 
+mylog(f"about to load tf-fast. Python version: {sys.version}")
 
-
+loadDatasets()
+gc.freeze()
 app = FastAPI()
 origins = [
     "*"
@@ -377,7 +410,7 @@ def postLexemesRoute(request: LexRequest, db='lxx'):
 @app.post("/texts/")
 @app.post("/{db}/texts/")
 def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
-	mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
+	#mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
 	texts = list()
 	#tfAPI = getAPI(db)
 	tfData=getDataset(db)
@@ -435,7 +468,7 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 				
 				if (getLexemes):
 				#add all section lexemes to response 'lexemes' dictionary:
-					mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
+					#mylog("postTextsRoute: getting Lexemes...",debugOn=True,showTime=True)
 					
 					for n in nodes:
 						
@@ -458,12 +491,12 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 				txtRef = TextAndReference(text=text,reference=refString,words=verses,notes=notes)
 				
 				textsAndRefsResponse.append(txtRef)
-			mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
+			#mylog("postTextsRoute, @ end of refs loop:", debugOn=True, showTime=True)	
 		elif request.sections:
 			#firstNode = True
 
 			if (getLexemes):
-				mylog("postTextsRoute: getting Lexemes from sections...")
+				#mylog("postTextsRoute: getting Lexemes from sections...")
 				sectionsLexemes=tfData.getLexemes2(sections=request.sections)
 				mylog("postTextsRoute sectionsLexemes = ")
 				mylog(sectionsLexemes)
@@ -759,71 +792,7 @@ def getRef(nodeId, db='lxx'):
 		except:
 			return ''
 	return ''
-#def getNodeFromBcV(book,chapter,verse,db='lxx'):
-#	node = 0
-	#tfData=getDataset(db)
-	#api=tfData.api
-	#if(api):
-		#mylog("calling nodeFromSection(" + book + "," + str(chapter) +"," + str(verse)+","+db+")")
-#		
-#		node=api.T.nodeFromSection((book,int(chapter),int(verse)))
-#		if (type(node) != int):
-#			node = 0
-#		mylog("...got node " + str(node))
-#	return node
-#TfAPI=namedtuple('tfAPI', ['api','getLemma','TfData'])
 
-
-"""
-def getAPI(db='lxx'):
-	
-	api=None
-	getLemma=lambda x: ''
-	dataSet=None
-	if (db=='lxx'):
-		api=LXX.api
-		getLemma =LXX.getLemma
-		theBooksDict=LXX.booksDict
-		dataSet=LXX
-	elif (enableSBLGNT and db=='sblgnt'):
-		api=SBLGNTa
-		getLemma=SBLGNT.getLemma
-		theBooksDict=SBLGNT.booksDict
-		dataSet=SBLGNT
-	elif (enableNT and db=='nt'):
-		api=NTa
-		getLemma = NT.getLemma
-		theBooksDict=NT.booksDict
-		dataSet=NT
-	elif (enableBHS and db=='bhs'):
-		api=BHS.api
-		#api.lex= lambda i : api.F.voc_lex_utf8.v(i) if api.F.voc_lex_utf8.v(i) else tf.getLemma(i)
-		getLemma=BHS.getLemma
-		theBooksDict=tfBHSBooksDict
-		dataSet=BHS
-		#api.lex =lambda i : api.F.lex_utf8.v(i)
-	elif (enableWEB and db=='web'):
-		api=WEB.api
-		getLemma=WEB.getLemma
-		theBooksDict=WEB.booksDict
-		dataSet=WEB
-	elif (db=='vul' or db=='vulgate'):
-		api=VUL.api
-		getLemma=VUL.getLemma
-		theBooksDict=VUL.booksDict
-		dataSet=VUL
-	return TfAPI(api,getLemma,dataSet)
-
-"""
-"""
-def getDicts(db='lxx'):
-	if (db=='lxx'):
-		return {'dict': posDict, 'groups': posGroups}
-	elif(db=='bhs'):
-		return {'dict': bhsPosDict, 'groups': bhsPosGroups}
-	else:
-		return {'dict':{}, 'groups':{}}
-"""
 def sectionFromNode(node,db='lxx'):
 	tfData=getDataset(db)
 	api=tfData.api
