@@ -163,7 +163,7 @@ class TfVulgate(TfDataset):
         return ''
     def getLemma(self,wordid):
         lemma = super().getLemma(wordid)
-        filtered = re.sub('[\]0-9!%*,.:;=?$]','',lemma)
+        filtered = re.sub(r'[\]0-9!%*,.:;=?$]','',lemma)
         return lemma if filtered else ''
 
     def getPos(self,wordid):
