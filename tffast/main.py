@@ -18,6 +18,7 @@ from .tfData.tfNT import TfN1904
 from .tfData.tfBHS import TfBHS
 from .tfData.tfSBLGNT import TfSBLGNT
 from .tfData.tfVulgate import TfVulgate
+from contextlib import asynccontextmanager
 from .tfData.tfWEB import TfWEB
 from .env import mylog, debug
 from tffast.tfData.tfDataset import POS
@@ -29,6 +30,7 @@ from tffast.tfData.tfDataset import POS
 mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
 
+DISABLED_DATASETS = os.getenv("DISABLED", '').split(',')
 
 enabledDatasets = {
 	'lxx': TfLXX,
@@ -38,7 +40,11 @@ enabledDatasets = {
 	'vul': TfVulgate,
 }
 
-from contextlib import asynccontextmanager
+for ds in DISABLED_DATASETS:
+	if ds in enabledDatasets:
+		del enabledDatasets[ds]
+
+
 
 # Removed threading import and lock as they are no longer needed for lazy loading
 # import threading

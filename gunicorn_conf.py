@@ -19,7 +19,7 @@ worker_class = "uvicorn.workers.UvicornWorker"
 if DEBUG:
     workers = 1
     reload = True
-    preload_app = False
+    preload_app = True
     loglevel = "debug"
     print("Running in DEBUG mode...")
 else:
