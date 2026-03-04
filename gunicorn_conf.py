@@ -9,9 +9,9 @@ wsgi_app = "tffast.main:app"
 DEV_ALIASES = {"dev", "development", "local"}
 RAW_ENV = os.getenv("APP_ENV", "production").lower()
 DEBUG = RAW_ENV in DEV_ALIASES
-THEPORT = os.getenv("PORT", "5000")
+PORT = os.getenv("PORT", "5000")
 # --- Network ---
-bind = "0.0.0.0:"+THEPORT
+bind = "0.0.0.0:"+PORT
 
 # --- Worker Configuration ---
 worker_class = "uvicorn.workers.UvicornWorker"
