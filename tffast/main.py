@@ -38,6 +38,7 @@ enabledDatasets = {
 	'bhs': TfBHS,
 	'sblgnt': TfSBLGNT,
 	'vul': TfVulgate,
+	'web': TfWEB,
 }
 
 for ds in DISABLED_DATASETS:

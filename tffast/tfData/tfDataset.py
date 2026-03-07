@@ -308,10 +308,46 @@ class TfDataset:
 		restrictProperNouns = POS.PROPER_NOUN.value in restrict #Strings
 		restricted = True if len(restrict) else False#len(restrictStrings) > 0 else False
 		excluded  = True if len(exclude) else False #len(excludeStrings) > 0 else False
-		#validLexes =[l for (l,lexObj) in self.lexemes.items() if 
-		#	(not checkProper or (lexObj.isProper and excludeProperNouns and not restrictProperNouns)) 
-		#	and (not excluded or (lexObj.pos not in excludeStrings)  
-		#		and (not restricted or (lexObj.pos in restrictStrings)))]
+
+		exclude_set = set(exclude)
+		restrict_set = set(restrict)
+
+		# ==========================================
+		# FAST PATH FOR WHOLE CORPUS
+		# ==========================================
+		if len(sections) == 0 and not common:
+			lexemes = {}
+			# Calculate total words in the corpus by summing up each book's word count if available
+			totalWordsInSections = sum(book_info.get('words', 0) for book_info in self.booksDict.values()) if getattr(self, 'booksDict', None) else 0
+			
+			for l, lexObj in self.lexemes.items():
+				# Apply the exact same inclusion logic
+				if (
+					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
+					and (not excluded or len(set(lexObj.pos) & exclude_set) == 0)  
+					and (not restricted or len(set(lexObj.pos) & restrict_set) > 0)
+				):
+					lexemes[l] = {
+						'id': lexObj.id,
+						'beta': lexObj.beta,
+						'gloss': lexObj.gloss,
+						'pos': lexObj.pos,
+						'total': lexObj.total,
+						'count': lexObj.total # Since we're querying the whole corpus, 'count' == 'total'
+					}
+					if lexObj.strongs:
+						lexemes[l]['strongs'] = lexObj.strongs
+			
+			theResponseObj = {
+				'totalLexemes': len(lexemes.keys()),
+				'totalWords': totalWordsInSections,
+				'lexemes': lexemes if min <= 1 and max == 0 else {
+					k: v for (k, v) in lexemes.items() if (int(v['total']) >= int(min) and (int(max) == 0 or int(v['total']) <= int(max)))
+				}
+			}
+				
+			return theResponseObj
+
 
 		if(len(sections)==0):
 		#get all word ids for each sections
@@ -322,7 +358,7 @@ class TfDataset:
 			words=[]
 			if (self.api.F.otype.v(s) == 'word' or self.api.F.otype.v(s) == 'lex' or self.api.F.otype.v(s) == 'lemma'):
 				
-				sectionsLexemes[s]= self.getLemma(s)
+				sectionsLexemes[s]= [self.getLemma(s)]
 				totalWordsInSections+=1
 			#	totalInstances+=1
 			else:
@@ -336,26 +372,20 @@ class TfDataset:
 		tmpLexemes = []
 		if (len(sectionLexSets)):
 			tmpLexemes = list(set.union(*sectionLexSets))
-		#if (common):
-#			tmpLexemes = list(set.intersection(*sectionLexSets))
-#		else:
-#			tmpLexemes = list(set.union(*sectionLexSets))
 
-		
-		#lexemes ={l:{'lexObj': self.lexemes[l]} for l in tmpLexemes if self.lexemes[l] and (
-		#	(not checkProper or (self.lexemes[l].isProper and excludeProperNouns and not restrictProperNouns)) 
-		#	and (not excluded or (self.lexemes[l].pos not in excludeStrings)  
-		#		and (not restricted or (self.lexemes[l].pos in restrictStrings))))}
-
+		exclude_set = set(exclude)
+		restrict_set = set(restrict)
 		for l in tmpLexemes:
-			lexObj = self.lexemes[l] if l in self.lexemes.keys() else None
+			#lexObj = self.lexemes[l] if l in self.lexemes.keys() else None
+			lexObj = self.lexemes.get(l)
+
 			#mylog(f"getLexemes2(): lexObj.pos= {lexObj.pos}",True)
 			#mylog(f"getLexemes2(): lexObj.pos & restrict: {str(set(lexObj.pos) & set(restrict))}",True)
 			if (lexObj and
 				(
 					(not checkProper or not excludeProperNouns or (lexObj.isProper or not restrictProperNouns)) 
-					and (not excluded or len(set(lexObj.pos) & set(exclude))==0)  
-					and (not restricted or len(set(lexObj.pos) & set(restrict)) > 0)
+					and (not excluded or len(set(lexObj.pos) & exclude_set)==0)  
+					and (not restricted or len(set(lexObj.pos) & restrict_set) > 0)
 				)
 			):#include!
 				#mylog(f"including Lex '{lexObj.lemma}' with pos '{lexObj.pos}'")
@@ -372,7 +402,9 @@ class TfDataset:
 					lexemes[l]['strongs']=lexObj.strongs
 
 		keys=lexemes.keys()
-		lexCounts = Counter([l for s in sectionsLexemes.values() for l in s if l in keys])
+		#lexCounts = Counter([l for s in sectionsLexemes.values() for l in s if l in keys])
+		lexCounts = Counter(l for s in sectionsLexemes.values() for l in s if l in keys)
+
 
 		for (l,obj) in lexemes.items():
 			obj['count']=lexCounts[l]
@@ -482,6 +514,47 @@ class TfDataset:
 					queryDetail = 'chapter'
 
 			#refs = {}
+			
+			theLemmas = self.getLemmaFeature().s(lex.lemma)
+			#mylog(f"getLexRefs(): theLemmas={theLemmas}",debugOn=True)
+			for l in theLemmas:
+				#NB: this be a word node, right?!
+				if (self.api.F.otype.v(l) == 'word'):
+					w=l
+					#theWords = self.api.L.d(l,'word')
+					#mylog(f"getLexRefs(): theWords={theWords}",debugOn=True)
+					#for w in theWords:
+					if (len(sections) == 0 or (len(set(self.api.L.u(w)) & set(sections)) > 0) ):
+						sectionTuple= self.api.T.sectionTuple(w)
+						if (queryDetail == 'book'):
+							sectionNode = sectionTuple[0]
+						elif (queryDetail == 'chapter'):
+							sectionNode = sectionTuple[1]
+						else:
+							sectionNode = sectionTuple[2]
+
+						#rNodes.add(sectionNode) # gets node of containing verse
+						refTuple = self.api.T.sectionFromNode(w) # gets tuple of containing verse
+						if (queryDetail == 'book'):
+							refString = refTuple[0]
+						elif (queryDetail == 'chapter'):
+							refString = refTuple[0] + " " + str(refTuple[1])
+						else:
+							refString = refTuple[0] + " " + ":".join(map(str,refTuple[1:]))
+						#refs.add(refString)
+						bookid=self.api.L.u(w,'book')[0]
+						if bookid not in bookCounts:
+							bookCounts[bookid]=1
+						else:
+							bookCounts[bookid] +=1
+						if sectionNode not in rNodes:
+							rNodes[sectionNode]=refString
+							verseCounts[sectionNode]=1
+						else:
+							verseCounts[sectionNode] +=1
+						#rNodes[sectionNode]=refString+"(" + str(verseCounts[sectionNode]) + ")"
+
+			"""
 			for n in self.api.F.otype.s('word'):
 				if (self.getLexID(n) == lex.id and (len(sections) == 0 or (len(set(self.api.L.u(n)) & set(sections)) > 0) )):
 					sectionTuple= self.api.T.sectionTuple(n)
@@ -512,7 +585,7 @@ class TfDataset:
 					else:
 						verseCounts[sectionNode] +=1
 						#rNodes[sectionNode]=refString+"(" + str(verseCounts[sectionNode]) + ")"
-
+			"""
 			return {'refs': list(rNodes.values()), 'nodes': list(rNodes.keys()), 'bookcounts': dict(bookCounts), 'total': sum(bookCounts.values())}
 		else:
 			return ''

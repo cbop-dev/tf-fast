@@ -120,3 +120,11 @@ def test_lexes(sblgnt):
         assert  GreekUtils.normalize(lex.lemma) ==  GreekUtils.normalize(t['lemma'])
         print(lex.gloss)
         #assert 'exhaust' in lex.gloss # this is a mistaken in the TF data! someday I'll fork, fix, and make pull request!
+
+
+def test_getLexRefs(sblgnt):
+    tests=[
+        {'id': 1537, 'refs': '2_Corinthians 12:15'}
+    ]
+    for t in tests:
+        assert(t['refs'] in sblgnt.getLexRefs(t['id'])['refs'])
