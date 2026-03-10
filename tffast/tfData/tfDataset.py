@@ -593,7 +593,11 @@ class TfDataset:
 	def getText(self,nodeId):
 		if (nodeId > 0):
 			try:
-				return self.api.T.text(int(nodeId)).strip()
+				#mylog(f"getText({nodeId})",debugOn=True)
+				text= self.api.T.text(int(nodeId)).strip()
+
+				#mylog(f"getText({nodeId}:<{self.api.F.otype.v(nodeId)}>) => {text}",debugOn=True)
+				return text
 			except:
 				return ''
 		else:

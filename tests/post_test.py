@@ -29,6 +29,13 @@ def nt():
     return NT
 
 @pytest.fixture()
+def vul():
+    global VUL
+    if(not VUL):
+        VUL= TfVulgate()
+    return VUL
+    
+@pytest.fixture()
 def lxx():
     return TfLXX()
 
@@ -64,11 +71,12 @@ def test_get_text(client):
     assert response.json()['text'] == "καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"
 
 def test_post_text(base_url, client):
-    requests=[{'sections': [385239]},
-              {'refs': [{'book':'Matthew','chapter':1,'verses':[1]}],'options':{'lexemes': True}},             
-              {'refs': [{'book':'Matthews','chapter':1,'verses':[1]}]},
-              {'sections': [382714,382715],'options':{'showVerses': True}},
-              {'sections': [382714],'options':{'lexemes': True}},
+    requests=[{'sections': [385239],'db':'nt'},
+              {'refs': [{'book':'Matthew','chapter':1,'verses':[1]}],'options':{'lexemes': True},'db':'nt'},             
+              {'refs': [{'book':'Matthews','chapter':1,'verses':[1]}],'db':'nt'},
+              {'sections': [382714,382715],'options':{'showVerses': True},'db':'nt'},
+              {'sections': [382714],'options':{'lexemes': True},'db':'nt'},
+              {'sections': [1],'options':{'lexemes': False},'db':'vul'},
     ]
     results=[
         {'texts':[{'text':"καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"}]},
@@ -77,12 +85,13 @@ def test_post_text(base_url, client):
         {'texts':[{'text':"(1) Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."}, 
                   {'text':"(2) Ἀβραὰμ ἐγέννησεν τὸν Ἰσαάκ, Ἰσαὰκ δὲ ἐγέννησεν τὸν Ἰακώβ, Ἰακὼβ δὲ ἐγέννησεν τὸν Ἰούδαν καὶ τοὺς ἀδελφοὺς αὐτοῦ,"}]},
         {'texts':[{'text':"Βίβλος γενέσεως Ἰησοῦ Χριστοῦ υἱοῦ Δαυεὶδ υἱοῦ Ἀβραάμ."}]},
+        {'texts':[{'text':"liber"}]}
     ]
     assert len(requests) == len(results)
     for i in range(0,len(requests)):
         testReq = requests[i]
         testRes = results[i]
-        response =client.post(f"/nt/texts/",json=testReq).json()
+        response =client.post(f"/{requests[i]['db']}/texts/",json=testReq).json()
         doLexes= testReq['options']['lexemes'] if 'options' in testReq.keys() and 'lexemes' in testReq['options'].keys() else False
         mylog("the response: ")
         mylog(response)
