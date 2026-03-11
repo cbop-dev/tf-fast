@@ -15,7 +15,7 @@ def test_getLex_test(BHS):
         {'id': 1437603, 'lex':'רֵאשִׁית'}
     ]
     for t in tests:
-        assert(BHS.getLemma(t['id']) == t['lex'])
+        assert(BHS.getNormalizedLemma(t['id']) == t['lex'])
 
 def test_getChapters(BHS):
     tests=[
@@ -301,3 +301,17 @@ def test_getLexemes2_counts(BHS):
         assert found[0]['total']==t['total']
         
 #def test_normalize
+
+def test_getLexRefs(BHS):
+
+    tests = [
+    
+        {'id':6763, 'refs':["Genesis 1:1"]}
+        
+    ]
+    for t in tests:
+        refs = BHS.getLexRefs(t['id'])
+        print(f"got refs for lex ${t['id']}: ${refs}")
+        assert len(refs)
+        for ref in t['refs']:
+            assert ref in refs['refs']

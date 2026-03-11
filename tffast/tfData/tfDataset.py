@@ -91,7 +91,7 @@ class TfDataset:
 
 	def getFreq(self,wordid):
 		lem = self.getLemma(wordid)
-		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if self.normalize(e[0]) == lem]
+		freqs = [e[1] for e in self.getLemmaFeature().freqList('word') if e[0] == lem]
 		return freqs[0] if len(freqs) > 0 else 0
 
 		
@@ -111,7 +111,10 @@ class TfDataset:
 	
 
 	def getLemma(self,wordid):
-		return self.normalize(self.getLemmaFeature().v(wordid).strip())
+		return self.getLemmaFeature().v(wordid).strip()
+	
+	def getNormalizedLemma(self,wordid):
+		return self.normalize(self.getLemma(wordid))
 	
 	def getLexiconEntryFeature(self):
 		return None
@@ -144,7 +147,8 @@ class TfDataset:
 				#print(f"invoking vanilla use()!")
 				mydata=use(datasetPathname,version=version)
 		else:
-			print(f"Go some data: ${mydata}")
+			pass
+			#print(f"Go some data: ${mydata}")
 			
 		if (mydata):
 			mylog(f"TfDataset({dbname},{datasetPathname}) got data: ")
@@ -171,7 +175,7 @@ class TfDataset:
 		self.lexemes = dict()#lemma:str->Lexeme
 
 		if (self.lemmaEnabled):
-			lemmaFreqDict={self.normalize(o[0]):o[1] for o in self.getLemmaFeature().freqList('word')}
+			lemmaFreqDict={o[0]:o[1] for o in self.getLemmaFeature().freqList('word')}
 			#mylog("buildLexData(): gonna build self.lexemes...")
 			self.words = list()
 			for w in self.api.F.otype.s('word'):
@@ -249,7 +253,7 @@ class TfDataset:
 
 	def countLexInSection(self,lemma,section):
 		count = 0
-		lemma=self.normalize(lemma)
+		#lemma=self.normalize(lemma)
 		if (self.api.F.otype.v(section) == 'word'):
 			if (self.getLemma(section) == lemma):
 				count = 1			
@@ -495,6 +499,8 @@ class TfDataset:
 		sections: ids of TF sections (like chapters, books) to limit the search to. If emtpy, finds all instances.
 		details: not sure what this does. probably something. Possible values: are 'book', 'chapter', or 'verse'.
 		
+
+		Returns refs as {'refs': <string array>, 'nodes': <int array of verses>, 'bookCounts': <dict of booksids->count>, 'total', <total instances in BHS>}
 		"""
 		
 		# optionally limits to instances within any of the selected sections, exluding all others:
@@ -554,38 +560,6 @@ class TfDataset:
 							verseCounts[sectionNode] +=1
 						#rNodes[sectionNode]=refString+"(" + str(verseCounts[sectionNode]) + ")"
 
-			"""
-			for n in self.api.F.otype.s('word'):
-				if (self.getLexID(n) == lex.id and (len(sections) == 0 or (len(set(self.api.L.u(n)) & set(sections)) > 0) )):
-					sectionTuple= self.api.T.sectionTuple(n)
-					if (queryDetail == 'book'):
-						sectionNode = sectionTuple[0]
-					elif (queryDetail == 'chapter'):
-						sectionNode = sectionTuple[1]
-					else:
-						sectionNode = sectionTuple[2]
-
-					#rNodes.add(sectionNode) # gets node of containing verse
-					refTuple = self.api.T.sectionFromNode(n) # gets tuple of containing verse
-					if (queryDetail == 'book'):
-						refString = refTuple[0]
-					elif (queryDetail == 'chapter'):
-						refString = refTuple[0] + " " + str(refTuple[1])
-					else:
-						refString = refTuple[0] + " " + ":".join(map(str,refTuple[1:]))
-					#refs.add(refString)
-					bookid=self.api.L.u(n,'book')[0]
-					if bookid not in bookCounts:
-						bookCounts[bookid]=1
-					else:
-						bookCounts[bookid] +=1
-					if sectionNode not in rNodes:
-						rNodes[sectionNode]=refString
-						verseCounts[sectionNode]=1
-					else:
-						verseCounts[sectionNode] +=1
-						#rNodes[sectionNode]=refString+"(" + str(verseCounts[sectionNode]) + ")"
-			"""
 			return {'refs': list(rNodes.values()), 'nodes': list(rNodes.keys()), 'bookcounts': dict(bookCounts), 'total': sum(bookCounts.values())}
 		else:
 			return ''
@@ -719,15 +693,15 @@ class TfDataset:
 			if (chapter):
 				if (len(verses)): #book, chap, and vv!
 					nodes=[self.getNodeFromBcV(self.booksDict[bookNode]['name'],chapter,v) for v in verses]
-					print(f"Got book,chap,v:[{','.join(map(str,nodes))}]")
+					mylog(f"Got book,chap,v:[{','.join(map(str,nodes))}]")
 				else:#chap only
 					nodes.append(self.lookupChapter(bookname,chapter))
-					print("Got book + chap only!")
+					mylog("Got book + chap only!")
 			else: #bookonly
 				nodes.append(bookNode)
-				print("Got book only!")
+				mylog("Got book only!")
 		else:
-			print("Got no book node! Uh oh!")
+			mylog("Got no book node! Uh oh!")
 		
 		return {k:{'gloss':l['gloss'],'strongs':l['strongs']} for k,l in self.getLexemes2(sections=nodes,min=min,max=max)['lexemes'].items()} if len(nodes) else {}
 

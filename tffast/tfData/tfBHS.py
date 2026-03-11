@@ -135,8 +135,11 @@ class TfBHS(TfDataset):
         #super().__init__('ETCBC/bhsa-min',dbname="bhs", version="2021",dataset=dataset)
 		
     def getLemma(self,wordid):
-        return HebrewUtils.normalize(self.getLemmaFeature().v(wordid).strip())
+        return self.getLemmaFeature().v(wordid).strip()
     
+    def getNormalizedLemma(self,wordid):
+        return HebrewUtils.normalize(self.getLemma(wordid))
+        
     def getLemmaFeature(self):
         return self.api.F.voc_lex_utf8
 

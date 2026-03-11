@@ -14,12 +14,16 @@ def nt():
 
 def test_lexemesDict(nt):
     #assert(nt.getLex(1).lemma =='Αἰγύπτιος')
-    found = False
-    for l in nt.lexemes.keys():
-        if l==GreekUtils.normalize('Αἰγύπτιος'):
-            found = True
-            break
-    assert(found)
+    #lemma = "Αἰγύπτιος"
+    #egyptID = nt.getLex(124)
+    #print(f'egypt:"{egyptID.lemma}"')
+    #print(" ".join([nt.getLex(i).lemma for i in range(0,130)]))
+    #assert False
+    lemmas = ["Ἀβραάμ","Αἰγύπτιος"]
+    
+    for lemma in lemmas:
+        assert lemma in nt.lexemes.keys()
+    #assert(found)
 
     ids = [l.id for l in nt.lexemes.values()]
     assert(len(ids)==5396)
@@ -38,7 +42,7 @@ def test_getLemma(nt):
         {'id': 1, 'lex':GreekUtils.normalize('βίβλος')},
     ]
     for t in tests:
-        assert(nt.getLemma(t['id']) == t['lex'])
+        assert(nt.getNormalizedLemma(t['id']) == nt.normalize(t['lex']))
 
 def test_getFreq(nt):
     assert (nt.getFreq(1)==10)
@@ -72,7 +76,7 @@ def test_getBook(nt):
 
 def test_countLexSection(nt):
     tests = [
-        {'section':137780, 'lemma': GreekUtils.normalize('πληρόω'), 'count': 16}, #matt
+        {'section':137780, 'lemma': 'πληρόω', 'count': 16}, #matt
         #{'section':137780, 'lemma': 'πληρόω', 'count': 15} #error
        
         

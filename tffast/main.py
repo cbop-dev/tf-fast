@@ -430,7 +430,7 @@ def postLexemesRoute(request: LexRequest, db='lxx'):
 @app.post("/texts/")
 @app.post("/{db}/texts/")
 def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
-	print("POSTTEXTS!!!")
+	
 	#mylog(f"postTextsRoute({db})", debugOn=True, showTime=True)
 	texts = list()
 	#tfAPI = getAPI(db)
@@ -449,7 +449,7 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 		wordsArray= list() # list[{'id':int,'word':str,'pos':str,...}]
 		#mylog("postTextsRoute. showVerses = " + str(showVerses))
 		textsAndRefsResponse=list()#TextAndReference
-		#print("YOU!")
+		
 		if request.refs:
 			
 			for ref in request.refs:
