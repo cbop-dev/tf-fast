@@ -4,6 +4,7 @@ from tf.app import use
 from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
 from enum import Enum
+from ..utils import utils
 
 class POS(Enum):
 	ADJECTIVE= 0
@@ -78,6 +79,7 @@ class Lexeme:
 
 class TfDataset:
 	posDict={}
+	bookNameLookup=[]
 	def getBeta(self,wordid):
 		return self.api.F.lex.v(wordid)#does not work for nt, must override.
 	def getPlain(self,wordid):
@@ -678,11 +680,27 @@ class TfDataset:
 		
 		return outString
 	def lookupBook(self,string):
-		matches=[n for (n,o) in self.booksDict.items() if string in o['syn'] or ('abbrev' in o.keys() and string == o['abbrev']) 
-			or ('name' in o.keys() and string == o['name'])]
-		match=None
-		if (len(matches)):
-			match=matches[0]
+		
+		match=0
+			
+		for (n,o) in self.booksDict.items():
+			theNamesAbbreves = set()
+			for nameKey in ['abbrev','name','long']:
+				if (nameKey in o.keys()):
+					theNamesAbbreves.add(o[nameKey])
+				
+			if ('syn' in o.keys()):
+				for names in o['syn']:
+					for name in utils.flatten(names):
+						theNamesAbbreves.add(name)
+									
+			for name in [string,string.lower(),string.capitalize()]:
+				if (name in theNamesAbbreves):
+					match=n
+					break
+			
+#		matches=[n for (n,o) in self.booksDict.items() if string in o['syn'] or ('abbrev' in o.keys() and string == o['abbrev']) 
+#			or ('name' in o.keys() and string == o['name'])]
 		return match
 	
 	def getHandyDictionary(self,bookname,chapter=None,verses=[],min=0,max=0):
