@@ -117,7 +117,8 @@ def getCommonRoute(db='lxx'):
 
 @app.get("/{db}/lex/{lexid:int}")
 @app.get("/lex/{lexid:int}")
-def getLexInfo(lexid: int,db='lxx'):
+def getLexInfo(lexid: int,db='lxx',strongs='0'):
+	strongs = True if (strongs == '1' or strongs=='True' or strongs=='T' or strongs=='t') else False
 	tfData=getDataset(db)
 	if(tfData and tfData.lemmaEnabled):
 		api=tfData.api
@@ -133,6 +134,8 @@ def getLexInfo(lexid: int,db='lxx'):
 			theLexObj['pos'] = lex.pos if lex.pos else 'proper noun or name'
 			lang=tfData.lang if tfData.lang else 'greek'
 			theLexObj['lemma'] = lex.lemma
+			if(strongs and lex.strongs):
+				theLexObj['strongs'] = lex.strongs
 				
 			if (tfData.dbname == 'bhs'):
 			
@@ -201,8 +204,9 @@ def wordCloudRoute(db='lxx',restrict='',invert='',title='',sections='',exclude='
 
 @app.get("/{db}/lex")
 @app.get("/lex")
-def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',beta='',plain='',common='',groups='',min='',gloss='',):
+def lexemesRoute(db='lxx',proper='',sections='',restrict='',exclude='',pos='',beta='',plain='',common='',groups='',min='',gloss='',strongs='0'):
 	tfData=getDataset(db)
+	strongs = True if (strongs == '1' or strongs=='True' or strongs=='T' or strongs=='t') else False
 	api=tfData.api
 	if (tfData.lemmaEnabled):
 		#theDicts=getDicts(db)

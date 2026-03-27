@@ -67,6 +67,10 @@ class GreekUtils:
         return result.replace('ς', 'σ').replace(r'σ$', 'ς', 1)
 
     @staticmethod
+    def removeFinal(greek):
+        return greek.replace('ς', 'σ')
+
+    @staticmethod
     def normalize(string):
         return unicodedata.normalize("NFC",string).strip()
 
@@ -145,7 +149,7 @@ class GreekUtils:
         return ''.join(remove_diacritics_map.get(c, c) for c in greek)
 
     @staticmethod
-    def plain_greek(greek):
+    def plain_greek(greek,removeFinal=False):
         """
         Return Greek text without diacritics for sorting/searching.
 
@@ -155,6 +159,10 @@ class GreekUtils:
         Returns:
             str: The input string with diacritics removed.
         """
-        return GreekUtils.remove_diacritics(greek)
+        
+        retVal = GreekUtils.normalize(GreekUtils.remove_diacritics(greek))
+        if (removeFinal):
+            retVal = GreekUtils.removeFinal(retVal)
+        return retVal
     
 GreekUtils._initialize_maps()

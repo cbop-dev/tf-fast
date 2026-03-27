@@ -153,6 +153,13 @@ class TfSBLGNT(TfDataset):
 		else:
 			return ''
 
+
+	def lookupLex(self,greek):
+		"""
+			returns a list of lexemes that contain the given greek expression, once normalized and stripped of diacritics.
+		"""
+		return [lex for (lemma,lex) in self.lexemes.items() if GreekUtils.plain_greek(greek,removeFinal=True) in GreekUtils.plain_greek(lemma,removeFinal=True)]
+		
 	def apparatusNote(self,book,chapter,verse):
 		theBookNode = self.lookupBook(book)
 		note = ''

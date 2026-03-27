@@ -100,6 +100,11 @@ class TfDataset:
 	def getPos(self,wordid):
 		return self.api.F.sp.v(wordid)
 
+	def lookupLex(self,str):
+		"""
+			returns a list of lexemes whose lemma contain the given string
+		"""
+		return [lex for (lemma,lex) in self.lexemes.items() if str in lemma]
 
 	def getPosEnums(self,wordid):
 		pos = self.getPos(wordid)

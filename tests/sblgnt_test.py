@@ -128,3 +128,16 @@ def test_getLexRefs(sblgnt):
     ]
     for t in tests:
         assert(t['refs'] in sblgnt.getLexRefs(t['id'])['refs'])
+
+def test_lookupLex(sblgnt):
+    tests=[
+        {'id': 836, 'lookups': ['αυτος','αὐτός','αὐτό','αὐτὀσ'],'lemma':'αὐτός'}
+        
+    ]
+    for t in tests:
+        for lookup in t['lookups']:
+            lexes=sblgnt.lookupLex(lookup)
+            assert(len(lexes)>0)
+            ids=[l.id for l in lexes]
+            assert(t['id'] in ids)
+            assert(t['lemma'] in [l.lemma for l in lexes])
