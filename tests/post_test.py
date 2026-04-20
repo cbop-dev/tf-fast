@@ -14,30 +14,31 @@ from tffast.env import mylog, debug
 from tffast.utils.greekUtils import GreekUtils
 import json
 from tffast.tfData.tfDataset import POS
+from tffast.MyDatasets import dataSets,getDataset,loadDatasets
 @pytest.fixture()
 def base_url():
     return "http://localhost:5000/"
 NT=None
 TC=None
-
+VUL=None
 
 @pytest.fixture()
 def nt():
     global NT
     if(not NT):
-        NT= TfN1904()
+        NT= getDataset('nt')
     return NT
 
 @pytest.fixture()
 def vul():
     global VUL
     if(not VUL):
-        VUL= TfVulgate()
+        VUL= getDataset('vul')
     return VUL
     
 @pytest.fixture()
 def lxx():
-    return TfLXX()
+    return getDataset('lxx')
 
 @pytest.fixture()
 def client():
@@ -48,7 +49,7 @@ def client():
 
 @pytest.fixture()
 def sblgnt():
-    return TfSBLGNT()
+    return getDataset('sblgnt')
 
 @pytest.fixture()
 def runner():

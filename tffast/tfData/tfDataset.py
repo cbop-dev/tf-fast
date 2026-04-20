@@ -5,7 +5,7 @@ from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
 from enum import Enum
 from ..utils import utils
-
+debug=False
 class POS(Enum):
 	ADJECTIVE= 0
 	CONJUNCTION= 1
@@ -463,7 +463,7 @@ class TfDataset:
 
 		
 	def getChaptersDict(self,book):
-		#mylog("getChapters(" + str(book) + "," + db +")")
+		#mylog("getChapters(" + str(book) +")",debugOn=True)
 		return dict([(str(self.api.F.chapter.v(c)), c) for c in self.api.L.d(book) if self.api.F.otype.v(c)=='chapter'])
 		
 	def getChapter(self,bookID,chapNum):
@@ -479,11 +479,11 @@ class TfDataset:
 ### pasted from init.py:
 	def getVersesFromNodeRange(self,startNode,endNode,showVerses=False):
 		text = ''
-		mylog("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
+		#mylog("getVersesFromNodeRange(" +str(startNode) + ","+str(endNode)+")")
 		
 		if (startNode == endNode):
 			text += self.api.T.text(startNode)
-			mylog("	got single node; text= " + text)
+			#mylog("	got single node; text= " + text)
 		elif (startNode > 0 and endNode >= startNode):
 			for i in range(startNode,endNode+1,1):
 				if(self.api.F.otype.v(i) =='verse'):
@@ -494,7 +494,7 @@ class TfDataset:
 					text += self.api.T.text(i)
 				else:
 					mylog("Node " + str(i) + " was not a verse, but is: " + self.api.F.otype.v(i) +", text = " + self.api.T.text(i))
-			mylog("	got range. text = " + text)
+			#mylog("	got range. text = " + text)
 
 		return text.strip()
 	
@@ -616,11 +616,11 @@ class TfDataset:
 		if cnode:
 			vnodes = self.api.L.d(cnode, 'verse')
 			for v in vnodes:
-				if self.api.F.verse.v(v) == str(verse) or self.api.F.verse.v(v) == verse:
+				if self.api.F.verse.v(v) == str(verse) or self.api.F.verse.v(v) == int(verse):
 					node = v
 					break
 		
-		mylog(f"calling graph traversal getNodeFromBcV('{book}', {str(chapter)},{str(verse)})=>{node}")
+		#mylog(f"getNodeFromBcV('{book}', {str(chapter)},{str(verse)})=>{node}",debugOn=debug)
 		return node
 
 
@@ -706,6 +706,9 @@ class TfDataset:
 			
 #		matches=[n for (n,o) in self.booksDict.items() if string in o['syn'] or ('abbrev' in o.keys() and string == o['abbrev']) 
 #			or ('name' in o.keys() and string == o['name'])]
+		if (not match):
+			pass
+			#mylog(f"lookupBook({string})=>{match}, with namesAbbrev",debugOn=debug)
 		return match
 	
 	def getHandyDictionary(self,bookname,chapter=None,verses=[],min=0,max=0):
@@ -716,13 +719,13 @@ class TfDataset:
 			if (chapter):
 				if (len(verses)): #book, chap, and vv!
 					nodes=[self.getNodeFromBcV(self.booksDict[bookNode]['name'],chapter,v) for v in verses]
-					mylog(f"Got book,chap,v:[{','.join(map(str,nodes))}]")
+					#mylog(f"Got book,chap,v:[{','.join(map(str,nodes))}]")
 				else:#chap only
 					nodes.append(self.lookupChapter(bookname,chapter))
-					mylog("Got book + chap only!")
+					#mylog("Got book + chap only!")
 			else: #bookonly
 				nodes.append(bookNode)
-				mylog("Got book only!")
+				#mylog("Got book only!")
 		else:
 			mylog("Got no book node! Uh oh!")
 		

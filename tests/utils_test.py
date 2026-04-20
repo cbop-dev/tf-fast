@@ -1,4 +1,5 @@
 import pytest, os,sys
+from tffast.utils.utils import createNumArrayFromStringListRange
 from tffast.utils.greekUtils import GreekUtils
 from tffast.env import mylog, debug
 # Test the GreekUtils class
@@ -47,3 +48,14 @@ def test_hebrew_normalize():
         assert GreekUtils.normalize(u[0]) == GreekUtils.normalize(u[1])
 
     
+def test_createNumArrayFromStringListRange():
+    tests=[
+        {'in':"1-2",'out':[1,2]},
+        {'in':"1-2,4-5",'out':[1,2,4,5]},
+        {'in':"4-5,1-2",'out':[1,2,4,5]},
+        {'in':"2",'out':[2]},
+        {'in':"2,1",'out':[1,2]},
+    ]
+    for t in tests:
+        numList=createNumArrayFromStringListRange(t['in'])
+        assert(numList==t['out'])

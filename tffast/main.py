@@ -22,47 +22,14 @@ from contextlib import asynccontextmanager
 from .tfData.tfWEB import TfWEB
 from .env import mylog, debug
 from tffast.tfData.tfDataset import POS
-
+from tffast.MyDatasets import dataSets,getDataset,loadDatasets
 #debugOn=debug
 #debugOn=True
-debug = False
+debug = True
 
 mylog("LOADING APP!!!========================")
 mylog("--------------DEBUGGING ON--------------")
 
-DISABLED_DATASETS = os.getenv("DISABLED", '').split(',')
-
-enabledDatasets = {
-	'lxx': TfLXX,
-	'nt': TfN1904,
-	'bhs': TfBHS,
-	'sblgnt': TfSBLGNT,
-	'vul': TfVulgate,
-	'web': TfWEB,
-}
-
-for ds in DISABLED_DATASETS:
-	if ds in enabledDatasets:
-		del enabledDatasets[ds]
-
-
-
-# Removed threading import and lock as they are no longer needed for lazy loading
-# import threading
-
-dataSets={}
-# _dataset_lock = threading.Lock() # Removed
-
-def getDataset(dbname='lxx'):
-	# Datasets are now eagerly loaded by lifespan, so no lazy loading logic is needed here.
-	# We just return the pre-loaded dataset.
-	return dataSets.get(dbname)
-
-def loadDatasets():
-	for [key,db] in enabledDatasets.items():
-		if key not in dataSets:
-			mylog(f"Eagerly loading: {key}")
-			dataSets[key] = db()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -347,6 +314,7 @@ class TextReference(BaseModel):
 class TextsOptions(BaseModel):
 	showVerses:bool=False
 	lexemes:bool=False
+	versions: list[str] | None = None # str abbrev of other versions to also fetch, for a polyglot view!
 
 class TextsRequest(BaseModel):
 	refs: list[TextReference]|None =None# book name, chapter, verses
@@ -470,7 +438,7 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 					
 				for v in ref.verses:
 						
-					#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]")
+					#mylog(f"postTextsRoute verse loop for {str(r[0])} {str(r[1])}:[{','.join(map(str,r[2]))}]",debugOn=debug)
 					node=tfData.getNodeFromBcV(ref.book,ref.chapter,v)## book, chap, verse
 						
 					textToAdd = tfData.getText(node)
@@ -480,8 +448,9 @@ def postTextsRoute(request: TextsRequest, showNotes=True,db='lxx'):
 						#mylog(f"node {node} appended!")
 
 					
-					#mylog("textToAdd = '" + textToAdd + "'; showVerses = " +str(showVerses))
+					#mylog(f"for {refString}: textToAdd = '{textToAdd}'; showVerses = {showVerses}",debugOn=debug)
 					if (len(textToAdd) > 0):
+						
 						if (not firstVerse):
 							text+= ' '
 						if(showVerses):
@@ -652,26 +621,27 @@ def getVersesFromRange(db='lxx',book='',chapter='',showVerses='0',start='',end='
 			mylog("got nothing")
 		else:
 			if ((startNode == 0 or startNode == None) and (endNode != 0 and endNode != None)):
-				mylog(f"got end node {endNode} but no start node! trying to fix...")
+				#mylog(f"got end node {endNode} but no start node! trying to fix...")
 				for i in range(startVerse + 1,endVerse+1, 1):
 					if (startNode == None):
 						startNode = tfData.getNodeFromBcV(book,chapter,i)
 			
 			if ((endNode == 0 or endNode == None) and (startNode != None and startNode != 0)):
-				mylog(f"got start node {startNode} but no end node! trying to fix with range:")
+				#mylog(f"got start node {startNode} but no end node! trying to fix with range:")
 				for i in range(endVerse-1, startVerse-1, -1):
 					if (endNode == 0 or endNode == None):
 						endNode = tfData.getNodeFromBcV(book,chapter,i)
 			if (startNode != None and endNode != None and startNode > 0 and endNode > 0 and endNode >= startNode):
 				verses = getVersesFromNodeRange(startNode,endNode,showVerses,db)
-				mylog("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
+				#mylog("calling getVersesFromNodeRange("+str(startNode)+","+str(endNode)+")")
 				start = api.T.sectionFromNode(startNode)
 				if (startNode < endNode):
 					ref = start[0] + " " + str(start[1]) +":"+str(start[2])+"-"+str(api.T.sectionFromNode(endNode)[-1])
 				else:
 					ref = start[0] + " " + str(start[1]) +":"+str(start[2])
 			else:
-				mylog("got no nodes from range!")
+				pass
+				#mylog("got no nodes from range!")
 			
 	return {'text': verses, 'reference': ref} if verses and ref else {}
 	

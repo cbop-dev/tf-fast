@@ -64,7 +64,8 @@ class TfBHS(TfDataset):
         426629:{"abbrev":"2Chr","syn":["Chronica_II",'2Chr','2Chronicles','2Chron','2Ch','IIChronicles','IIChron','IICh','IIChr']},
     }
     """
-    booksDict= {426591: {'abbrev': 'Gen', 'syn': ['Genesis', 'Gen', 'Ge'], 'name': 'Genesis'},
+    booksDict= {
+        426591: {'abbrev': 'Gen', 'syn': ['Genesis', 'Gen', 'Ge'], 'name': 'Genesis'},
         426592: {'abbrev': 'Exod',   'syn': ['Exodus', 'Exod', 'Exodus'], 'name': 'Exodus'},
         426593: {'abbrev': 'Lev',   'syn': ['Leviticus', 'Lev', 'Leviticus'], 'name': 'Leviticus'},
         426594: {'abbrev': 'Num',   'syn': ['Numeri', 'Num', 'Numbers'], 'name': 'Numbers'},

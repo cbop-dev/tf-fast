@@ -1,12 +1,13 @@
 import pytest, os,sys, csv, re
 from tffast.tfData.tfBHS import TfBHS
 from tffast.env import debug,mylog
+from tffast.MyDatasets import dataSets,getDataset,loadDatasets
 bhs=None
 @pytest.fixture()
 def BHS():
     global bhs
     if(not bhs):
-        bhs= TfBHS()
+        bhs= getDataset('bhs')
     return bhs
 
 

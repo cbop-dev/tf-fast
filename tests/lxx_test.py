@@ -1,12 +1,13 @@
 import pytest, os,sys
 from tffast.tfData.tfLXX import TfLXX
 from tffast.tfData.tfDataset import POS
+from tffast.MyDatasets import dataSets,getDataset,loadDatasets
 lxx=None
 @pytest.fixture()
 def LXX():
     global lxx
     if(not lxx):
-        lxx= TfLXX()
+        lxx=getDataset('lxx')
     return lxx
 
 
