@@ -33,7 +33,7 @@ def nt():
 def vul():
     global VUL
     if(not VUL):
-        VUL= getDataset('vul')
+        VUL= getDataset('vulgate')
     return VUL
     
 @pytest.fixture()
@@ -77,7 +77,7 @@ def test_post_text(base_url, client):
               {'refs': [{'book':'Matthews','chapter':1,'verses':[1]}],'db':'nt'},
               {'sections': [382714,382715],'options':{'showVerses': True},'db':'nt'},
               {'sections': [382714],'options':{'lexemes': True},'db':'nt'},
-              {'sections': [1],'options':{'lexemes': False},'db':'vul'},
+              {'sections': [1],'options':{'lexemes': False},'db':'vulgate'},
     ]
     results=[
         {'texts':[{'text':"καὶ καθὼς ἐγένετο ἐν ταῖς ἡμέραις Νῶε, οὕτως ἔσται καὶ ἐν ταῖς ἡμέραις τοῦ Υἱοῦ τοῦ ἀνθρώπου·"}]},
@@ -132,3 +132,18 @@ def test_post_ref(base_url, client):
         print(str(response))
         assert 'totalLexemes' in response.keys()
         assert response['totalLexemes'] == test['output']['totalLexemes']
+
+def test_verseMap(base_url, client):
+    tests=[
+          {'input':{"refs":[{'book': 'Gen','chapter':1,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['Gen 1:1']}},
+          {'input':{"refs":[{'book': 'PSA','chapter':22,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['PSA 23:1']}},
+          {'input':{"refs":[{'book': 'Ps','chapter':22,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['Ps 23:1']}},
+          ##^ doesn't work yet. Got to convert book names!
+    ]
+    for t in tests:
+        response =client.post(f"/{t['input']['src']}/versemap",json=t['input']).json()
+        #mylog("the response: ",True)
+        #mylog(response,True)
+        print(str(response))
+        #assert 'totalLexemes' in response.keys()
+        assert response == t['output']

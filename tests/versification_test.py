@@ -5,22 +5,22 @@ from versification_utils import remap_verses
 from tffast.env import debug,mylog
 from tffast.utils.bibleUtils import BibleUtils
 from tffast.utils.utils import createNumArrayFromStringListRange
-import tffast.utils.bibleNames as BibleNames
+#import tffast.utils.bibleNames as BibleNames
 from tffast.MyDatasets import getDataset,loadDatasets
 from tf.app import use
 from tf.advanced import sections as Sections
 
 datasetMap={}
 
-global bhs
-bhs = bhs if bhs else None
-global lxx
-lxx = lxx if lxx else None
+#global bhs
+#bhs = bhs if bhs else None
+#global lxx
+#lxx = lxx if lxx else None
 @pytest.fixture()
 def BHS():
-    global bhs
-    global datasetMap
-    bhs=getDataset('bhs',datasetMap)
+ #   global bhs
+  #  global datasetMap
+    bhs=getDataset('bhs')
     #bhs= TfBHS()
     return bhs
 
@@ -29,8 +29,8 @@ def LXX():
     #global lxx
     #if(not lxx):
         #lxx= TfLXX()
-    global datasetMap
-    return getDataset('lxx',datasetMap)
+    #global datasetMap
+    return getDataset('lxx')
 
 def test_dummy():
     assert(True)
@@ -61,6 +61,7 @@ def test_myRemapMethod():
         {'in': "PSA 22:31", 'out': "PSA 21:31", 'from':'bhs', 'to':'lxx'},
         {'in': "2SA 2:3", 'out': "2SA 2:3", 'from':'bhs', 'to':'lxx'},
         {'in': "DAN 13:1", 'out': "DAN 13:1", 'from':'lxx', 'to':'vulgate'},
+        {'in': "EST 4:22", 'out': "EST 4:22", 'from':'lxx', 'to':'web'},
        # "PSA 23:6": "The last verse of Psalm 23"
     ]
 
@@ -71,8 +72,8 @@ def test_myRemapMethod():
         
 
 def test_getBookMapAbbrev():
-    assert(BibleNames.getBookMapAbbrev("Genesis") == "GEN")
-    assert(BibleNames.getBookMapAbbrev("Exodus") == "EXO")
+    assert(BibleUtils.getBookMapAbbrev("Genesis") == "GEN")
+    assert(BibleUtils.getBookMapAbbrev("Exodus") == "EXO")
 
 def test_reverseBookAbbrev():
     tests=[
@@ -87,7 +88,7 @@ def test_reverseBookAbbrev():
       
     ]
     for t in tests:
-        assert(BibleNames.getTfBookAbbrev(t['in'], t['version']) == t['out'])
+        assert(BibleUtils.getTfBookAbbrev(t['in'], t['version']) == t['out'])
 
 
 def test_getParallelVerses(BHS,LXX):

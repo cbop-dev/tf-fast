@@ -539,18 +539,9 @@ versionMaps={
   'nt':n1904Map,
   'web':webMap,
   'sblgnt':sblMap,
-  'vul':vulMap
+  'vulgate':vulMap
 }
 
-
-"""
-	'lxx': TfLXX,
-	'nt': TfN1904,
-	'bhs': TfBHS,
-	'sblgnt': TfSBLGNT,
-	'vul': TfVulgate,
-	'web': TfWEB,
-"""
 
 def getBookMapAbbrev(name):
     for abbrev, names in bibleBookMappingNames.items():
@@ -563,7 +554,7 @@ def getTfBookAbbrev(verseMapAbbrev,version):
   """
   getTfBookAbbrev: a reverse function to getBookMapAbbrev. Returns the bookname abbreviation used the given tf fabric dataset.
   verseMapAbbrev: the mapping abbreviation used in the verse_map module/function. (i.e., the value returned by getBookMapAbbrev)
-  version: the version of the tf fabric dataset: e.g., one of: 'bhs', 'lxx', 'nt', 'web', 'sblgnt', 'vul'
+  version: the version of the tf fabric dataset: e.g., one of: 'bhs', 'lxx', 'nt', 'web', 'sblgnt', 'vulgate'
   """
 
   ret = None

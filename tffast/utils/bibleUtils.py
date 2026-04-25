@@ -7,35 +7,28 @@ from tffast.tfData.tfSBLGNT import TfSBLGNT
 from versification_utils import remap_verses
 from tffast.tfData.tfDataset import TfDataset
 from tffast.env import debug,mylog
+from tffast.utils.bibleNames import getTfBookAbbrev,getBookMapAbbrev
 import re
 class BibleUtils:
-    """
-    tfs={
-        'bhs':TfBHS(),
-        'lxx':TfLXX(),
-        'web':TfWEB(),
-        'nt':TfNT(),
-        'vulgate':TfVulgate(),
-        'sblgnt':TfSBLGNT()
-    }
-  
-    mapNames = {
-        'eng':['WEB'], #this could be wrong for a Catholic Bible, as the versification_utils defines 'eng' as "English (Protestant)" 
-                       #see https://github.com/jcuenod/versification_utils
 
-        'vul':['vulgate'],
-        'lxx':['lxx'],
-        'org':['bhs','lxx','sblgnt','nt'] #this is the default mapping
-    }
-    """
+    # mape to abbreviations used in the versification_utils package (external dependency)
+    # see https://github.com/jcuenod/versification_utils
     mapNames={
-        'WEB':'eng',
+        'web':'eng',
         'vulgate':'vul',
         'lxx':'lxx',
         'sblgnt':'org',
         'nt':'org',
         'bhs':'org'
     }
+
+    @staticmethod
+    def getTfBookAbbrev(book,versification):
+        return getTfBookAbbrev(book,versification)
+
+    @staticmethod
+    def getBookMapAbbrev(name):
+        return getBookMapAbbrev(name)
 
     @staticmethod
     def remapVerses(verses,fromTfName, toTfName):
@@ -45,8 +38,8 @@ class BibleUtils:
         fromTfName: abbrev of the tf dataset to remap from
         toTfName: abbrev of the tf dataset to remap to
         """
-        fromSchema = BibleUtils.mapNames[fromTfName] if fromTfName in BibleUtils.mapNames else None
-        toSchema = BibleUtils.mapNames[toTfName] if toTfName in BibleUtils.mapNames else None
+        fromSchema = BibleUtils.mapNames[fromTfName] if fromTfName in BibleUtils.mapNames.keys() else None
+        toSchema = BibleUtils.mapNames[toTfName] if toTfName in BibleUtils.mapNames.keys() else None
         ret = []
         if (fromSchema and toSchema):
             newVersesDict = remap_verses({v:'' for v in verses}, fromSchema, toSchema)
@@ -69,41 +62,6 @@ class BibleUtils:
         return {'book':book,'chap':chap,'vv':vv}
         
 
-        #getBookChapVerseFromRef(refString, replaceUnderscores=true) {
-    """
-    function getBookChapVerseFromRef(refString, replaceUnderscores=true) {
-
-    // mylog(`getBookChapVerseFromRef(${refString})`, true);
-        refString = cleanString(refString, replaceUnderscores);
-        let book = null, chap = book, v = book;
-        //NB books with only 1 chap: [Phlm, Jude,2 John, 3 John]
-        let badInput = false;
-        if (refString.split(":").length == 2) {//got explicit verses
-            let bookChap = '';
-            [bookChap, v] = refString.split(":");
-            if (v) { //got verses as expected
-                const bookChapObj = splitBookChap(bookChap, replaceUnderscores);
-                book = bookChapObj.book;
-                chap = bookChapObj.chap;
-            }
-            else { //what?? bad input: colon with not verses! (e.g., "Eph 2:")
-                badInput = true;
-                mylog("bad input with colon: '" + refString + "'");
-            }
-        }
-        else { //no verses, just book and chap
-            const bookChapObj = splitBookChap(refString, replaceUnderscores);
-            book = bookChapObj.book;
-            chap = bookChapObj.chap;
-            if (!chap) {
-                // mylog("getBookChapVerseFromRef("+refString+") got no chap!"+chap)
-            }
-
-        }
-        return { book: book, chap: chap, v: v }
-    }
-    """
-
     @staticmethod
     def splitBookChap(string, replaceUnderscores=True):
         pass
@@ -122,27 +80,3 @@ class BibleUtils:
         else:
             print(f"Got not matches for {string}")
         return {'book':theBook,'chap':theChap} 
-
-"""
-    splitBookChap(string, replaceUnderscores=true) {
-    //reading 'chapters' which might actually be verses, i.e., Jude 3a
-    const matches = cleanString(string, replaceUnderscores).match(/^(([1-4]+[ _]*)?[a-zA-Z _]+)([ _]+([0-9a-z-]+))?$/); 
-    let theBook = null, theChap = theBook;
-
-    if (matches && matches.length >= 5) { //got chapter
-        theBook = matches[1];
-        theChap = matches[4] ? matches[4] : null;
-    }
-    else if (matches && matches[1]) {//just a book
-        theBook = matches[1];
-
-    }
-    else {
-        //error
-        mylog("splitBookChap could not parse '" + string + "'");
-    }
-
-//    mylog("splitBookChap(string)->{b:" + theBook + ", c:"+theChap+"}",true);
-    return { book: theBook, chap: theChap }
-}
-"""

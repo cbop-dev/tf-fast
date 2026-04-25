@@ -25,11 +25,11 @@ datasetMap = {
 	'nt': TfN1904,
 	'bhs': TfBHS,
 	'sblgnt': TfSBLGNT,
-	'vul': TfVulgate,
+	'vulgate': TfVulgate,
 	'web': TfWEB,
 }
 
-enabledDatasets=['lxx','nt','bhs','sblgnt','vul','web']
+enabledDatasets=['lxx','nt','bhs','sblgnt','vulgate','web']
 for ds in DISABLED_DATASETS:
 	if ds in enabledDatasets:
 		del enabledDatasets[ds]

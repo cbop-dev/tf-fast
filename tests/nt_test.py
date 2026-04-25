@@ -2,13 +2,14 @@ import pytest, os,sys
 from tffast.tfData.tfNT import TfN1904
 from tffast.env import mylog, debug
 from tffast.utils.greekUtils import GreekUtils
+from tffast.MyDatasets import dataSets,getDataset,loadDatasets
 NT=None
 
 @pytest.fixture()
 def nt():
     global NT
     if(not NT):
-        NT= TfN1904()
+        NT= getDataset('nt')
     return NT
 
 

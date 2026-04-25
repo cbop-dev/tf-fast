@@ -23,6 +23,7 @@ from .tfData.tfWEB import TfWEB
 from .env import mylog, debug
 from tffast.tfData.tfDataset import POS
 from tffast.MyDatasets import dataSets,getDataset,loadDatasets
+from tffast.utils.bibleUtils import BibleUtils
 #debugOn=debug
 #debugOn=True
 debug = True
@@ -320,6 +321,12 @@ class TextsRequest(BaseModel):
 	refs: list[TextReference]|None =None# book name, chapter, verses
 	sections: list[int] |None = None
 	options: TextsOptions =TextsOptions()
+
+class VerseMapRequest(TextsRequest):
+	src: str=''
+	to: list[str]=[] ## abbrev of bible versions to map the references to. Valid values are those in BibleNames.versionMaps
+	
+
 class LexOptions(BaseModel):
 	common:bool=False
 	pos:bool=False
@@ -397,6 +404,28 @@ def postLexemesRoute(request: LexRequest, db='lxx'):
 					gloss=request.options.gloss, pos=request.options.pos, 
 					checkProper=request.options.checkProper, beta=request.options.beta, 
 					common=request.options.common, plain=request.options.plain)
+
+@app.post("/versemap")
+@app.post("/{db}/versemap")
+def postVerseMapRoute(request: VerseMapRequest, db='lxx'):
+	request.src = request.src if request.src else BibleUtils.getBookMapAbbrev(db)
+	tfData=getDataset(db)
+	retRefs={}
+	if(tfData):
+		verses=[]
+		for outVersion in request.to:
+			for ref in request.refs:
+				theRefString = f"{ref.book} {str(ref.chapter)}"
+				if len(ref.verses) > 0:
+					for v in ref.verses:
+						newVerse = f"{theRefString}:{str(v)}"
+						verses.append(newVerse)
+				else: # no verses; whole chapter! Is this legit?
+					verses.append(theRefString)
+			retRefs[outVersion] = BibleUtils.remapVerses(verses,request.src,outVersion)
+			mylog(f"retRefs[{outVersion}] of [{";".join(verses)}] = {retRefs[outVersion]}",debugOn=True)
+	return retRefs
+
 @app.post("/texts")
 @app.post("/{db}/texts")
 @app.post("/texts/")

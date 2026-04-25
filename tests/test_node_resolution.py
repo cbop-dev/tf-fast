@@ -1,12 +1,13 @@
 import unittest
 from tffast.tfData.tfBHS import TfBHS
 from tffast.tfData.tfLXX import TfLXX
-
+from tffast.MyDatasets import getDataset
+#global LXX, BHS
 class TestNodeResolution(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.bhs = TfBHS()
-        cls.lxx = TfLXX()
+        cls.bhs = getDataset('bhs')
+        cls.lxx = getDataset('lxx')
 
     def test_lxx_book_resolution(self):
         """Test LXX full books and abbreviations map to the same Book Node"""
