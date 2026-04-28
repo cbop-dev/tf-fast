@@ -50,3 +50,6 @@ def test_posEnums(LXX):
     ]
     for t in tests:
         assert(set(LXX.getPosEnums(t['wordid'])) == set(t['posEnums']))
+
+def test_remapVerse(LXX):
+    assert(LXX.remapVerseCorrection("S3Y 1:1") == "DAN 3:24")

@@ -11,6 +11,12 @@ from tf.app import use
 from tf.advanced import sections as Sections
 
 datasetMap={}
+testTF=True
+def loadTheDataset(db):
+    if(testTF):
+        return getDataset(db)
+    else:
+        return None
 
 #global bhs
 #bhs = bhs if bhs else None
@@ -20,7 +26,7 @@ datasetMap={}
 def BHS():
  #   global bhs
   #  global datasetMap
-    bhs=getDataset('bhs')
+    bhs=loadTheDataset('bhs')
     #bhs= TfBHS()
     return bhs
 
@@ -30,7 +36,7 @@ def LXX():
     #if(not lxx):
         #lxx= TfLXX()
     #global datasetMap
-    return getDataset('lxx')
+    return loadTheDataset('lxx')
 
 def test_dummy():
     assert(True)
@@ -59,9 +65,12 @@ def test_myRemapMethod():
 
     tests = [
         {'in': "PSA 22:31", 'out': "PSA 21:31", 'from':'bhs', 'to':'lxx'},
+        {'in': "Ps 22:31", 'out': "PSA 21:31", 'from':'bhs', 'to':'lxx'},
+        {'in': "PSA 22:3", 'out': "PSA 22:3", 'from':'bhs', 'to':'bhs'},
         {'in': "2SA 2:3", 'out': "2SA 2:3", 'from':'bhs', 'to':'lxx'},
         {'in': "DAN 13:1", 'out': "DAN 13:1", 'from':'lxx', 'to':'vulgate'},
         {'in': "EST 4:22", 'out': "EST 4:22", 'from':'lxx', 'to':'web'},
+        {'in': "DAN 3:37", 'out': "S3Y 1:14", 'from':'vulgate', 'to':'lxx'},
        # "PSA 23:6": "The last verse of Psalm 23"
     ]
 
@@ -85,32 +94,37 @@ def test_reverseBookAbbrev():
         {'in': "EXO", 'out': "Exod", 'version':'lxx'},
         {'in': "LEV", 'out': "Lev", 'version':'lxx'},
         {'in': "NUM", 'out': "Num", 'version':'lxx'},
+        {'in': "DAN", 'out': "DanTh", 'version':'lxx'}
       
     ]
     for t in tests:
         assert(BibleUtils.getTfBookAbbrev(t['in'], t['version']) == t['out'])
 
 
+
 def test_getParallelVerses(BHS,LXX):
     pass
-    tests=[
-        {'ref': "Gen 1:1", 'from':'bhs', 'to':'lxx', 'outRef': 'Gen 1:1', 'outText':["ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν"]}
+    if (BHS and LXX):
+        tests=[
+            {'ref': "Gen 1:1", 'from':'bhs', 'to':'lxx', 'outRef': 'Gen 1:1', 'outText':["ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν"]},
+            {'ref': "Dan 3:37", 'from':'vulgate', 'to':'lxx', 'outRef': 'Dan 3:37', 'outText':["ὅτι δέσποτα ἐσμικρύνθημεν παρὰ πάντα τὰ ἔθνη καί ἐσμεν ταπεινοὶ ἐν πάσῃ τῇ γῇ σήμερον διὰ τὰς ἁμαρτίας ἡμῶν"]}
 
-    ]
+        ]
 
-    for t in tests:
-        parRef = BibleUtils.remapVerses([t['ref']], t['from'], t['to'])[0]
-        assert(parRef == t['outRef'])
-        
-        bcv=BibleUtils.getBcVfromRef(parRef) 
-        vlist=createNumArrayFromStringListRange(bcv['vv'])
-        textList=[]
-        for v in vlist:
-            node=LXX.getNodeFromBcV(bcv['book'],bcv['chap'],v)
-            text=LXX.getText(node) if node else ''
-            textList.append(text)
-        
-        assert(textList == t['outText'])
+        for t in tests:
+            parRef = BibleUtils.remapVerses([t['ref']], t['from'], t['to'])[0]
+            parRef=LXX.remapVerseCorrection(t['ref']) if t['to']=='lxx' else parRef
+            assert(parRef == t['outRef'])
+            
+            bcv=BibleUtils.getBcVfromRef(parRef) 
+            vlist=createNumArrayFromStringListRange(bcv['vv'])
+            textList=[]
+            for v in vlist:
+                node=LXX.getNodeFromBcV(bcv['book'],bcv['chap'],v)
+                text=LXX.getText(node) if node else ''
+                textList.append(text)
+            
+            assert(textList == t['outText'])
 
         
     

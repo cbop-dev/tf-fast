@@ -5,6 +5,7 @@ from ..env import debug,mylog
 from ..utils.greekUtils import GreekUtils
 from enum import Enum
 from ..utils import utils
+from ..utils.bibleUtils import BibleUtils
 debug=False
 class POS(Enum):
 	ADJECTIVE= 0
@@ -78,8 +79,11 @@ class Lexeme:
 
 
 class TfDataset:
-	posDict={}
-	bookNameLookup=[]
+	#bookNameLookup=[]
+	def __init__(self):
+		self.dbname=''
+		self.posDict={}
+	
 	def getBeta(self,wordid):
 		return self.api.F.lex.v(wordid)#does not work for nt, must override.
 	def getPlain(self,wordid):
@@ -743,3 +747,13 @@ class TfDataset:
 	def lemmaDictForm(wordid):
 		feature=self.getLemmaDictFormFeature()
 		return feature.v(wordid) if feature else ''
+
+	def remapVerse(self,verse,fromTfName):
+		return BibleUtils.remapVerses([verse],fromTfName,self.dbname)
+		
+	def remapVerseCorrection(self,verse):
+		"""
+		remaps a verse reference from what the verfification_utils.remap_verses() function returns to what this TF dataset actually uses.
+		verse: a string representation of the verse (e.g. "Genesis 1:1")
+		"""
+		return verse

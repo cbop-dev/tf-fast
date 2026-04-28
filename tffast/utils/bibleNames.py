@@ -1,189 +1,12 @@
-versification_name_map=[
-  "GEN",
-  "EXO",
-  "LEV",
-  "NUM",
-  "DEU",
-  "JOS",
-  "JDG",
-  "RUT",
-  "1SA",
-  "2SA",
-  "1KI",
-  "2KI",
-  "1CH",
-  "2CH",
-  "EZR",
-  "NEH",
-  "EST",
-  "JOB",
-  "PSA",
-  "PRO",
-  "ECC",
-  "SNG",
-  "ISA",
-  "JER",
-  "LAM",
-  "EZK",
-  "DAN",
-  "HOS",
-  "JOL",
-  "AMO",
-  "OBA",
-  "JON",
-  "MIC",
-  "NAM",
-  "HAB",
-  "ZEP",
-  "HAG",
-  "ZEC",
-  "MAL",
-  "MAT",
-  "MRK",
-  "LUK",
-  "JHN",
-  "ACT",
-  "ROM",
-  "1CO",
-  "2CO",
-  "GAL",
-  "EPH",
-  "PHP",
-  "COL",
-  "1TH",
-  "2TH",
-  "1TI",
-  "2TI",
-  "TIT",
-  "PHM",
-  "HEB",
-  "JAS",
-  "1PE",
-  "2PE",
-  "1JN",
-  "2JN",
-  "3JN",
-  "JUD",
-  "REV",
-  "TOB",
-  "JDT",
-  "ESG",
-  "WIS",
-  "SIR",
-  "BAR",
-  "LJE",
-  "S3Y",
-  "SUS",
-  "BEL",
-  "1MA",
-  "2MA",
-  "3MA",
-  "4MA",
-  "1ES",
-  "2ES",
-  "MAN",
-  "PS2",
-  "ODA",
-  "PSS",
-  "JSA",
-  "JDB",
-  "TBS",
-  "SST",
-  "DNT",
-  "BLT",
-  "EZA",
-  "JUB",
-  "ENO"
-]
+import json
+filename="tffast/utils/bibleBookNames.json"
+
+bookNamesObject=json.load(open(filename))
+standardizedBookNames=bookNamesObject["standardBookNamesDict"]
+
+versification_name_map=bookNamesObject['versification_name_map']
 
 
-"""
-bhsBooks={
-        426591: {'abbrev': 'Gen', 'syn': ['Genesis', 'Gen', 'Ge'], 'name': 'Genesis'},
-        426592: {'abbrev': 'Exod',   'syn': ['Exodus', 'Exod', 'Exodus'], 'name': 'Exodus'},
-        426593: {'abbrev': 'Lev',   'syn': ['Leviticus', 'Lev', 'Leviticus'], 'name': 'Leviticus'},
-        426594: {'abbrev': 'Num',   'syn': ['Numeri', 'Num', 'Numbers'], 'name': 'Numbers'},
-        426595: {'abbrev': 'Deut',   'syn': ['Deuteronomium', 'Deut', 'Deuteronomy', 'Dt', 'Deu'], 'name': 'Deuteronomy'},
-        426596: {'abbrev': 'Josh',   'syn': ['Josua', 'Josh', 'Joshua', 'Josua'], 'name': 'Joshua'},
-        426597: {'abbrev': 'Judg',   'syn': ['Judices', 'Judg', 'Judges', 'Jdg', 'Jdgs', 'Judgs'], 'name': 'Judges'},
-        426598: {'abbrev': '1Sam',   'syn': ['Samuel_I',    '1Sam',    '1Samuel',    'ISamuel',    '1Sa',    '1Sam',    'ISa',    'ISam', '1 Sam', '1 Samuel', 'I Samuel', '1 Sa', 'I Sa'], 'name': '1_Samuel'},
-        426599: {'abbrev': '2Sam',   'syn': ['Samuel_II',    '2Sam',    '2Samuel',    'IISamuel',    '2Sa',    '2Sam',    'IISa',    'IISam', '2 Sam', '2 Samuel', 'II Samuel', '2 Sa', 'II Sa'], 'name': '2_Samuel'},
-        426600: {'abbrev': '1Kgs',   'syn': ['Reges_I', '1Kgs', '1Kings', 'IKings', '1Kg', 'IKg', '1 Kgs', '1 Kings', 'I Kings', '1 Kg', 'I Kg'], 'name': '1_Kings'},
-        426601: {'abbrev': '2Kgs',   'syn': ['Reges_II', '2Kgs', '2Kings', 'IIKings', '2Kg', 'IIKg', '2 Kgs', '2 Kings', 'II Kings', '2 Kg', 'II Kg'], 'name': '2_Kings'},
-        426602: {'abbrev': 'Isa',   'syn': ['Jesaia', 'Isa', 'Isaiah', 'Is', 'Jesaia'], 'name': 'Isaiah'},
-        426603: {'abbrev': 'Jer',   'syn': ['Jeremia', 'Jer', 'Jeremiah', 'Jeremia', 'Jerem', 'Jere'], 'name': 'Jeremiah'},
-        426604: {'abbrev': 'Ezek',   'syn': ['Ezechiel', 'Ezek', 'Ezekiel', 'Ezechiel'], 'name': 'Ezekiel'},
-        426605: {'abbrev': 'Hos', 'syn': ['Hosea', 'Hos'], 'name': 'Hosea'},
-        426606: {'abbrev': 'Joel', 'syn': ['Joel'], 'name': 'Joel'},
-        426607: {'abbrev': 'Amos', 'syn': ['Amos', 'Am'], 'name': 'Amos'},
-        426608: {'abbrev': 'Obad',   'syn': ['Obadia', 'Obad', 'Obadiah', 'Ob', 'Obed'], 'name': 'Obadiah'},
-        426609: {'abbrev': 'Jonah', 'syn': ['Jona', 'Jonah', 'Jon'], 'name': 'Jonah'},
-        426610: {'abbrev': 'Mic',   'syn': ['Micha', 'Mic', 'Micah', 'Micha', 'Mica'], 'name': 'Micah'},
-        426611: {'abbrev': 'Nah', 'syn': ['Nahum', 'Nah'], 'name': 'Nahum'},
-        426612: {'abbrev': 'Hab',   'syn': ['Habakuk', 'Hab', 'Habakkuk'], 'name': 'Habakkuk'},
-        426613: {'abbrev': 'Zeph',   'syn': ['Zephania', 'Zeph', 'Zephaniah'], 'name': 'Zephaniah'},
-        426614: {'abbrev': 'Hag',   'syn': ['Haggai', 'Hag', 'Haggai'], 'name': 'Haggai'},
-        426615: {'abbrev': 'Zech',   'syn': ['Sacharia', 'Zech', 'Zechariah'], 'name': 'Zechariah'},
-        426616: {'abbrev': 'Mal',   'syn': ['Maleachi', 'Mal', 'Malachi'], 'name': 'Malachi'},
-        426617: {'abbrev': 'Ps',   'syn': ['Psalmi', 'Ps(s)', 'Psalms', 'Psa'], 'name': 'Psalms'},
-        426618: {'abbrev': 'Job', 'syn': ['Iob', 'Job', 'Jb'], 'name': 'Job'},
-        426619: {'abbrev': 'Prov',   'syn': ['Proverbia', 'Prov', 'Proverbs', 'Pr'], 'name': 'Proverbs'},
-        426620: {'abbrev': 'Ruth', 'syn': ['Ruth', 'Ru'], 'name': 'Ruth'},
-        426621: {'abbrev': 'Cant',   'syn': ['Canticum',    'Song',    'SongofSongs',    'SongofSolomon',    'Canticles',    'Cant'], 'name': 'Song_of_songs'},
-        426622: {'abbrev': 'Qoh',   'syn': ['Ecclesiastes', 'Eccl', 'Ecclesiastes', 'Qoheleth', 'Qoh', 'Eccl'], 'name': 'Ecclesiastes'},
-        426623: {'abbrev': 'Lam',   'syn': ['Threni', 'Lam', 'Lamentations'], 'name': 'Lamentations'},
-        426624: {'abbrev': 'Esth',   'syn': ['Esther', 'Esth', 'Est'], 'name': 'Esther'},
-        426625: {'abbrev': 'Dan', 'syn': ['Daniel', 'Dan'], 'name': 'Daniel'},
-        426626: {'abbrev': 'Ezra', 'syn': ['Esra', 'Ezr'], 'name': 'Ezra'},
-        426627: {'abbrev': 'Neh',   'syn': ['Nehemia', 'Nehemiah', 'Neh'], 'name': 'Nehemiah'},
-        426628: {'abbrev': '1Chr',   'syn': ['Chronica_I',    '1Chr',    '1Chronicles',    '1Chron',    '1Ch',    'IChronicles',    'IChron',    'ICh',    'IChr', '1 Chr', '1 Chronicles', '1 Chron', '1 Ch', 'I Chronicles', 'I Chron', 'I Ch', 'I Chr'], 'name': '1_Chronicles'},
-        426629: {'abbrev': '2Chr',   'syn': ['Chronica_II',    '2Chr',    '2Chronicles',    '2Chron',    '2Ch',    'IIChronicles',    'IIChron',    'IICh',    'IIChr', '2 Chr', '2 Chronicles', '2 Chron', '2 Ch', 'II Chronicles', 'II Chron', 'II Ch', 'II Chr'], 'name': '2_Chronicles'}
-}
-"""
-"""todo:
-bhsBookAbbrevMap={
-  "GEN":'Gen',
-  "EXO":'Exod',
-  "LEV":'Lev',
-  "NUM":'Num',
-  "DEU":'Deu',
-  "JOS":'Josh',
-  "JDG",
-  "RUT",
-  "1SA",
-  "2SA",
-  "1KI",
-  "2KI",
-  "1CH",
-  "2CH",
-  "EZR",
-  "NEH",
-  "EST",
-  "JOB",
-  "PSA",
-  "PRO",
-  "ECC",
-  "SNG",
-  "ISA",
-  "JER",
-  "LAM",
-  "EZK",
-  "DAN",
-  "HOS",
-  "JOL",
-  "AMO",
-  "OBA",
-  "JON",
-  "MIC",
-  "NAM",
-  "HAB",
-  "ZEP",
-  "HAG",
-  "ZEC",
-  "MAL",
-
-}
-"""
 lxxBooks ={
 		623694: {'abbrev': "Gen", 'syn': ['Gen', 'Genesis', 'Ge']},
 		623695: {'abbrev': "Exod", 'syn': ['Exod', 'Exodus']},
@@ -274,7 +97,7 @@ nt1904books={
 		137806 : {"name": "Revelation", "abbrev": "Rev" , "syn": ["Revelation", "Rev","Apocalypse", "Apoc", "Ap", "Re","Apo"] , "words": 9832 , "lemmas": 910 , "chapters": 22 }
 	}
 
-vulgateBooNames={
+vulgateBookNames={
         596441: {"name": "Matthew", "abbrev": "MAT", "syn": ['MAT', 'mat', 'Matthew', 'matthew'], "words": 16435, "chapters": 28, "lemmas": 1715, "morphs": 1},
         596442: {"name": "Mark", "abbrev": "MRK", "syn": ['MRK', 'mrk', 'Mark', 'mark'], "words": 10284, "chapters": 16, "lemmas": 1430, "morphs": 1},
         596443: {"name": "Luke", "abbrev": "LUK", "syn": ['LUK', 'luk', 'Luke', 'luke'], "words": 18004, "chapters": 24, "lemmas": 1960, "morphs": 1},
@@ -426,114 +249,21 @@ webcBookNames={
         877742: {"name": "Revelation", "abbrev": "Revelation", "syn": ["Revelation", "revelation", "REV", "rev"], "words": 1, "chapters": 1, "lemmas": 0},
 }
 
-bibleBookMappingNames = {
-    'GEN': ["GEN", "Ge", "Gen", "Genesis", "gen", "genesis"],
-    'EXO': ["EXO", "Exodus", "exo", "exodus","Exod"],
-    'LEV': ["LEV", "Lev", "Leviticus", "lev", "leviticus"],
-    'NUM': ["NUM", "Num", "Numbers", "Numeri", "num", "numbers"],
-    'DEU': ["DEU", "Deu", "Deut", "Deuteronomium", "Deuteronomy", "Dt", "deu", "deuteronomy"],
-    'JOS': ["JOS", "Joshua", "jos", "joshua","Josh"],
-    'JDG': ["JDG", "Jdg", "Jdgs", "Judg", "Judges", "Judgs", "Judices", "jdg", "judges"],
-    'RUT': ["RUT", "Ruth", "rut", "ruth"],
-    '1SA': ["1 Kgdms", "1 Kingdoms", "1 Sa", "1 Sam", "1 Samuel", "1SA", "1Sa", "1Sam", "1Samuel", "1_Samuel", "1sa", "I Kgdms", "I Kingdoms", "I Sa", "I Sam", "I Samuel", "ISa", "ISam", "ISamuel", "Samuel_I"],
-    '2SA': ["2 Kgdms", "2 Kingdoms", "2 Sa", "2 Sam", "2 Samuel", "2SA", "2Sa", "2Sam", "2Samuel", "2_Samuel", "2sa", "II Kgdms", "II Kingdoms", "II Sa", "II Sam", "II Samuel", "IISa", "IISam", "IISamuel", "Samuel_II"],
-    '1KI': ["1 Kg", "1 Kgs", "1 Kings", "1KI", "1Kg", "1Kgs", "1Kings", "1_Kings", "1ki", "3 Kgdms", "3 Kingdoms", "I Kg", "I Kings", "III Kgdms", "III Kingdoms", "IKg", "IKings", "Reges_I"],
-    '2KI': ["2 Kg", "2 Kgs", "2 Kings", "2KI", "2Kg", "2Kgs", "2Kings", "2_Kings", "2ki", "4 Kgdms", "4 Kingdoms", "II Kg", "II Kings", "IIKg", "IIKings", "IV Kgdms", "IV Kingdoms", "Reges_II"],
-    '1CH': ["1 Ch", "1 Chr", "1 Chron", "1 Chronicles", "1CH", "1Ch", "1Chr", "1Chron", "1Chronicles", "1_ChronICLES", "1_Chronicles", "1ch", "Chronica_I", "I Ch", "I Chr", "I Chron", "I Chronicles", "ICh", "IChr", "IChron", "IChronicles", "I_Chronicles"],
-    '2CH': ["2 Ch", "2 Chr", "2 Chron", "2 Chronicles", "2CH", "2Ch", "2Chr", "2Chron", "2Chronicles", "2_ChronICLES", "2_Chronicles", "2ch", "Chronica_II", "II Ch", "II Chr", "II Chron", "II Chronicles", "IICh", "IIChr", "IIChron", "IIChronicles", "II_Chronicles"],
-    'EZR': ["1 Esdras", "1_Esdras", "EZR", "Esra", "Ezr", "Ezra", "ezr", "ezra"],
-    'NEH': ["2 Esdr", "2 Esdras", "II Esdr", "II Esdras", "NEH", "Neh", "Nehemia", "Nehemiah", "neh", "nehemiah"],
-    'EST': ["EST", "Est", "Esth", "Esther", "est", "esther"],
-    'JOB': ["Iob", "JOB", "Jb", "Job", "job"],
-    'PSA': ["PSA", "Ps(s)", "Psa", "Psalmi", "Psalms", "psa", "psalms","ps","Ps"],
-    'PRO': ["PRO", "Pr", "Prov", "Proverbia", "Proverbs", "pro", "proverbs"],
-    'ECC': ["ECC", "Eccl", "Ecclesiastes", "Qoh", "Qoheleth", "ecc", "ecclesiastes"],
-    'SNG': ["Cant", "Canticles", "Canticum", "SNG", "Song", "Song of Solomon", "Song of Songs", "SongofSolomon", "SongofSongs", "sng"],
-    'ISA': ["1 Sa", "1 Sam", "1 Samuel", "1Sa", "1Sam", "1Samuel", "I Sa", "I Samuel", "ISA", "ISa", "ISam", "ISamuel", "Is", "Isa", "Isaiah", "Jesaia", "Samuel_I", "isa", "isaiah"],
-    'JER': ["JER", "Jer", "Jere", "Jerem", "Jeremia", "Jeremiah", "jer", "jeremiah"],
-    'LAM': ["LAM", "Lam", "Lamentations", "Threni", "lam", "lamentations"],
-    'EZK': ["EZK", "Ezechiel", "Ezek", "Ezekiel", "ezekiel", "ezk"],
-    'DAN': ["DAN", "Dan", "Dan LXX", "Dan OG", "Dan Th", "DanLXX", "DanOG", "DanTh", "Daniel", "Daniel LXX", "Daniel OG", "Daniel Th", "DanielLXX", "DanielOG", "DanielTh", "dan", "daniel"],
-    'HOS': ["HOS", "Hos", "Hosea", "hos", "hosea"],
-    'JOL': ["JOL", "Joel", "joel", "jol"],
-    'AMO': ["AMO", "Amos", "amo", "amos"],
-    'OBA': ["OBA", "Obadiah", "oba", "obadiah","Obad"],
-    'JON': ["JON", "Jon", "Jon LXX", "JonLXX", "Jona", "Jonah", "Jonah LXX", "JonahLXX", "jon", "jonah"],
-    'MIC': ["MIC", "Mic", "Mica", "Micah", "Micha", "mic", "micah"],
-    'NAM': ["NAM", "Nah", "Nahum", "nahum", "nam"],
-    'HAB': ["HAB", "Hab", "Habakkuk", "Habakuk", "hab", "habakkuk"],
-    'ZEP': ["ZEP", "Zephaniah", "zep", "zephaniah","Zeph"],
-    'HAG': ["HAG", "Hag", "Haggai", "hag", "haggai"],
-    'ZEC': ["ZEC", "Zechariah", "zec", "zechariah","Zech"],
-    'MAL': ["MAL", "Mal", "Malachi", "Maleachi", "mal", "malachi"],
-    'MAT': ['Mat', 'Mtt', 'Mt', 'mat', 'MAT', 'Matt', 'matthew', 'Matthew'],
-    'MRK': ['Mar', 'mrk', 'MRK', 'mark', 'Mk', 'Mark', 'Mc'],
-    'LUK': ['LUK', 'Luke', 'Lk', 'luk', 'Luk', 'Lu', 'luke'],
-    'JHN': ['Jo', 'Jn', 'Iohn', 'JHN', 'Giov', 'john', 'jhn', 'John'],
-    'ACT': ['Ac', 'Acts', 'Act', 'act', 'acts', 'ACT'],
-    'ROM': ['rom', 'Rom', 'romans', 'Romans', 'Ro', 'ROM'],
-    '1CO': ['1_corinthians', 'I Co', 'I Cor', 'I Corinthians', '1co', 'I_Co', 'I_Corinthians', '1Cor', '1_Co', '1 Corinthians', '1 Cor', 'I_Cor', '1 Co', '1_Corinthians', '1CO', '1_Cor'],
-    '2CO': ['2Cor', 'II Corinthians', '2CO', '2 Corinthians', '2co', 'II Co', 'II_Co', 'II_Cor', 'II_Corinthinans', '2_Corinthians', 'II Cor', '2_corinthians', '2 Co', '2_Co', '2 Cor', '2_Cor'],
-    'GAL': ['GAL', 'gal', 'galatians', 'Ga', 'Gal', 'Galatians'],
-    'EPH': ['EPH', 'ephesians', 'Ephe', 'Ephesians', 'Eph', 'eph', 'Ep'],
-    'PHP': ['Philip', 'Phili', 'philippians', 'Philippians', 'Phil', 'PHP', 'php', 'Ph'],
-    'COL': ['COL', 'Colossians', 'Col', 'col', 'colossians', 'Co'],
-    '1TH': ['1_Thessalonians', 'I Thes', '1_thessalonians', '1_Thes', 'I_Thessalonians', '1_The', 'I Thess', 'I The', '1 Thessalonians', '1Thess', '1th', '1Thes', '1 The', 'I_Thes', '1_Thess', '1 Thes', '1 Thess', '1TH', 'I_The', 'I_Thess'],
-    '2TH': ['II_Thessalonians', '2_Thessalonians', 'II_The', '2_Thess', 'II Thess', '2 The', '2 Thessalonians', '2Thess', '2_thessalonians', '2 Thes', '2TH', '2_The', '2_Thes', '2th', 'II Thes', 'II The', 'II_Thess', '2Thes', '2 Thess', 'II_Thes'],
-    '1TI': ['1ti', '1TI', '1Tim', 'I_Ti', 'I Tim', '1 Timothy', '1_timothy', '1_Ti', 'I_Tim', 'I Ti', '1_Tim', '1_Timothy', '1 Ti', '1 Tim', 'I_Timothy'],
-    '2TI': ['II_Ti', '2 Timothy', '2_Timothy', '2 Tim', '2TI', '2_Ti', '2_timothy', 'II Tim', 'II_Timothy', '2ti', '2 Ti', 'II_Tim', '2Tim', 'II Ti', '2_Tim'],
-    'TIT': ['TIT', 'tit', 'Titus', 'Tit', 'titus', 'Ti'],
-    'PHM': ['PHM', 'Philemon', 'philemon', 'Phln', 'Phlm', 'Phmn', 'Phlmn', 'phm'],
-    'HEB': ['Hebr', 'He', 'Hebrews', 'heb', 'HEB', 'Heb', 'hebrews'],
-    'JAS': ['Ja', 'james', 'Jas', 'Jame', 'Jam', 'James', 'JAS', 'jas'],
-    '1PE': ['1pe', '1 Peter', 'I Peter', 'I_Pe', '1_Pet', '1 Pe', '1_Peter', '1_peter', 'I Pet', 'I_Pet', '1 Pet', '1_Pe', '1Pet', 'I Pe', '1PE'],
-    '2PE': ['2_Pet', 'II Pet', '2_peter', '2 Peter', '2 Pe', 'II_Pe', '2Pet', '2_Pe', '2_Peter', '2pe', '2PE', 'II_Pet', '2 Pet', 'II Pe', 'II Peter'],
-    '1JN': ['1 Jn', '1JN', 'I Jn', 'I John', '1_john', '1Jn', '1_John', '1 John', '1jn'],
-    '2JN': ['2 Jn', '2 John', '2Jn', '2jn', 'II John', '2_John', '2_john', '2JN', 'II Jn'],
-    '3JN': ['III Jn', '3 John', '3JN', '3 Jn', '3_John', '3Jn', 'III John', '3_john', '3jn'],
-    'JUD': ['jud', 'Jud', 'JUD', 'Jude', 'jude'],
-    'REV': ['Rev', 'Apo', 'revelation', 'Apoc', 'Ap', 'Apocalypse', 'Re', 'rev', 'REV', 'Revelation'],
-    'TOB': ["TOB", "Tob", "Tob BA", "Tobit", "Tobit BA", "tob", "tobit","TobBA"],
-    'JDT': ["JDT", "Jdt", "Judith", "jdt", "judith"],
-    'ESG': ["ESG", "Est", "Esth", "Esther", "esg"],
-    'WIS': ["WIS", "Wis", "Wisd", "Wisdom", "Wisdom of Solomon", "wis", "wisdom"],
-    'SIR': ["Ben Sira", "Ecclesiasticus", "SIR", "Sir", "Sirach", "ecclesiasticus", "sir", "sirach"],
-    'BAR': ["BAR", "Bar", "Baruch", "bar"],
-    'LJE': ["Ep Jer", "Epistle of Jeremiah", "LJE" ,"EpJer"],
-    'S3Y': ["S3Y", "Song of the Three Young Men", "Song of the Three Holy Children", "Song of the Three Youths"],
-    'SUS': ["SUS", "Sus OG", "SusOG", "Susanna", "Susanna OG", "SusannaOG","Sus"],
-    'BEL': ["BEL", "Bel and the Dragon", "BelDrag"],
-    '1MA': ["1 Mac", "1 Maccabees", "1MA", "1Mac", "1_Maccabees", "1ma","1Mac"],
-    '2MA': ["2 Mac", "2 Maccabees", "2MA", "2Mac", "2_Maccabees", "2ma",'2Mac'],
-    '3MA': ["3 Mac", "3 Macc", "3 Maccab", "3 Maccabees", "3MA", "III Mac", "III Macc", "III Maccab",'3Mac'],
-    '4MA': ["4 Mac", "4 Macc", "4 Maccab", "4 Maccabees", "4MA", "IV Mac", "IV Macc", "IV Maccab","4Mac"],
-    '1ES': ["1 Esdr", "1 Esdras", "1ES", "Ezra", "I Esdr", "I Esdras","1Esdr"],
-    '2ES': ["2 Esdr", "2 Esdras", "2ES", "II Esdr", "II Esdras", "Neh", "Nehemiah","2Esdr"],
-    'MAN': ["MAN", "Prayer of Manasses", "man", "prayer_of_manasses"],
-    'PS2': ["PS2", "Psalm 151", "Ps 151", "Ps151"],
-    'ODA': ["ODA", "OdSol", "Odes", "Odes of Solomon", "OdesSol","Od"],
-    'PSS': ["PSS", "Ps Sol", "Psa Sol", "PsaSol", "Psalmi Salomonis", "Psalms of Solomon", "psalmi_salomonis", "pss","PsSol"],
-    'JSA': ["JSA", "Joshua A", "JoshuaA"],
-    'JDB': ["JDB", "Judges B", "JudgesB"],
-    'TBS': ["TBS", "Tob", "Tob S", "Tobit", "Tobit S","Tobit S","TobS"],
-    'SST': ["SST", "Susanna Th", "SusannaTh","SusTh"],
-    'DNT': ["DNT", "Dan", "Dan Th", "DanTh", "Daniel", "Daniel Th", "DanielTh"],
-    'BLT': ["BLT", "Bel and the Dragon Th", "BelDragTh","BelTh"],
-    'EZA': ["EZA", "Ezra Apocalypse"],
-    'JUB': ["JUB", "Jubilees"],
-    'ENO': ["ENO", "Enoch"],
-}
-
+bibleBookMappingNames = bookNamesObject['bibleBookMappingNames']
+"""
 bhsMap={'GEN': 'Gen', 'EXO': 'Exod', 'LEV': 'Lev', 'NUM': 'Num', 'DEU': 'Deut', 'JOS': 'Josh', 'JDG': 'Judg', '1SA': 'Isa', '2SA': '2Sam', '1KI': '1Kgs', '2KI': '2Kgs', 'JER': 'Jer', 'EZK': 'Ezek', 'HOS': 'Hos', 'JOL': 'Joel', 'AMO': 'Amos', 'OBA': 'Obad', 'JON': 'Jonah', 'MIC': 'Mic', 'NAM': 'Nah', 'HAB': 'Hab', 'ZEP': 'Zeph', 'HAG': 'Hag', 'ZEC': 'Zech', 'MAL': 'Mal', 'PSA': 'Ps', 'JOB': 'Job', 'PRO': 'Prov', 'RUT': 'Ruth', 'SNG': 'Cant', 'ECC': 'Qoh', 'LAM': 'Lam', 'EST': 'Esth', 'DAN': 'Dan', 'EZR': 'Ezra', 'NEH': 'Neh', '1CH': '1Chr', '2CH': '2Chr'}
 lxxMap={'GEN': 'Gen', 'EXO': 'Exod', 'LEV': 'Lev', 'NUM': 'Num', 'DEU': 'Deut', 'JOS': 'Josh', 'JDG': 'Judg', 'RUT': 'Ruth', '1SA': 'Isa', '2SA': '2Sam', '1KI': '1Kgs', '2KI': '2Kgs', '1CH': '1Chr', '2CH': '2Chr', '1ES': '1Esdr', '2ES': '2Esdr', 'EST': 'Esth', 'JDT': 'Jdt', 'TOB': 'TobBA', 'TBS': 'TobS', '1MA': '1Mac', '2MA': '2Mac', '3MA': '3Mac', '4MA': '4Mac', 'PSA': 'Ps', 'ODA': 'Od', 'PRO': 'Prov', 'ECC': 'Qoh', 'SNG': 'Cant', 'JOB': 'Job', 'WIS': 'Wis', 'SIR': 'Sir', 'PSS': 'PsSol', 'HOS': 'Hos', 'MIC': 'Mic', 'AMO': 'Amos', 'JOL': 'Joel', 'JON': 'Jonah', 'OBA': 'Obad', 'NAM': 'Nah', 'HAB': 'Hab', 'ZEP': 'Zeph', 'HAG': 'Hag', 'ZEC': 'Zech', 'MAL': 'Mal', 'JER': 'Jer', 'BAR': 'Bar', 'LJE': 'EpJer', 'LAM': 'Lam', 'EZK': 'Ezek', 'BEL': 'Bel', 'BLT': 'BelTh', 'DAN': 'DanTh', 'SUS': 'Sus', 'SST': 'SusTh'}
 n1904Map={'MAT': 'Matt', 'MRK': 'Mark', 'LUK': 'Luke', 'JHN': 'John', 'ACT': 'Acts', 'ROM': 'Rom', '1CO': '1 Cor', '2CO': '2 Cor', 'GAL': 'Gal', 'EPH': 'Eph', 'PHP': 'Phil', 'COL': 'Col', '1TH': '1 Thess', '2TH': '2 Thess', '1TI': '1 Tim', '2TI': '2 Tim', 'TIT': 'Titus', 'PHM': 'Phlm', 'HEB': 'Heb', 'JAS': 'Jas', '1PE': '1 Pet', '2PE': '2 Pet', '1JN': '1 John', '2JN': '2 John', '3JN': '3 John', 'JUD': 'Jude', 'REV': 'Rev'}
 vulMap={'MAT': 'MAT', 'MRK': 'MRK', 'LUK': 'LUK', 'JHN': 'JHN', 'ACT': 'ACT', 'ROM': 'ROM', '1CO': '1CO', '2CO': '2CO', 'GAL': 'GAL', 'EPH': 'EPH', 'PHP': 'PHP', 'COL': 'COL', '1TH': '1TH', '2TH': '2TH', '1TI': '1TI', '2TI': '2TI', 'TIT': 'TIT', 'PHM': 'PHM', 'HEB': 'HEB', 'JAS': 'JAS', '1PE': '1PE', '2PE': '2PE', '1JN': '1JN', '2JN': '2JN', '3JN': '3JN', 'JUD': 'JUD', 'REV': 'REV', 'GEN': 'GEN', 'EXO': 'EXO', 'LEV': 'LEV', 'NUM': 'NUM', 'DEU': 'DEU', 'JOS': 'JOS', 'JDG': 'JDG', 'RUT': 'RUT', '1SA': 'ISA', '2SA': '2SA', '1KI': '1KI', '2KI': '2KI', '1CH': '1CH', '2CH': '2CH', 'EZR': 'EZR', 'NEH': 'NEH', 'EST': 'EST', 'JDT': 'JDT', 'TOB': 'TOB', '1MA': '1MA', '2MA': '2MA', 'PSA': 'PSA', 'MAN': 'MAN', 'PRO': 'PRO', 'ECC': 'ECC', 'JOB': 'JOB', 'WIS': 'WIS', 'SIR': 'SIR', 'PSS': 'PSS', 'HOS': 'HOS', 'AMO': 'AMO', 'MIC': 'MIC', 'JOL': 'JOL', 'OBA': 'OBA', 'JON': 'JON', 'NAM': 'NAM', 'HAB': 'HAB', 'ZEP': 'ZEP', 'HAG': 'HAG', 'ZEC': 'ZEC', 'MAL': 'MAL', 'JER': 'JER', 'LAM': 'LAM', 'EZK': 'EZK', 'DAN': 'DAN'}
 webMap={'GEN': 'GEN', 'EXO': 'EXO', 'LEV': 'LEV', 'NUM': 'NUM', 'DEU': 'DEU', 'JOS': 'JOS', 'JDG': 'JDG', 'RUT': 'RUT', '1SA': 'ISA', '2SA': '2SA', '1KI': '1KI', '2KI': '2KI', '1CH': '1CH', '2CH': '2CH', 'EZR': 'EZR', 'NEH': 'NEH', 'JOB': 'JOB', 'PSA': 'PSA', 'PRO': 'PRO', 'ECC': 'ECC', 'SNG': 'SNG', 'JER': 'JER', 'LAM': 'LAM', 'EZK': 'EZK', 'HOS': 'HOS', 'JOL': 'JOL', 'AMO': 'AMO', 'OBA': 'OBA', 'JON': 'JON', 'MIC': 'MIC', 'NAM': 'NAM', 'HAB': 'HAB', 'ZEP': 'ZEP', 'HAG': 'HAG', 'ZEC': 'ZEC', 'MAL': 'MAL', 'TOB': 'TOB', 'JDT': 'JDT', 'ESG': 'ESG', 'WIS': 'WIS', 'SIR': 'SIR', 'BAR': 'BAR', '1MA': '1MA', '2MA': '2MA', None: 'DAG', 'MAT': 'Matthew', 'MRK': 'Mark', 'LUK': 'Luke', 'JHN': 'John', 'ACT': 'Acts', 'ROM': 'Romans', '1CO': '1_Corinthians', '2CO': '2_Corinthians', 'GAL': 'Galatians', 'EPH': 'Ephesians', 'PHP': 'Philippians', 'COL': 'Colossians', '1TH': '1_Thessalonians', '2TH': '2_Thessalonians', '1TI': '1_Timothy', '2TI': '2_Timothy', 'TIT': 'Titus', 'PHM': 'Philemon', 'HEB': 'Hebrews', 'JAS': 'James', '1PE': '1_Peter', '2PE': '2_Peter', '1JN': '1_John', '2JN': '2_John', '3JN': '3_John', 'JUD': 'Jude', 'REV': 'Revelation'}
 sblMap={'MAT': 'Matt', 'MRK': 'Mark', 'LUK': 'Luke', 'JHN': 'John', 'ACT': 'Acts', 'ROM': 'Rom', '1CO': '1 Cor', '2CO': '2 Cor', 'GAL': 'Gal', 'EPH': 'Eph', 'PHP': 'Phil', 'COL': 'Col', '1TH': '1 Thess', '2TH': '2 Thess', '1TI': '1 Tim', '2TI': '2 Tim', 'TIT': 'Titus', 'PHM': 'Phlm', 'HEB': 'Heb', 'JAS': 'Jas', '1PE': '1 Pet', '2PE': '2 Pet', '1JN': '1 John', '2JN': '2 John', '3JN': '3 John', 'JUD': 'Jude', 'REV': 'Rev'}
+"""
 
 
+versionMaps=bookNamesObject["versions"]
 
-versionMaps={
+"""
+{
   'bhs':bhsMap,
   'lxx':lxxMap,
   'nt':n1904Map,
@@ -541,6 +271,7 @@ versionMaps={
   'sblgnt':sblMap,
   'vulgate':vulMap
 }
+"""
 
 
 def getBookMapAbbrev(name):
@@ -562,4 +293,26 @@ def getTfBookAbbrev(verseMapAbbrev,version):
       
       if verseMapAbbrev in versionMaps[version]:
         ret = versionMaps[version][verseMapAbbrev]
+  return ret
+
+def getStandarizedBookName(synonym):
+  """
+    Returns a book name for the book with the given synonymn or abbreviation. NB: this is a one way function, in that it will return a common value for some variations on the same book, e.g., "EstherG" and "Esther" both return "Esther" and likewise for versions of Daniel, etc.
+    synonym: the synonym for the book name. 
+    returns a string, the "standardized" book name if found, or an empty string if none found
+  """
+  ret = ''
+  synonym = synonym.strip()
+  for name, syns in standardizedBookNames.items():
+    if synonym in syns:
+      ret = name
+      break
+    elif synonym.lower() in map(lambda s: s.lower(), syns):
+      ret = name
+      break
+  
+  if (ret == ''):
+    pass
+    #print(f"Could not find synonym {synonym}")
+  
   return ret

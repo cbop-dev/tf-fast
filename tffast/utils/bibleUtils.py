@@ -1,13 +1,14 @@
-from tffast.tfData.tfBHS import TfBHS
-from tffast.tfData.tfLXX import TfLXX
-from tffast.tfData.tfWEB import TfWEB
-from tffast.tfData.tfNT import TfN1904
-from tffast.tfData.tfVulgate import TfVulgate
-from tffast.tfData.tfSBLGNT import TfSBLGNT
+import json
+#from tffast.tfData.tfBHS import TfBHS
+#from tffast.tfData.tfLXX import TfLXX
+#from tffast.tfData.tfWEB import TfWEB
+#from tffast.tfData.tfNT import TfN1904
+#from tffast.tfData.tfVulgate import TfVulgate
+#from tffast.tfData.tfSBLGNT import TfSBLGNT
 from versification_utils import remap_verses
-from tffast.tfData.tfDataset import TfDataset
+#from tffast.tfData.tfDataset import TfDataset
 from tffast.env import debug,mylog
-from tffast.utils.bibleNames import getTfBookAbbrev,getBookMapAbbrev
+from tffast.utils.bibleNames import getTfBookAbbrev,getBookMapAbbrev,getStandarizedBookName
 import re
 class BibleUtils:
 
@@ -37,12 +38,22 @@ class BibleUtils:
         verses: list of verse strings
         fromTfName: abbrev of the tf dataset to remap from
         toTfName: abbrev of the tf dataset to remap to
+        return: list of mapped verse strings, where the book names have been standardized to match those in bibleNames.py
         """
         fromSchema = BibleUtils.mapNames[fromTfName] if fromTfName in BibleUtils.mapNames.keys() else None
         toSchema = BibleUtils.mapNames[toTfName] if toTfName in BibleUtils.mapNames.keys() else None
         ret = []
         if (fromSchema and toSchema):
-            newVersesDict = remap_verses({v:'' for v in verses}, fromSchema, toSchema)
+            refList=[]
+            for verse in verses:
+                bcv = BibleUtils.getBcVfromRef(verse)
+                bookMapAbbrev=BibleUtils.getBookMapAbbrev(bcv['book'])
+                if (bookMapAbbrev):
+                    bcv['book']=bookMapAbbrev
+                    refList.append(BibleUtils.bcvToRef(bcv))
+
+            newVersesDict = remap_verses({ref:'' for ref in refList}, fromSchema, toSchema)
+
             if (newVersesDict):
                 ret = list(newVersesDict.keys())
         return ret
@@ -61,6 +72,8 @@ class BibleUtils:
 
         return {'book':book,'chap':chap,'vv':vv}
         
+    def bcvToRef(bcv,keys=['book','chap','vv']):
+        return f"{bcv[keys[0]]} {bcv[keys[1]]}{(":"+bcv[keys[2]]) if bcv[keys[2]] else ''}"
 
     @staticmethod
     def splitBookChap(string, replaceUnderscores=True):
@@ -68,7 +81,7 @@ class BibleUtils:
         theBook =None
         theChap = theBook
 
-        matches=re.search(r"^(([1-4]+[ _]*)?[a-zA-Z _]+)([ _]+([0-9a-z-]+))?$", string)
+        matches=re.search(r"^(([1-4]+[ _]*)?[0-9a-zA-Z _]+)([ _]+([0-9a-z-]+))$", string)
         # match[0]: book; 1:number of book if any; 2:space+chap; 3: chap
         if (matches):
             if (matches.group(0)): #book
@@ -80,3 +93,12 @@ class BibleUtils:
         else:
             print(f"Got not matches for {string}")
         return {'book':theBook,'chap':theChap} 
+
+    @staticmethod
+    def getStandarizedBookName(synonym):
+        """
+            getStandarizedBookName: Returns a book name for the book with the given synonymn or abbreviation.
+            synonym: the synonym for the book name. 
+            returns a string, the "standardized" book name if found, or an empty string if none found
+        """
+        return getStandarizedBookName(synonym)

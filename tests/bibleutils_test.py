@@ -27,13 +27,15 @@ def test_bcv_test():
         for k in ['book','chap','vv']:
             assert(bcv[k] is not None)
             #assert(bcv[k]==t['out'][k])
+        assert(BibleUtils.bcvToRef(bcv)==t['in'])
 
 
 
 
 def test_splitBookChap_test():
     tests=[
-        {'in':"Gen 1", 'out':{'book': 'Gen', 'chap': '1'}}
+        {'in':"Gen 1", 'out':{'book': 'Gen', 'chap': '1'}},
+        {'in':"S3Y 1", 'out':{'book': 'S3Y', 'chap': '1'}}
     ]
     
 
@@ -50,3 +52,22 @@ def test_splitBookChap_test():
             #assert(bcv[k]==t['out'][k])
 
 #splitBookChap
+
+def test_getStandarizedBookName_test():
+
+    tests=[
+        {'in':"Gen", 'out':"Genesis"},
+        {'in':"GEN", 'out':"Genesis"},
+        {'in':"1SA", 'out':"1 Samuel"},
+        {'in':"1Sa", 'out':"1 Samuel"},
+        {'in':"1_Samuel", 'out':"1 Samuel"},
+        
+    ]
+    for t in tests:
+        sbn=BibleUtils.getStandarizedBookName(t['in'])
+        assert(sbn is not '')
+        assert(sbn==t['out'])
+
+
+
+    assert(True)

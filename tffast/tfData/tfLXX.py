@@ -7,6 +7,8 @@ from .tfDataset import TfDataset
 from ..env import mylog
 from ..utils.greekUtils import GreekUtils
 from .tfDataset import Lexeme, POS
+from ..utils.bibleUtils import BibleUtils
+from ..utils.utils import createNumArrayFromStringListRange
 
 class TfLXX(TfDataset):
 	posDict={#these are the values for F.pos in the LXX TF dataset
@@ -175,4 +177,18 @@ class TfLXX(TfDataset):
 
 	def getLemmaDictFormFeature():
 		return self.api.F.bol_lexeme_dict
+
+	def remapVerseCorrection(self,verse):
+		bcv = BibleUtils.getBcVfromRef(verse)
+		print(f"remapVerseCorrection({verse}) has initial bcv ='{bcv['book']} {bcv['chap']}:{bcv['vv']}'")
+		if (bcv['book'] == "S3Y"):
+			bcv['book'] = 'DAN'
+			bcv['chap']="3"
+			vv=createNumArrayFromStringListRange(bcv['vv'])
+			for i,v in enumerate(vv):
+				v+=23
+				vv[i]=v
+			bcv['vv']= str(vv[0]) if len(vv)==1 else f"{str(vv[0])}-{str(vv[-1])}"
+		return BibleUtils.bcvToRef(bcv)
+
 	

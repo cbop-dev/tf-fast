@@ -135,9 +135,9 @@ def test_post_ref(base_url, client):
 
 def test_verseMap(base_url, client):
     tests=[
-          {'input':{"refs":[{'book': 'Gen','chapter':1,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['Gen 1:1']}},
+          {'input':{"refs":[{'book': 'Gen','chapter':1,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['GEN 1:1']}},
           {'input':{"refs":[{'book': 'PSA','chapter':22,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['PSA 23:1']}},
-          {'input':{"refs":[{'book': 'Ps','chapter':22,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['Ps 23:1']}},
+          {'input':{"refs":[{'book': 'Ps','chapter':22,'verses':[1]}],'src':'lxx','to':['bhs']}, 'output':{'bhs':['PSA 23:1']}},
           ##^ doesn't work yet. Got to convert book names!
     ]
     for t in tests:
