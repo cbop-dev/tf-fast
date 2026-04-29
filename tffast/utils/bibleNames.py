@@ -2,7 +2,7 @@ import json
 import os
 from tffast.utils import utils
 
-filename="bibleBookNames.json"
+filename="tf_bible_booknames/bibleBookNames.json"
 
 jsonFilePath = os.path.join(os.path.dirname(utils.__file__),filename)
 #print(f"THE JSON FILE: {os.path.abs(jsonFilePath}")

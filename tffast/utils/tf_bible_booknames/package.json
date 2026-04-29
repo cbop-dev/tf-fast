@@ -1,0 +1,27 @@
+{
+  "name": "@cbop-dev/tf-bible-booknames",
+  "version": "0.0.2",
+  "description": "json object containing book names mapping for various Text-Fabric Bible datasets and for versification_utils, used by tf-fast (https://github.com/cbop-dev/tf-fast)",
+  "keywords": [
+    "text-fabric",
+    "bible",
+    "versification",
+    "javascript",
+    "json"
+  ],
+  "homepage": "https://github.com/cbop-dev/tf-fast#readme",
+  "bugs": {
+    "url": "https://github.com/cbop-dev/tf-fast/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cbop-dev/tf-fast.git"
+  },
+  "license": "ISC",
+  "author": "cbop-dev",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
