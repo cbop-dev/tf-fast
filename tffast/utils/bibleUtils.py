@@ -12,7 +12,7 @@ from tffast.utils.bibleNames import getTfBookAbbrev,getBookMapAbbrev,getStandari
 import re
 class BibleUtils:
 
-    # mape to abbreviations used in the versification_utils package (external dependency)
+    # map to abbreviations used in the versification_utils package (external dependency)
     # see https://github.com/jcuenod/versification_utils
     mapNames={
         'web':'eng',
@@ -35,10 +35,15 @@ class BibleUtils:
     def remapVerses(verses,fromTfName, toTfName):
 
         """ 
-        verses: list of verse strings
-        fromTfName: abbrev of the tf dataset to remap from
-        toTfName: abbrev of the tf dataset to remap to
-        return: list of mapped verse strings, where the book names have been standardized to match those in bibleNames.py
+        verses: list[int[
+            list of verse strings, like ['Gen 1:1','Ps 12:3']
+        fromTfName: string
+            abbrev of the tf dataset to remap from
+        toTfName: string
+            abbrev of the tf dataset to remap to
+        
+        Returns: list[string]
+            Returns of mapped verse strings, where the book names have been standardized to match those in bibleNames.py, that is, recognized by versificaion_utils
         """
         fromSchema = BibleUtils.mapNames[fromTfName] if fromTfName in BibleUtils.mapNames.keys() else None
         toSchema = BibleUtils.mapNames[toTfName] if toTfName in BibleUtils.mapNames.keys() else None
@@ -50,7 +55,11 @@ class BibleUtils:
                 bookMapAbbrev=BibleUtils.getBookMapAbbrev(bcv['book'])
                 if (bookMapAbbrev):
                     bcv['book']=bookMapAbbrev
-                    refList.append(BibleUtils.bcvToRef(bcv))
+                    theNewRef = BibleUtils.bcvToRef(bcv)
+                    refList.append(theNewRef)
+                    print(f"Remapping {verse} to {theNewRef}")
+                else:
+                    mylog(f"Could not find book abbreviation for {bcv['book']}", True)
 
             newVersesDict = remap_verses({ref:'' for ref in refList}, fromSchema, toSchema)
 

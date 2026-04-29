@@ -1,7 +1,13 @@
 import json
-filename="tffast/utils/bibleBookNames.json"
+import os
+from tffast.utils import utils
 
-bookNamesObject=json.load(open(filename))
+filename="bibleBookNames.json"
+
+jsonFilePath = os.path.join(os.path.dirname(utils.__file__),filename)
+#print(f"THE JSON FILE: {os.path.abs(jsonFilePath}")
+
+bookNamesObject=json.load(open(jsonFilePath))
 standardizedBookNames=bookNamesObject["standardBookNamesDict"]
 
 versification_name_map=bookNamesObject['versification_name_map']
@@ -275,6 +281,12 @@ versionMaps=bookNamesObject["versions"]
 
 
 def getBookMapAbbrev(name):
+    """
+    name: string
+      The biblical book name in any of the forms it may appear in 
+    returns: string
+      The bookname abbreviation used in the verse_map module/function.
+    """
     for abbrev, names in bibleBookMappingNames.items():
         names=[n.lower() for n in names]
         if name.lower() in names:

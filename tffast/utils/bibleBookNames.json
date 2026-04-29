@@ -208,7 +208,7 @@
     "NEH": ["2 Esdr", "2 Esdras", "II Esdr", "II Esdras", "NEH", "Neh", "Nehemia", "Nehemiah", "neh", "nehemiah"],
     "EST": ["EST", "Est", "Esth", "Esther", "est", "esther"],
     "JOB": ["Iob", "JOB", "Jb", "Job", "job"],
-    "PSA": ["PSA", "Ps(s)", "Psa", "Psalmi", "Psalms", "psa", "psalms","ps","Ps"],
+    "PSA": ["PSA", "Ps(s)", "Psa", "Psalmi", "Psalms", "psa", "psalms","ps","Ps","Pss"],
     "PRO": ["PRO", "Pr", "Prov", "Proverbia", "Proverbs", "pro", "proverbs"],
     "ECC": ["ECC", "Eccl", "Ecclesiastes", "Qoh", "Qoheleth", "ecc", "ecclesiastes"],
     "SNG": ["Cant", "Canticles", "Canticum", "SNG", "Song", "Song of Solomon", "Song of Songs", "SongofSolomon", "SongofSongs", "sng"],

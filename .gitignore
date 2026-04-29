@@ -16,3 +16,7 @@ tfData/__pycache__/
 *.pyc
 
 tfflask/tfData/__pycache__/
+
+tffast/tfData/tmp/
+
+tests/trash/

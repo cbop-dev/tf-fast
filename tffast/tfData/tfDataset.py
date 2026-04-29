@@ -749,7 +749,14 @@ class TfDataset:
 		return feature.v(wordid) if feature else ''
 
 	def remapVerse(self,verse,fromTfName):
-		return BibleUtils.remapVerses([verse],fromTfName,self.dbname)
+		if (verse):
+			vv= BibleUtils.remapVerses([verse],fromTfName,self.dbname)
+			if(len(vv)):
+				return vv[0]
+			else:
+				return verse
+		else:
+			return verse
 		
 	def remapVerseCorrection(self,verse):
 		"""

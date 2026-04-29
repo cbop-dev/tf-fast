@@ -10,6 +10,7 @@ from tffast.MyDatasets import getDataset,loadDatasets
 from tf.app import use
 from tf.advanced import sections as Sections
 
+
 datasetMap={}
 testTF=True
 def loadTheDataset(db):
@@ -100,28 +101,49 @@ def test_reverseBookAbbrev():
     for t in tests:
         assert(BibleUtils.getTfBookAbbrev(t['in'], t['version']) == t['out'])
 
+def test_getBookMapAbbrev():
+    tests=[
+        {'in': 'Ps', 'out': 'PSA'},
+        {'in': 'PSA', 'out': 'PSA'},
+        {'in': 'Ps(s)', 'out': 'PSA'},
+        {'in': 'Psa', 'out': 'PSA'},
+        {'in': 'Psalmi', 'out': 'PSA'},
+        {'in': 'Psalms', 'out': 'PSA'},
+        {'in': 'psa', 'out': 'PSA'},
+        {'in': 'psalms', 'out': 'PSA'},
+        {'in': 'ps', 'out': 'PSA'},
+        {'in': 'Ps', 'out': 'PSA'},
+        {'in': 'Pss', 'out': 'PSA'},
+    ]
+    for t in tests:
+        assert(BibleUtils.getBookMapAbbrev(t['in']) == t['out'])
 
 
 def test_getParallelVerses(BHS,LXX):
     pass
+
+    assert(BibleUtils.getBookMapAbbrev('Ps')=='PSA')
     if (BHS and LXX):
         tests=[
-            {'ref': "Gen 1:1", 'from':'bhs', 'to':'lxx', 'outRef': 'Gen 1:1', 'outText':["ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν"]},
-            {'ref': "Dan 3:37", 'from':'vulgate', 'to':'lxx', 'outRef': 'Dan 3:37', 'outText':["ὅτι δέσποτα ἐσμικρύνθημεν παρὰ πάντα τὰ ἔθνη καί ἐσμεν ταπεινοὶ ἐν πάσῃ τῇ γῇ σήμερον διὰ τὰς ἁμαρτίας ἡμῶν"]}
-
+            {'ref': "Gen 1:1", 'from':'bhs', 'to':'lxx', 'outRef': 'GEN 1:1', 'outText':["ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν"]},
+            {'ref': "Dan 3:37", 'from':'vulgate', 'to':'lxx', 'outRef': 'DAN 3:37', 'outText':["ὅτι δέσποτα ἐσμικρύνθημεν παρὰ πάντα τὰ ἔθνη καί ἐσμεν ταπεινοὶ ἐν πάσῃ τῇ γῇ σήμερον διὰ τὰς ἁμαρτίας ἡμῶν"]},
+            {'ref': "Ps 23:1", 'from':'bhs', 'to':'vulgate', 'outRef':'PSA 22:1','outText':['psalmus David Dominus reget me et nihil mihi deerit']}
         ]
 
         for t in tests:
             parRef = BibleUtils.remapVerses([t['ref']], t['from'], t['to'])[0]
-            parRef=LXX.remapVerseCorrection(t['ref']) if t['to']=='lxx' else parRef
+            toDb=loadTheDataset(t['to'])
+            mylog(f"Remapped {t['ref']} to {parRef}")
+            parRef=toDb.remapVerseCorrection(parRef)
+            mylog(f"Corrected {t['ref']} to {parRef}")
             assert(parRef == t['outRef'])
             
             bcv=BibleUtils.getBcVfromRef(parRef) 
             vlist=createNumArrayFromStringListRange(bcv['vv'])
             textList=[]
             for v in vlist:
-                node=LXX.getNodeFromBcV(bcv['book'],bcv['chap'],v)
-                text=LXX.getText(node) if node else ''
+                node=toDb.getNodeFromBcV(bcv['book'],bcv['chap'],v)
+                text=toDb.getText(node) if node else ''
                 textList.append(text)
             
             assert(textList == t['outText'])
