@@ -10,6 +10,8 @@ from versification_utils import remap_verses
 from tffast.env import debug,mylog
 from tffast.utils.bibleNames import getTfBookAbbrev,getBookMapAbbrev,getStandarizedBookName
 import re
+
+debugOn=debug
 class BibleUtils:
 
     # map to abbreviations used in the versification_utils package (external dependency)
@@ -33,7 +35,6 @@ class BibleUtils:
 
     @staticmethod
     def remapVerses(verses,fromTfName, toTfName):
-
         """ 
         verses: list[int[
             list of verse strings, like ['Gen 1:1','Ps 12:3']
@@ -45,11 +46,13 @@ class BibleUtils:
         Returns: list[string]
             Returns of mapped verse strings, where the book names have been standardized to match those in bibleNames.py, that is, recognized by versificaion_utils
         """
+        mylog(f"remapVerses(from {fromTfName} to {toTfName}, verses {verses})", debugOn=debugOn)
         fromSchema = BibleUtils.mapNames[fromTfName] if fromTfName in BibleUtils.mapNames.keys() else None
         toSchema = BibleUtils.mapNames[toTfName] if toTfName in BibleUtils.mapNames.keys() else None
         ret = []
         if (fromSchema and toSchema):
             refList=[]
+
             for verse in verses:
                 bcv = BibleUtils.getBcVfromRef(verse)
                 bookMapAbbrev=BibleUtils.getBookMapAbbrev(bcv['book'])
@@ -65,21 +68,24 @@ class BibleUtils:
 
             if (newVersesDict):
                 ret = list(newVersesDict.keys())
+        mylog(f"remapVerses() = {ret}", debugOn=debugOn)
         return ret
 
     @staticmethod
-    def getBcVfromRef(ref):
-        pass
-        [bookChap,vv]=ref.split(":")
+    def getBcVfromRef(ref,keys=['book','chap','vv']):
+        if(len(keys)==3):
+            [bookChap,vv]=ref.split(":")
 
-        bookChapObj=BibleUtils.splitBookChap(bookChap)
-        book=None
-        chap=None
-        if (bookChapObj):
-            book=bookChapObj['book']
-            chap=bookChapObj['chap']
+            bookChapObj=BibleUtils.splitBookChap(bookChap)
+            book=None
+            chap=None
+            if (bookChapObj):
+                book=bookChapObj['book']
+                chap=bookChapObj['chap']
 
-        return {'book':book,'chap':chap,'vv':vv}
+            return {keys[0]:book,keys[1]:chap,keys[2]:vv}
+        else:
+            return {'book':'','chap':'','vv':''}
         
     def bcvToRef(bcv,keys=['book','chap','vv']):
         return f"{bcv[keys[0]]} {bcv[keys[1]]}{(":"+bcv[keys[2]]) if bcv[keys[2]] else ''}"

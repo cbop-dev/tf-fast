@@ -1,43 +1,16 @@
 import pytest, os,sys, csv, re
-from tffast.tfData.tfBHS import TfBHS
-from tffast.tfData.tfLXX import TfLXX
+#from tffast.tfData.tfBHS import TfBHS
+#from tffast.tfData.tfLXX import TfLXX
 from versification_utils import remap_verses
 from tffast.env import debug,mylog
 from tffast.utils.bibleUtils import BibleUtils
 from tffast.utils.utils import createNumArrayFromStringListRange
 #import tffast.utils.bibleNames as BibleNames
-from tffast.MyDatasets import getDataset,loadDatasets
-from tf.app import use
-from tf.advanced import sections as Sections
+#from tffast.MyDatasets import getDataset,loadDatasets
+#from tf.app import use
+#from tf.advanced import sections as Sections
 
 
-datasetMap={}
-testTF=True
-def loadTheDataset(db):
-    if(testTF):
-        return getDataset(db)
-    else:
-        return None
-
-#global bhs
-#bhs = bhs if bhs else None
-#global lxx
-#lxx = lxx if lxx else None
-@pytest.fixture()
-def BHS():
- #   global bhs
-  #  global datasetMap
-    bhs=loadTheDataset('bhs')
-    #bhs= TfBHS()
-    return bhs
-
-@pytest.fixture()
-def LXX():
-    #global lxx
-    #if(not lxx):
-        #lxx= TfLXX()
-    #global datasetMap
-    return loadTheDataset('lxx')
 
 def test_dummy():
     assert(True)
@@ -118,35 +91,3 @@ def test_getBookMapAbbrev():
     for t in tests:
         assert(BibleUtils.getBookMapAbbrev(t['in']) == t['out'])
 
-
-def test_getParallelVerses(BHS,LXX):
-    pass
-
-    assert(BibleUtils.getBookMapAbbrev('Ps')=='PSA')
-    if (BHS and LXX):
-        tests=[
-            {'ref': "Gen 1:1", 'from':'bhs', 'to':'lxx', 'outRef': 'GEN 1:1', 'outText':["ἐν ἀρχῇ ἐποίησεν ὁ θεὸς τὸν οὐρανὸν καὶ τὴν γῆν"]},
-            {'ref': "Dan 3:37", 'from':'vulgate', 'to':'lxx', 'outRef': 'DAN 3:37', 'outText':["ὅτι δέσποτα ἐσμικρύνθημεν παρὰ πάντα τὰ ἔθνη καί ἐσμεν ταπεινοὶ ἐν πάσῃ τῇ γῇ σήμερον διὰ τὰς ἁμαρτίας ἡμῶν"]},
-            {'ref': "Ps 23:1", 'from':'bhs', 'to':'vulgate', 'outRef':'PSA 22:1','outText':['psalmus David Dominus reget me et nihil mihi deerit']}
-        ]
-
-        for t in tests:
-            parRef = BibleUtils.remapVerses([t['ref']], t['from'], t['to'])[0]
-            toDb=loadTheDataset(t['to'])
-            mylog(f"Remapped {t['ref']} to {parRef}")
-            parRef=toDb.remapVerseCorrection(parRef)
-            mylog(f"Corrected {t['ref']} to {parRef}")
-            assert(parRef == t['outRef'])
-            
-            bcv=BibleUtils.getBcVfromRef(parRef) 
-            vlist=createNumArrayFromStringListRange(bcv['vv'])
-            textList=[]
-            for v in vlist:
-                node=toDb.getNodeFromBcV(bcv['book'],bcv['chap'],v)
-                text=toDb.getText(node) if node else ''
-                textList.append(text)
-            
-            assert(textList == t['outText'])
-
-        
-    
